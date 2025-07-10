@@ -2,7 +2,7 @@
 
 import React from "react";
 import HTMLFlipBook from "react-pageflip";
-import miracleCover from '../images/miracleCover.png';
+import miracleCover from '/images/miracleCover.png';
 
 const Page = React.forwardRef(({ children }, ref) => {
   return (

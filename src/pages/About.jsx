@@ -1,7 +1,8 @@
 import React from 'react';
 import Navbar from '../components/NavBar';
 import Footer from '../components/Footer';
-import miracleCover from '../images/miracleCover.png'; // reuse as placeholder
+
+import miracleCover from '/images/miracleCover.png'; // reuse as placeholder
 
 export default function About() {
   return (

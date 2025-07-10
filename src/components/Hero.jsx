@@ -62,7 +62,7 @@ export default function Hero() {
             <motion.img
               whileHover={{ scale: 1.08, rotate: -2 }}
               transition={{ duration: 0.4 }}
-              src="src/images/miracleCover.png"
+              src="/images/miracleCover.png"
               alt="How to Become the Miracle book cover"
               className="w-[220px] md:w-[300px] rounded-lg shadow-2xl"
             />
