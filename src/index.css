@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Domine:wght@700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Domine', serif;
+}
+
+/* html, body {
+  cursor: none;
+}
+
+.cursor-circle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle at center, #fffacd, #fce047, #fbb040);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0);
+  z-index: 9999;
+  mix-blend-mode: screen;
+  transition: transform 0.05s ease-out;
+  box-shadow:
+    0 0 10px 4px rgba(255, 240, 100, 0.6),
+    0 0 20px 8px rgba(255, 220, 50, 0.4),
+    0 0 30px 12px rgba(255, 200, 0, 0.2);
+  backdrop-filter: blur(2px);
+} */
