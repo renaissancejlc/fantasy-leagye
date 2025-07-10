@@ -24,9 +24,19 @@ export default function BecomeTheMiracle() {
             Through soulful reflections and grounded wisdom, this book empowers readers to shift
             from seeking miracles to becoming one—for themselves and others.
           </p>
+          <br></br>
+                    <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-black text-white px-6 py-3 text-lg font-bold uppercase tracking-wider hover:bg-gray-800 transition-all duration-200"
+          >
+            Buy Now
+          </a>
         </section>
 
         <section className="max-w-4xl mx-auto text-left mb-16 space-y-6 border-l-4 border-black pl-6">
+          
           <h2 className="text-2xl font-semibold">About the Book</h2>
           <p className="italic">
             <em>Become the Miracle</em> is an invitation to remember the divine truth already
@@ -54,6 +64,7 @@ export default function BecomeTheMiracle() {
 
         <section className="max-w-5xl mx-auto text-center mb-20 border-t border-black pt-16">
           <h2 className="text-3xl font-extrabold uppercase mb-4 tracking-widest border-b-4 border-black inline-block pb-1">Book Preview</h2>          <p className="mb-6 text-lg">Read a sample of the book’s introduction and contents:</p>
+
           <PreviewBook />
         </section>
       </div>
