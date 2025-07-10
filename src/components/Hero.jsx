@@ -202,7 +202,7 @@ export default function Hero() {
               Beyond the Page
             </h2>
             <p className="text-lg leading-relaxed tracking-normal">
-              What if the miracle isn’t something you chase—but something you awaken?
+              What if the miracle isn’t something you chase, but something you awaken?
               Doug’s work challenges you to reframe self-help as soul-remembrance. This isn’t a fix. It’s a return.
             </p>
           </motion.div>
@@ -218,7 +218,7 @@ export default function Hero() {
               Inner Invitation
             </h2>
             <p className="text-lg leading-relaxed tracking-normal">
-              This space isn’t just for readers—it’s for rememberers. Those who know
+              This space isn’t just for readers; it’s for rememberers. Those who know
               there’s more. Explore the philosophies behind the words, the healing
               beneath the highlight.
             </p>
