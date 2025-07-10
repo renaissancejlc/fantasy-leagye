@@ -10,18 +10,24 @@ export default function Contact() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 md:px-20 py-16 bg-white text-black">
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-6xl font-bold uppercase mb-12 tracking-wide text-center"
-        >
-          Contact
-        </motion.h1>
-        <p className="text-center max-w-xl mx-auto text-lg text-gray-600 mt-4">
+          <main className="w-full text-black border-t-4 border-black pl-0 ml-0">
+            <section className="bg-white px-4 md:px-8 pt-14 pb-12 relative">
+              <div className="absolute left-0 top-20 rotate-[-90deg] text-xs tracking-widest uppercase text-black/60">
+              </div>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className="text-[10vw] md:text-[7vw] font-black uppercase text-center mb-16 leading-none tracking-tight"
+              >
+                Contact
+                
+              </motion.h1>
+              <p className="text-center max-w-xl mx-auto text-lg text-gray-600 mt-4">
           Want to book Doug for a talk, ask a question, or share your story? Drop a message below.
         </p>
+            </section>
+        
 
         <div className="relative z-20 max-w-4xl mx-auto p-8 mt-12 bg-white shadow-lg rounded-lg">
           <form

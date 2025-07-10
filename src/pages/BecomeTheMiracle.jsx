@@ -63,7 +63,8 @@ export default function BecomeTheMiracle() {
         </section>
 
         <section className="max-w-5xl mx-auto text-center mb-20 border-t border-black pt-16">
-          <h2 className="text-3xl font-extrabold uppercase mb-4 tracking-widest border-b-4 border-black inline-block pb-1">Book Preview</h2>          <p className="mb-6 text-lg">Read a sample of the book’s introduction and contents:</p>
+          <h2 className="text-3xl font-extrabold uppercase mb-4 tracking-widest border-b-4 border-black inline-block pb-1">Check it out</h2> 
+                   <p className="mb-6 text-lg">Read a sample of the book’s introduction and contents:</p>
 
           <PreviewBook />
         </section>

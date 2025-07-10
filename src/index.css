@@ -1,16 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Domine:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=General+Sans:wght@200;300;400;500;600&family=Italiana&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'General Sans', sans-serif;
 }
 
 h1, h2, h3 {
-  font-family: 'Domine', serif;
+  font-family: 'Fraunces', serif;
 }
 
 /* html, body {
@@ -36,3 +35,8 @@ h1, h2, h3 {
     0 0 30px 12px rgba(255, 200, 0, 0.2);
   backdrop-filter: blur(2px);
 } */
+
+/* Site title font override */
+.site-title {
+  font-family: 'Italiana', serif !important;
+}

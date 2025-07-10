@@ -9,6 +9,7 @@ import Contact from './pages/Contact';
 import BecomeTheMiracle from './pages/BecomeTheMiracle';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
+import Events from './pages/Events';
 
 export default function App() {
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/become-the-miracle" element={<BecomeTheMiracle />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-use" element={<TermsOfUse />} />
+          <Route path="/events" element={<Events />} />
 
         </Routes>
       </Router>
