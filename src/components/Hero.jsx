@@ -246,6 +246,7 @@ export default function Hero() {
             </p>
           </button>
         </div>
+        <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white opacity-40 z-20"></div>
       </section>
       </>
       )}

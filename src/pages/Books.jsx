@@ -27,10 +27,16 @@ export default function Books() {
               <div className="relative w-full text-center md:text-left font-black text-[10vw] md:text-[7vw] tracking-tight leading-none z-10">
                 <span className="block text-[#000000] drop-shadow-md">BECOME</span>
                 <span className="block text-[#000000] -mt-2 ml-6 md:ml-10 drop-shadow-md">THE</span>
-                <span className="block text-[#000000] -mt-2 ml-12 md:ml-20 drop-shadow-md">MIRACLE</span>
+                <span className="block text-[#000000] -mt-2 ml-12 md:ml-20 drop-shadow-md">
+                  MIRACLE
+                  <span className="text-yellow-400">.</span>
+                </span>
               </div>
               <p className="text-lg md:text-xl font-medium italic mt-4 text-gray-800 max-w-prose text-center md:text-left">
                 Awaken your gift. Answer the call. Become the light.
+              </p>
+              <p className="text-sm text-gray-600 italic mt-2 md:text-left text-center">
+                Doug Cooper’s debut writing
               </p>
               <br></br>
               <a href="#" className="border-2 border-black text-black bg-transparent px-5 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all">

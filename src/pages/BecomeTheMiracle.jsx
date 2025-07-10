@@ -15,9 +15,11 @@ export default function BecomeTheMiracle() {
             alt="Become the Miracle Book Cover"
             className="mx-auto mb-8 w-64 shadow-lg"
           />
-          <h1 className="text-5xl md:text-6xl font-bold uppercase mb-6 tracking-widest">Become the Miracle</h1>
+         <h1 className="text-5xl md:text-6xl font-bold uppercase mb-6 tracking-widest">
+           How to Become the Miracle the World Is Waiting For
+         </h1>
           <p className="text-md md:text-lg font-medium uppercase tracking-wider text-gray-600 mb-6">
-            A spiritual guide to becoming the light
+            A spiritual guide to becoming the light · Doug Cooper’s debut
           </p>
           <p className="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto">
             A guide for spiritual alignment, healing, and becoming the light the world needs now.
@@ -31,7 +33,7 @@ export default function BecomeTheMiracle() {
             rel="noopener noreferrer"
             className="inline-block bg-black text-white px-6 py-3 text-lg font-bold uppercase tracking-wider hover:bg-gray-800 transition-all duration-200"
           >
-            Buy Now
+            Pre order Now
           </a>
         </section>
 
