@@ -65,9 +65,7 @@ export default function Home() {
                       >
                         BECOME THE MIRACLE
                       </h1>
-                      <div className="block md:hidden mt-4 text-center text-sm text-gray-600">
-                        Awaken your gift. Answer the call. Become the light.
-                      </div>
+                      
                     </div>
                   </div>
                   <div className="flex flex-col flex-shrink-0 max-w-sm text-right pr-8 z-10 px-4 sm:px-0 order-3">
