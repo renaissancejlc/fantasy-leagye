@@ -1,11 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Search, Trash2, Book } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+
+// Helper hook to get previous value
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+  return ref.current;
+}
 
 export default function NavBar() {
+  const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const searchRef = useRef(null);
+  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const [itemAdded, setItemAdded] = useState(false);
+  const prevCartItems = usePrevious(cartItems);
+  const [cartHovered, setCartHovered] = useState(false);
+  const cartTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!prevCartItems) return;
+    const addedOrChanged = cartItems.some((item, index) =>
+      !prevCartItems[index] || item.quantity !== prevCartItems[index].quantity
+    );
+    if (addedOrChanged) {
+      setItemAdded(true);
+      const timer = setTimeout(() => setItemAdded(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [cartItems, prevCartItems]);
 
   const books = [
     {
@@ -36,8 +64,8 @@ export default function NavBar() {
   return (
     <nav className="w-full border-b border-black/10 bg-white font-serif tracking-wide px-6 py-6">
       <div className="flex justify-between items-center w-full max-w-7xl mx-auto">
-        <div ref={searchRef} className="relative search-container">
-          <div className="flex items-center gap-2 transition-all duration-300 ease-in-out">
+        <div className="relative search-container">
+          <div ref={searchRef} className="flex items-center gap-2 transition-all duration-300 ease-in-out">
             <button
               aria-label="Search"
               className="text-black"
@@ -81,12 +109,86 @@ export default function NavBar() {
         <div className="text-[2.25rem] tracking-[0.25em] font-light font-[Playfair_Display] uppercase text-black text-center site-title">
           Doug Cooper
         </div>
-        <button aria-label="Cart" className="relative text-black">
-          <ShoppingCart className="w-5 h-5 hover:opacity-70 transition" />
-          <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-            0
-          </span>
-        </button>
+        <div
+          className="relative"
+          onMouseOver={() => {
+            clearTimeout(cartTimeoutRef.current);
+            setCartHovered(true);
+          }}
+          onMouseOut={() => {
+            cartTimeoutRef.current = setTimeout(() => {
+              setCartHovered(false);
+            }, 200);
+          }}
+        >
+          <button
+            aria-label="Cart"
+            className="relative text-black"
+            onClick={() => navigate('/cart')}
+          >
+            <ShoppingCart className="w-5 h-5 hover:opacity-70 transition" />
+            <span className={`absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center transition transform ${itemAdded ? "animate-bounce" : ""}`}>
+              {(() => {
+                const total = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+                return total > 10 ? '10+' : total;
+              })()}
+            </span>
+          </button>
+          <div
+            className={`absolute right-0 top-full mt-2 w-64 bg-white border border-black rounded-lg shadow-lg text-sm z-50 transition-opacity duration-300 ${cartHovered ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+          >
+            {cartItems.length > 0 ? (
+              <ul className="p-4 max-h-48 overflow-y-auto text-gray-800 text-sm">
+                {cartItems.map((item, index) => (
+                  <li key={index} className="mb-3 p-2 flex items-start gap-3 border-b border-gray-200 last:border-none">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.title ?? '(No title)'}
+                        className="w-12 h-16 object-cover rounded-md shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-12 h-16 flex items-center justify-center bg-gray-100 text-gray-500 rounded-md shadow-sm">
+                        <Book className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm text-black leading-snug">
+                        {item.title ?? <span className="italic text-gray-400">No title</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="w-6 h-6 text-xs bg-gray-100 hover:bg-gray-300 rounded-full flex items-center justify-center transition"
+                          aria-label="Decrease quantity"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-6 h-6 text-xs bg-gray-100 hover:bg-gray-300 rounded-full flex items-center justify-center transition"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-red-400 hover:text-red-600 mt-1"
+                      aria-label="Remove item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="p-4 text-gray-700 italic">Your cart is empty</div>
+            )}
+          </div>
+        </div>
       </div>
 
 

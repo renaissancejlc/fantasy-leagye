@@ -19,7 +19,7 @@ export default function Press() {
         <section>
           <p className="mb-4">
            For all media inquiries, please reach out to{' '}
-            <a href="mailto:doug@dougcooper.com" className="underline hover:italic">doug@dougcooper.com</a>.
+            <a href="mailto:media@dougcooper.com" className="underline hover:italic">doug@dougcooper.com</a>.
           </p>
         </section>
       </main>

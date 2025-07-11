@@ -14,26 +14,29 @@ export default function ShippingAndReturns() {
         <section className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">Shipping Policy</h2>
           <p className="mb-4">
-            Orders are processed within 2–4 business days. You will receive a confirmation email with tracking information once your order has shipped.
+            Orders are processed within 2–4 business days unless noted otherwise. You will receive a confirmation email with tracking information once your order ships.
           </p>
           <p className="mb-4">
-            Shipping is available within the continental United States. We do not currently offer international shipping.
+            Shipping is currently available within the continental United States only. We do not offer international shipping at this time.
           </p>
           <p className="mb-4">
-            Please double-check your shipping address at checkout. We are not responsible for packages delivered to incorrect addresses provided by the customer.
+            Preorder items may take up to 6 months to ship. If your order contains a mix of in-stock and preorder items, it will ship once all items are available.
+          </p>
+          <p className="mb-4">
+            Please ensure your shipping address is accurate before placing your order. We are not responsible for packages delivered to incorrect addresses provided by the customer.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">Returns &amp; Exchanges</h2>
           <p className="mb-4">
-            All sales are final. However, if you receive a defective or damaged item, please contact us within 7 days of delivery at our contact page with a description and photo of the issue.
+            All sales are final. If your item arrives damaged or defective, please contact us within 7 days of delivery through our contact page, including a description and photo of the issue.
           </p>
           <p className="mb-4">
-            Approved replacements or refunds will be processed as soon as possible.
+            If approved, we will process a replacement or refund as soon as possible.
           </p>
-          <p>
-            We do not offer exchanges or returns due to change of mind.
+          <p className="mb-4">
+            We do not offer returns or exchanges for change of mind. This includes preorder items, which are made to order and are not eligible for cancellation or return once placed.
           </p>
         </section>
       </main>

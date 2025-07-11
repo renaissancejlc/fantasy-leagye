@@ -5,9 +5,21 @@ import Navbar from "../components/NavBar";
 import Footer from "../components/Footer";
 import PreviewBook from "../components/PreviewBook";
 import miracleCover from '/images/miracleCover.png'; // reuse as placeholder
+import { useCart } from "../context/CartContext";
 
 export default function BecomeTheMiracle() {
   const location = useLocation();
+  const { addToCart } = useCart();
+  const handleAddToCart = () => {
+    addToCart({
+      id: "miracle-book",
+      title: "How to Become the Miracle the World Is Waiting For",
+      price: 22,
+      quantity: 1,
+      image: miracleCover,
+      isPreorder: true,
+    });
+  };
 
   useEffect(() => {
     if (location.hash) {
@@ -39,14 +51,12 @@ export default function BecomeTheMiracle() {
             from seeking miracles to becoming one—for themselves and others.
           </p>
           <br></br>
-                    <a
-            href="#preview"
-            target="_blank"
-            rel="noopener noreferrer"
+                    <button
+            onClick={handleAddToCart}
             className="inline-block bg-black text-white px-6 py-3 text-lg font-bold uppercase tracking-wider hover:bg-gray-800 transition-all duration-200"
           >
             Pre order Now
-          </a>
+          </button>
         </section>
 
         <section className="max-w-4xl mx-auto text-left mb-16 space-y-6 border-l-4 border-black pl-6">

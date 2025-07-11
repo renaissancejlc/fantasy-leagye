@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCart } from '../context/CartContext';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import BrushParallax from '../components/BrushParallax';
@@ -6,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import RadiantBackground from '../components/RadiantBackground.jsx';
 
 export default function Home() {
-        const [showReflection, setShowReflection] = React.useState(false);
+  const [showReflection, setShowReflection] = React.useState(false);
+  const { addToCart } = useCart();
 
   return (
 <div className="relative text-black min-h-screen font-serif overflow-x-hidden">      {/* <BrushParallax /> */}
@@ -72,7 +74,19 @@ export default function Home() {
                     <p className="italic text-xl md:text-2xl text-gray-800 mb-6" style={{ fontFamily: "'Chiefland Variable', serif" }}>
                       Awaken your gift. <br />Answer the call. <br />Become the light.
                     </p>
-                    <button className="px-6 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition duration-300 w-fit self-end">
+                    <button
+                      onClick={() =>
+                        addToCart({
+                          id: 'miracle-book',
+                          title: "How to Become the Miracle the World Is Waiting For",
+                          price: 22,
+                          image: '/images/miracleCover.png',
+                          isPreorder: true
+
+                        })
+                      }
+                      className="px-6 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition duration-300 w-fit self-end"
+                    >
                       Pre order Now
                     </button>
                   </div>

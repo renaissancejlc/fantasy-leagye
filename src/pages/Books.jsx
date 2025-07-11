@@ -2,8 +2,11 @@ import React from 'react';
 import miracleCover from '/images/miracleCover.png'; // reuse as placeholder
 import Navbar from '../components/NavBar';
 import Footer from '../components/Footer';
+import { useCart } from '../context/CartContext';
 
 export default function Books() {
+  const { addToCart } = useCart();
+
   return (
     <>
       <Navbar />
@@ -39,9 +42,20 @@ export default function Books() {
                 Doug Cooper’s debut writing
               </p>
               <br></br>
-              <a href="#" className="border-2 border-black text-black bg-transparent px-5 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all">
+              <button
+                onClick={() =>
+                  addToCart({
+                          id: 'miracle-book',
+                          title: "How to Become the Miracle the World Is Waiting For",
+                          price: 22,
+                          image: '/images/miracleCover.png',
+                          isPreorder: true
+                        })
+                }
+                className="border-2 border-black text-black bg-transparent px-5 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all"
+              >
                 Pre order Now
-              </a>
+              </button>
               <a href="/become-the-miracle" className="mt-4 md:mt-2 inline-block border-2 border-black text-black px-5 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all">
                 Learn More
               </a>
@@ -56,23 +70,53 @@ export default function Books() {
             <article className="border border-black/10 p-6 rounded hover:shadow-md transition" data-product="the-overflow-effect">
               <h3 className="font-bold text-lg">The Overflow Effect</h3>
               <p className="mt-2">A call to live in full alignment and generosity.</p>
-              <a href="#" className="mt-4 inline-block bg-black text-white px-6 py-2 text-xs tracking-wider uppercase hover:opacity-80 transition">
+              <button
+                onClick={() =>
+                  addToCart({
+                    id: 'the-overflow-effect',
+                    title: 'The Overflow Effect',
+                    price: 22,
+                    isPreorder: true,
+                  })
+                }
+                className="mt-4 inline-block bg-black text-white px-6 py-2 text-xs tracking-wider uppercase hover:opacity-80 transition"
+              >
                 Pre order
-              </a>
+              </button>
             </article>
             <article className="border border-black/10 p-6 rounded hover:shadow-md transition" data-product="the-aligned-hustle">
               <h3 className="font-bold text-lg">The Aligned Hustle</h3>
               <p className="mt-2">Spiritual tools for purpose-driven work and creativity.</p>
-              <a href="#" className="mt-4 inline-block bg-black text-white px-6 py-2 text-xs tracking-wider uppercase hover:opacity-80 transition">
+              <button
+                onClick={() =>
+                  addToCart({
+                    id: 'the-aligned-hustle',
+                    title: 'The Aligned Hustle',
+                    price: 22,
+                    isPreorder: true,
+                  })
+                }
+                className="mt-4 inline-block bg-black text-white px-6 py-2 text-xs tracking-wider uppercase hover:opacity-80 transition"
+              >
                 Pre order
-              </a>
+              </button>
             </article>
             <article className="border border-black/10 p-6 rounded hover:shadow-md transition" data-product="the-aligned-healer">
               <h3 className="font-bold text-lg">The Aligned Healer</h3>
               <p className="mt-2">A path for practitioners to honor their gifts with integrity.</p>
-              <a href="#" className="mt-4 inline-block bg-black text-white px-6 py-2 text-xs tracking-wider uppercase hover:opacity-80 transition">
+              <button
+                onClick={() =>
+                  addToCart({
+                    id: 'the-aligned-healer',
+                    title: 'The Aligned Healer',
+                    price: 22,
+                    isPreorder: true,
+                  })
+                }
+                className="mt-4 inline-block bg-black text-white px-6 py-2 text-xs tracking-wider uppercase hover:opacity-80 transition"
+              >
                 Pre order
-              </a>
+              </button>
             </article>
           </div>
         </section>
