@@ -15,19 +15,19 @@ const BrushParallax = () => {
         src={brush1}
         style={{ y: y1 }}
         alt="Brush 1"
-        className="absolute top-10 left-5 w-40 opacity-100"
+        className="absolute top-10 left-5 w-28 opacity-50"
       />
       <motion.img
         src={brush2}
         style={{ y: y2 }}
         alt="Brush 2"
-        className="absolute bottom-20 right-10 w-60 opacity-100"
+        className="absolute bottom-20 right-10 w-36 opacity-50"
       />
       <motion.img
         src={brush3}
         style={{ y: y1 }}
         alt="Brush 3"
-        className="absolute top-1/2 left-1/3 w-48 opacity-100"
+        className="absolute top-1/2 left-1/3 w-32 opacity-50"
       />
     </div>
   );
