@@ -9,8 +9,7 @@ export default function Home() {
         const [showReflection, setShowReflection] = React.useState(false);
 
   return (
-    <div className="relative text-black min-h-screen font-serif">
-      <BrushParallax />
+<div className="relative text-black min-h-screen font-serif overflow-x-hidden">      {/* <BrushParallax /> */}
       <NavBar />
           <>
             <AnimatePresence>
