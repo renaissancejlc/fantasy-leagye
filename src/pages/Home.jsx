@@ -181,10 +181,10 @@ export default function Home() {
                   Start your journey today.
                 </p>
                 <a
-                  href="/books"
+                  href="/become-the-miracle#preview"
                   className="mt-6 inline-block bg-black text-white text-base tracking-wide uppercase px-8 py-4 rounded hover:bg-opacity-80 transition relative z-10"
                 >
-                  Start Reading
+                  Read Preview
                 </a>
                 <div className="mt-4 w-full border-t-[2px] border-dashed border-black relative z-10"></div>
               </div>

@@ -1,10 +1,22 @@
 import React from "react";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import Footer from "../components/Footer";
 import PreviewBook from "../components/PreviewBook";
 import miracleCover from '/images/miracleCover.png'; // reuse as placeholder
 
 export default function BecomeTheMiracle() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [location]);
   return (
     <>
       <Navbar />
@@ -28,7 +40,7 @@ export default function BecomeTheMiracle() {
           </p>
           <br></br>
                     <a
-            href="#"
+            href="#preview"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-black text-white px-6 py-3 text-lg font-bold uppercase tracking-wider hover:bg-gray-800 transition-all duration-200"
@@ -64,9 +76,12 @@ export default function BecomeTheMiracle() {
           </div>
         </section>
 
-        <section className="max-w-5xl mx-auto text-center mb-20 border-t border-black pt-16">
+        <section id='preview' className="max-w-5xl mx-auto text-center mb-20 border-t border-black pt-2">
           <h2 className="text-3xl font-extrabold uppercase mb-4 tracking-widest border-b-4 border-black inline-block pb-1">Check it out</h2> 
-                   <p className="mb-6 text-lg">Read a sample of the book’s introduction and contents:</p>
+                   <p className="mb-6 text-lg flex items-center justify-center gap-2">
+                     Tap to turn the pages and reveal the contents and introduction:
+                     <span className="animate-bounce text-2xl text-maroon-700">↓</span>
+                   </p>
 
           <PreviewBook />
         </section>

@@ -8,7 +8,7 @@ const Page = React.forwardRef(({ children }, ref) => {
   return (
     <div
       ref={ref}
-      className="bg-white shadow-sm rounded w-full h-full p-1 flex flex-col justify-center items-center font-serif text-xl leading-loose text-center"
+      className="bg-white shadow-sm rounded w-full h-full p-1 flex flex-col justify-center items-center font-serif text-xl leading-loose text-center lg:mt-6"
     >
       {children}
     </div>
@@ -80,33 +80,41 @@ const PreviewBook = () => {
             Not by fixing anything.<br />
             But by aligning with who you already are beneath the noise.<br /><br />
             We’ve been taught to wait for miracles. To hope for them.<br />
-            But what if your greatest transformation comes not from receiving one—but from becoming one?<br /><br />
-            The truth is: you probably already have.<br />
-            You’ve already been the miracle in someone else’s story.<br />
-            You just didn’t know it.
           </p>
         </Page>
         <Page>
           <p className="text-sm leading-relaxed">
+            But what if your greatest transformation comes not from receiving one—but from becoming one?<br /><br />
+            The truth is: you probably already have.<br />
+            You’ve already been the miracle in someone else’s story.<br />
+            You just didn’t know it.
             That time you called someone right when they needed it.<br />
             That moment you said something small—but they remembered it forever.<br />
             That hour you listened and didn’t judge.<br />
             That night you stayed, or forgave, or reached across the silence.<br />
             That day you showed up, even when you were falling apart yourself.<br /><br />
-            That one night stand or short romance. When you think back, you might think that it was all about you.<br />
+           
+          </p>
+        </Page>
+        <Page>
+          <p className="text-sm leading-relaxed">
+             That one night stand or short romance. When you think back, you might think that it was all about you.<br />
             But in reality:<br /><br />
             Maybe you were the miracle.<br />
             You were the messenger.<br />
             And you didn’t even realize it.<br /><br />
             This journey is about realizing it now—and doing it on purpose.<br />
             It draws from many traditions. You’ll hear echoes of Abraham-Hicks, guiding us to raise our vibration and return to the Vortex where clarity and joy reside.
+            You’ll feel the depth of Vedanta and Deepak Chopra’s reminder that we are not our thoughts, not our emotions, but the awareness in which all of it moves.<br />
+           
+            
           </p>
         </Page>
         <Page>
-          <p className="text-sm leading-relaxed">
-            You’ll feel the depth of Vedanta and Deepak Chopra’s reminder that we are not our thoughts, not our emotions, but the awareness in which all of it moves.<br />
+            <p className="text-sm leading-relaxed">
             And you’ll hear my own voice—an invitation to let your scars speak, your presence serve, and your becoming bless others in ways you may never fully see.<br /><br />
-            Because sometimes the miracle doesn’t happen to you.<br />
+
+                 Because sometimes the miracle doesn’t happen to you.<br />
             It happens through you.<br />
             And when you start living that way—aligned, awake, aware—everything shifts.<br /><br />
             You become the calm in someone else’s chaos.<br />
@@ -115,14 +123,15 @@ const PreviewBook = () => {
             Friends will feel it. Strangers will feel it.<br />
             Your family will soften.<br />
             Your presence will change rooms.<br /><br />
+                But something else happens too.<br />
+            Your life begins to feel miraculous.<br />
+           
             
-          </p>
+            </p>
         </Page>
         <Page>
             <p className="text-sm leading-relaxed">
-                But something else happens too.<br />
-            Your life begins to feel miraculous.<br />
-            Joy rises for no reason.<br />
+                 Joy rises for no reason.<br />
             Your body responds.<br />
             Your mind clears.<br />
             Your relationships deepen.<br />
@@ -131,7 +140,12 @@ const PreviewBook = () => {
             You remember who you are—and what’s always been possible.<br /><br />
             You don’t just change the world around you.<br />
             You begin to live in a new one.<br /><br />
-            This is how healing happens.<br />
+            
+            </p>
+        </Page>
+        <Page>
+            <p className="text-sm leading-relaxed">
+                This is how healing happens.<br />
             This is how lives are lifted.<br />
             One person, in alignment, becoming the miracle, again and again and again.<br /><br />
             You’re not just here to get by.<br />
