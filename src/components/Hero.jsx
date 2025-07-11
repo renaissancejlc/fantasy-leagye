@@ -47,7 +47,7 @@ export default function Hero() {
       <>
       {/* HERO SECTION */}
       <RadiantBackground>
-        <section className="relative min-h-screen flex items-center justify-center px-12 pt-28">
+        <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-12 pt-28">
           <div className="absolute top-6 left-6 text-[10rem] font-bold text-white opacity-10 leading-none z-0">MIRACLE</div>
           <div className="absolute bottom-[10%] right-[-5%] text-[8rem] font-black text-white opacity-10 rotate-[12deg] leading-none z-0">BECOME</div>
           <div className="absolute z-0 left-[65%] top-[50%] w-[280px] md:w-[320px] lg:w-[360px] shadow-2xl rounded-md -translate-x-1/2 -translate-y-1/2 pointer-events-none">
@@ -58,7 +58,7 @@ export default function Hero() {
               aria-hidden="true"
             />
           </div>
-          <div className="max-w-7xl w-full flex items-center justify-between gap-12">
+          <div className="max-w-7xl w-full flex flex-wrap items-center justify-between gap-6 sm:gap-12">
             <div className="relative flex-1" style={{ fontFamily: "'Chiefland Variable', serif" }}>
               <div className="relative z-10">
                 <h1
@@ -67,14 +67,17 @@ export default function Hero() {
                 >
                   BECOME THE MIRACLE
                 </h1>
+                <div className="block md:hidden mt-4 text-center text-sm text-gray-600">
+                  Awaken your gift. Answer the call. Become the light.
+                </div>
               </div>
             </div>
-            <div className="flex flex-col flex-shrink-0 max-w-sm text-right pr-8 z-10">
+            <div className="flex flex-col flex-shrink-0 max-w-sm text-right pr-8 z-10 px-4 sm:px-0">
               <p className="italic text-xl md:text-2xl text-gray-800 mb-6" style={{ fontFamily: "'Chiefland Variable', serif" }}>
                 Awaken your gift. <br></br>Answer the call. <br></br>Become the light.
               </p>
               <button className="px-6 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition duration-300 w-fit self-end">
-                Preorder Now
+                Pre order Now
               </button>
             </div>
           </div>
