@@ -370,18 +370,20 @@ export default function Checkout() {
                     Country
                   </label>
                   <input
-                    id="shippingCountry"
                     type="text"
-                    value={shippingCountry}
-                    onChange={(e) => setShippingCountry(e.target.value)}
+                    id="shippingCountry"
+                    name="shippingCountry"
+                    value="United States"
+                    readOnly
                     required
                     ref={fieldRefs.shippingCountry}
-                    className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
+                    className={`w-full border-gray-300 bg-gray-100 rounded-md shadow-sm mt-1 block px-4 py-2 text-sm tracking-wide ${
                       formErrors.shippingCountry ? 'border-red-500' : 'border-black'
                     }`}
-                    placeholder="United States"
                     aria-invalid={formErrors.shippingCountry ? 'true' : 'false'}
                   />
+                  {/* Hidden input for form submission */}
+                  <input type="hidden" name="shippingCountry" value="United States" />
                   {formErrors.shippingCountry && (
                     <span className="text-red-500 text-xs">{formErrors.shippingCountry}</span>
                   )}
@@ -402,13 +404,16 @@ export default function Checkout() {
                   required
                   aria-invalid={formErrors.shippingMethod ? 'true' : 'false'}
                 >
-                  <option value="standard">Standard (5-7 business days) - $5.99</option>
-                  <option value="expedited">Expedited (2-3 business days) - $9.99</option>
-                  <option value="overnight">Overnight (1 business day) - $19.99</option>
+                  <option value="standard">Standard Shipping (5–7 business days after shipment) - $5.99</option>
+                  <option value="expedited">Expedited Shipping (2–3 business days after shipment) - $9.99</option>
+                  <option value="overnight">Priority Shipping (1–2 business days after shipment) - $19.99</option>
                 </select>
                 {formErrors.shippingMethod && (
                   <span className="text-xs text-red-600">{formErrors.shippingMethod}</span>
                 )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Shipping times apply after the item is shipped. Preorder items may take longer to dispatch.
+                </p>
               </div>
               <div className="mt-4">
                 <label className="inline-flex items-center gap-2">
@@ -591,18 +596,20 @@ export default function Checkout() {
                         Country
                       </label>
                       <input
-                        id="billingCountry"
                         type="text"
-                        value={billingCountry}
-                        onChange={(e) => setBillingCountry(e.target.value)}
+                        id="billingCountry"
+                        name="billingCountry"
+                        value="United States"
+                        readOnly
                         required
                         ref={fieldRefs.billingCountry}
-                        className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
+                        className={`w-full border-gray-300 bg-gray-100 rounded-md shadow-sm mt-1 block px-4 py-2 text-sm tracking-wide ${
                           formErrors.billingCountry ? 'border-red-500' : 'border-black'
                         }`}
-                        placeholder="United States"
                         aria-invalid={formErrors.billingCountry ? 'true' : 'false'}
                       />
+                      {/* Hidden input for form submission */}
+                      <input type="hidden" name="billingCountry" value="United States" />
                       {formErrors.billingCountry && (
                         <span className="text-red-500 text-xs">{formErrors.billingCountry}</span>
                       )}
@@ -682,9 +689,8 @@ export default function Checkout() {
                 </div>
               </div>
               <div className="checkout-notes mt-4 text-xs text-gray-700 space-y-1">
-                <p>🔒 100% Secure Checkout via Stripe</p>
+                <p>Secure Checkout via Stripe</p>
                 <p>A confirmation email will be sent after placing your order.</p>
-                <p>📦 Preorder items may take up to 6 months to ship.</p>
               </div>
             </section>
 
