@@ -10,6 +10,11 @@ import BecomeTheMiracle from './pages/BecomeTheMiracle';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
 import Events from './pages/Events';
+import ShippingAndReturns from './pages/ShippingAndReturns';
+import Press from './pages/Press';
+import Faq from './pages/Faq';
+
+
 
 export default function App() {
   useEffect(() => {
@@ -37,7 +42,11 @@ export default function App() {
           <Route path="/become-the-miracle" element={<BecomeTheMiracle />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-use" element={<TermsOfUse />} />
+          <Route path="/press" element={<Press />} />
+          <Route path="/faq" element={<Faq />} />
+          <Route path="/shipping-and-returns" element={<ShippingAndReturns />} />
           <Route path="/events" element={<Events />} />
+
 
         </Routes>
       </Router>

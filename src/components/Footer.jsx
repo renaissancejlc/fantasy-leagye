@@ -40,24 +40,21 @@ export default function Footer() {
         <div>
           <h3 className="font-bold uppercase mb-2">Doug Cooper</h3>
           <ul className="space-y-1">
-            <li><a href="#" className="hover:underline">About Doug</a></li>
-            <li><a href="#" className="hover:underline">My Story</a></li>
-            <li><a href="#" className="hover:underline">Press</a></li>
-            <li><a href="#" className="hover:underline">Shop Doug</a></li>
-            <li><a href="#" className="hover:underline">Books</a></li>
-            <li><a href="#" className="hover:underline">Connect with Doug</a></li>
-            <li><a href="#" className="hover:underline">Events</a></li>
-            <li><a href="#" className="hover:underline">Doug Cooper Live</a></li>
+            <li><a href="/about" className="hover:underline">About Doug</a></li>
+            <li><a href="/press" className="hover:underline">Press</a></li>
+            {/* <li><a href="/shop" className="hover:underline">Shop Doug</a></li> */}
+            <li><a href="/books" className="hover:underline">Books</a></li>
+            <li><a href="/contact" className="hover:underline">Connect with Doug</a></li>
+            <li><a href="/events" className="hover:underline">Events</a></li>
           </ul>
         </div>
 
         <div>
           <h3 className="font-bold uppercase mb-2">Support</h3>
           <ul className="space-y-1">
-            <li><a href="#" className="hover:underline">Help</a></li>
-            <li><a href="#" className="hover:underline">Contact</a></li>
-            <li><a href="#" className="hover:underline">Shipping &amp; Returns</a></li>
-            <li><a href="#" className="hover:underline">FAQ</a></li>
+            <li><a href="/contact" className="hover:underline">Contact</a></li>
+            <li><a href="/shipping-and-returns" className="hover:underline">Shipping &amp; Returns</a></li>
+            <li><a href="/faq" className="hover:underline">FAQ</a></li>
           </ul>
         </div>
 
