@@ -8,7 +8,7 @@ const Page = React.forwardRef(({ children }, ref) => {
   return (
     <div
       ref={ref}
-      className="bg-white shadow-sm rounded w-full h-full p-1 flex flex-col justify-center items-center font-serif text-xl leading-loose text-center lg:mt-6"
+      className="bg-white shadow-sm rounded w-full h-full p-1 flex flex-col justify-center items-center font-serif text-xl leading-loose text-center"
     >
       {children}
     </div>
