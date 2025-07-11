@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 import miracleCover from '/images/miracleCover.png'; // reuse as placeholder
 import Navbar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -6,6 +7,16 @@ import { useCart } from '../context/CartContext';
 
 export default function Books() {
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const el = document.querySelector(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, []);
 
   return (
     <>
@@ -64,7 +75,7 @@ export default function Books() {
         </div>
 
         {/* Upcoming Books */}
-        <section>
+        <section id="upcoming">
           <h2 className="text-3xl font-bold mb-6">Coming Soon</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 text-sm">
             <article className="border border-black/10 p-6 rounded hover:shadow-md transition" data-product="the-overflow-effect">

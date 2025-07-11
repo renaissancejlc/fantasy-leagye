@@ -12,9 +12,12 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems } = useCart();
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  // Use a single formData state for contact info
+  const [formData, setFormData] = useState({
+    email: '',
+    phone: '',
+    fullName: '',
+  });
 
   const [shippingStreet, setShippingStreet] = useState('');
   const [shippingCity, setShippingCity] = useState('');
@@ -71,9 +74,25 @@ export default function Checkout() {
     e.preventDefault();
     // Validate required fields
     const errors = {};
-    if (!email) errors.email = 'This field is required';
-    // No required validation for phone
-    if (!fullName) errors.fullName = 'This field is required';
+    // Email validation
+    if (!formData.email) {
+      errors.email = 'This field is required';
+    } else {
+      // Regex for email validation
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(formData.email)) {
+        errors.email = 'Invalid email format';
+      }
+    }
+    // Phone validation (optional, but if present, must match pattern)
+    if (formData.phone) {
+      const phonePattern = /^\+?[0-9\s\-().]{7,15}$/;
+      if (!phonePattern.test(formData.phone)) {
+        errors.phone = 'Invalid phone format';
+      }
+    }
+    // Full name required
+    if (!formData.fullName) errors.fullName = 'This field is required';
     if (!shippingStreet) errors.shippingStreet = 'This field is required';
     if (!shippingCity) errors.shippingCity = 'This field is required';
     if (!shippingState) errors.shippingState = 'This field is required';
@@ -105,6 +124,12 @@ export default function Checkout() {
     navigate(`/confirmation?session_id=dummy_session_id`);
   };
 
+  // Generic input handler for formData
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   // Shipping cost handler
   const handleShippingMethodChange = (e) => {
     const selected = e.target.value;
@@ -132,20 +157,22 @@ export default function Checkout() {
                   Email
                 </label>
                 <input
-                  id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="email"
+                  name="email"
                   required
-                  ref={fieldRefs.email}
+                  pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                   className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
                     formErrors.email ? 'border-red-500' : 'border-black'
                   }`}
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  ref={fieldRefs.email}
                   placeholder="john@example.com"
                   aria-invalid={formErrors.email ? 'true' : 'false'}
                 />
                 {formErrors.email && (
-                  <span className="text-xs text-red-600">{formErrors.email}</span>
+                  <span className="text-red-500 text-xs">{formErrors.email}</span>
                 )}
               </div>
               <div>
@@ -153,17 +180,23 @@ export default function Checkout() {
                   Phone (optional)
                 </label>
                 <input
-                  id="phone"
                   type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  ref={fieldRefs.phone}
+                  id="phone"
+                  name="phone"
+                  required={false}
+                  pattern="^\+?[0-9\s\-().]{7,15}$"
                   className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
                     formErrors.phone ? 'border-red-500' : 'border-black'
                   }`}
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  ref={fieldRefs.phone}
                   placeholder="(123) 456-7890"
                   aria-invalid={formErrors.phone ? 'true' : 'false'}
                 />
+                {formErrors.phone && (
+                  <span className="text-red-500 text-xs">{formErrors.phone}</span>
+                )}
                 <p className="text-sm text-gray-500 mt-1">Used only for delivery updates and order issues.</p>
               </div>
             </section>
@@ -179,8 +212,9 @@ export default function Checkout() {
                 <input
                   id="fullName"
                   type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
                   required
                   ref={fieldRefs.fullName}
                   className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
@@ -190,7 +224,7 @@ export default function Checkout() {
                   aria-invalid={formErrors.fullName ? 'true' : 'false'}
                 />
                 {formErrors.fullName && (
-                  <span className="text-xs text-red-600">{formErrors.fullName}</span>
+                  <span className="text-red-500 text-xs">{formErrors.fullName}</span>
                 )}
               </div>
               <div>
@@ -211,7 +245,7 @@ export default function Checkout() {
                   aria-invalid={formErrors.shippingStreet ? 'true' : 'false'}
                 />
                 {formErrors.shippingStreet && (
-                  <span className="text-xs text-red-600">{formErrors.shippingStreet}</span>
+                  <span className="text-red-500 text-xs">{formErrors.shippingStreet}</span>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -233,7 +267,7 @@ export default function Checkout() {
                     aria-invalid={formErrors.shippingCity ? 'true' : 'false'}
                   />
                   {formErrors.shippingCity && (
-                    <span className="text-xs text-red-600">{formErrors.shippingCity}</span>
+                    <span className="text-red-500 text-xs">{formErrors.shippingCity}</span>
                   )}
                 </div>
                 <div>
@@ -319,6 +353,7 @@ export default function Checkout() {
                     value={shippingZip}
                     onChange={(e) => setShippingZip(e.target.value)}
                     required
+                    pattern="[A-Za-z0-9 ]{3,10}"
                     ref={fieldRefs.shippingZip}
                     className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
                       formErrors.shippingZip ? 'border-red-500' : 'border-black'
@@ -327,7 +362,7 @@ export default function Checkout() {
                     aria-invalid={formErrors.shippingZip ? 'true' : 'false'}
                   />
                   {formErrors.shippingZip && (
-                    <span className="text-xs text-red-600">{formErrors.shippingZip}</span>
+                    <span className="text-red-500 text-xs">{formErrors.shippingZip}</span>
                   )}
                 </div>
                 <div>
@@ -348,7 +383,7 @@ export default function Checkout() {
                     aria-invalid={formErrors.shippingCountry ? 'true' : 'false'}
                   />
                   {formErrors.shippingCountry && (
-                    <span className="text-xs text-red-600">{formErrors.shippingCountry}</span>
+                    <span className="text-red-500 text-xs">{formErrors.shippingCountry}</span>
                   )}
                 </div>
               </div>
@@ -410,7 +445,7 @@ export default function Checkout() {
                       aria-invalid={formErrors.billingName ? 'true' : 'false'}
                     />
                     {formErrors.billingName && (
-                      <span className="text-xs text-red-600">{formErrors.billingName}</span>
+                      <span className="text-red-500 text-xs">{formErrors.billingName}</span>
                     )}
                   </div>
                   <div>
@@ -431,7 +466,7 @@ export default function Checkout() {
                       aria-invalid={formErrors.billingStreet ? 'true' : 'false'}
                     />
                     {formErrors.billingStreet && (
-                      <span className="text-xs text-red-600">{formErrors.billingStreet}</span>
+                      <span className="text-red-500 text-xs">{formErrors.billingStreet}</span>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -453,7 +488,7 @@ export default function Checkout() {
                         aria-invalid={formErrors.billingCity ? 'true' : 'false'}
                       />
                       {formErrors.billingCity && (
-                        <span className="text-xs text-red-600">{formErrors.billingCity}</span>
+                        <span className="text-red-500 text-xs">{formErrors.billingCity}</span>
                       )}
                     </div>
                     <div>
@@ -539,6 +574,7 @@ export default function Checkout() {
                         value={billingZip}
                         onChange={(e) => setBillingZip(e.target.value)}
                         required
+                        pattern="[A-Za-z0-9 ]{3,10}"
                         ref={fieldRefs.billingZip}
                         className={`w-full border bg-white px-4 py-2 text-sm tracking-wide placeholder-gray-500 ${
                           formErrors.billingZip ? 'border-red-500' : 'border-black'
@@ -547,7 +583,7 @@ export default function Checkout() {
                         aria-invalid={formErrors.billingZip ? 'true' : 'false'}
                       />
                       {formErrors.billingZip && (
-                        <span className="text-xs text-red-600">{formErrors.billingZip}</span>
+                        <span className="text-red-500 text-xs">{formErrors.billingZip}</span>
                       )}
                     </div>
                     <div>
@@ -568,7 +604,7 @@ export default function Checkout() {
                         aria-invalid={formErrors.billingCountry ? 'true' : 'false'}
                       />
                       {formErrors.billingCountry && (
-                        <span className="text-xs text-red-600">{formErrors.billingCountry}</span>
+                        <span className="text-red-500 text-xs">{formErrors.billingCountry}</span>
                       )}
                     </div>
                   </div>

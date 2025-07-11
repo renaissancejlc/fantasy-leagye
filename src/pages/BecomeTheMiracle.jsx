@@ -89,7 +89,7 @@ export default function BecomeTheMiracle() {
         <section id='preview' className="max-w-5xl mx-auto text-center mb-20 border-t border-black pt-2">
           <h2 className="text-3xl font-extrabold uppercase tracking-widest border-b-4 border-black inline-block pb-1">Check it out</h2> 
           <p className="text-lg flex items-center justify-center gap-2">
-            Tap to turn the pages and reveal the contents and introduction:
+            Tap the pages to turn and reveal the contents and introduction:
             <span className="animate-bounce text-2xl text-maroon-700">↓</span>
           </p>
 

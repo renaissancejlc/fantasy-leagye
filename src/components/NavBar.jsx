@@ -39,6 +39,18 @@ export default function NavBar() {
     {
       title: "How to Become the Miracle the World is Waiting For",
       path: "/become-the-miracle"
+    },
+    {
+      title: "The Aligned Hustle",
+      path: "/books#upcoming"
+    },
+    {
+      title: "The Aligned Healer",
+      path: "/books#upcoming"
+    },
+    {
+      title: "The Overflow Effect",
+      path: "/books#upcoming"
     }
   ];
 
@@ -48,7 +60,11 @@ export default function NavBar() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target) &&
+        !event.target.closest('.search-result-link')
+      ) {
         setSearchOpen(false);
         setQuery('');
       }
@@ -90,7 +106,7 @@ export default function NavBar() {
                   <li key={book.title}>
                     <Link
                       to={book.path}
-                      className="block px-4 py-2 hover:bg-black hover:text-white transition-colors duration-200"
+                      className="block px-4 py-2 hover:bg-black hover:text-white transition-colors duration-200 search-result-link"
                       onClick={() => {
                         setQuery('');
                         setSearchOpen(false);

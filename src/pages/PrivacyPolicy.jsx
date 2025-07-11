@@ -1,4 +1,3 @@
-
 import React from "react";
 import Navbar from "../components/NavBar";
 import Footer from "../components/Footer";
@@ -14,7 +13,7 @@ export default function PrivacyPolicy() {
           <p>Last updated: July 2025</p>
 
           <p>
-            This Privacy Policy describes how your personal information is collected, used, and shared when you visit or make a purchase from our website (the “Site”), powered by Shopify.
+            This Privacy Policy describes how your personal information is collected, used, and shared when you visit or make a purchase from our website (the “Site”), with payments securely processed by Stripe.
           </p>
 
           <h2 className="text-2xl font-bold mt-10">1. Personal Information We Collect</h2>
@@ -39,8 +38,8 @@ export default function PrivacyPolicy() {
           <h2 className="text-2xl font-bold mt-10">3. Sharing Your Personal Information</h2>
           <p>
             We share your Personal Information with third parties to help us use your Personal Information, as described above. 
-            For example, we use Shopify to power our online store — you can read more about how Shopify uses your Personal Information 
-            <a href="https://www.shopify.com/legal/privacy" target="_blank" rel="noreferrer" className="underline ml-1">here</a>.
+            For example, we use Stripe to process payments — you can read more about how Stripe uses your Personal Information 
+            <a href="https://stripe.com/privacy" target="_blank" rel="noreferrer" className="underline ml-1">here</a>.
           </p>
 
           <h2 className="text-2xl font-bold mt-10">4. Your Rights</h2>
