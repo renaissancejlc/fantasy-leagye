@@ -1,14 +1,9 @@
 import React from 'react'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import RadiantBackground from './RadiantBackground';
 
 export default function Hero() {
   const [showReflection, setShowReflection] = React.useState(false);
-  // Parallax transforms for paint backgrounds
-  const { scrollY } = useScroll();
-  const ySlow = useTransform(scrollY, [0, 1000], [0, -50]);
-  const yMedium = useTransform(scrollY, [0, 1000], [0, -100]);
-  const yFast = useTransform(scrollY, [0, 1000], [0, -150]);
   return (
     <>
       <AnimatePresence>
@@ -30,7 +25,7 @@ export default function Hero() {
               </svg>
             </button>
             <motion.h2
-              className="text-4xl md:text-6xl font-bold uppercase mb-6 text-center transition-all duration-700 ease-in-out hover:opacity-90"
+              className="text-4xl md:text-6xl font-bold uppercase mb-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
@@ -38,7 +33,7 @@ export default function Hero() {
               You’re not waiting for the miracle.
             </motion.h2>
             <motion.p
-              className="text-2xl md:text-3xl italic text-center max-w-2xl transition-all duration-700 ease-in-out hover:opacity-90"
+              className="text-2xl md:text-3xl italic text-center max-w-2xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.8 }}
@@ -53,9 +48,9 @@ export default function Hero() {
       {/* HERO SECTION */}
       <RadiantBackground>
         <section className="relative min-h-screen flex items-center justify-center px-12 pt-28">
-          <div className="absolute top-6 left-6 text-[10rem] font-bold text-white opacity-10 leading-none z-0 transition-all duration-700 ease-in-out hover:opacity-90">MIRACLE</div>
-          <div className="absolute bottom-[10%] right-[-5%] text-[8rem] font-black text-white opacity-10 rotate-[12deg] leading-none z-0 transition-all duration-700 ease-in-out hover:opacity-90">BECOME</div>
-          <div className="absolute z-0 left-[65%] top-[50%] w-[280px] md:w-[320px] lg:w-[360px] shadow-2xl rounded-md -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-700 ease-in-out hover:opacity-90">
+          <div className="absolute top-6 left-6 text-[10rem] font-bold text-white opacity-10 leading-none z-0">MIRACLE</div>
+          <div className="absolute bottom-[10%] right-[-5%] text-[8rem] font-black text-white opacity-10 rotate-[12deg] leading-none z-0">BECOME</div>
+          <div className="absolute z-0 left-[65%] top-[50%] w-[280px] md:w-[320px] lg:w-[360px] shadow-2xl rounded-md -translate-x-1/2 -translate-y-1/2 pointer-events-none">
             <img
               src="/images/miracleCover.png"
               alt="Book Cover"
@@ -67,7 +62,7 @@ export default function Hero() {
             <div className="relative flex-1" style={{ fontFamily: "'Chiefland Variable', serif" }}>
               <div className="relative z-10">
                 <h1
-                  className="text-[12vw] leading-[0.85] font-serif font-bold text-black select-none transition-all duration-700 ease-in-out hover:opacity-90"
+                  className="text-[12vw] leading-[0.85] font-serif font-bold text-black select-none"
                   style={{ lineHeight: 0.85 }}
                 >
                   BECOME THE MIRACLE
@@ -87,17 +82,14 @@ export default function Hero() {
         </section>
       </RadiantBackground>
 
-      {/* <div className="w-full h-16 bg-[url('/images/torn-paper.svg')] bg-repeat-x bg-bottom"></div> */}
+      <div className="w-full h-16 bg-[url('/images/torn-paper.svg')] bg-repeat-x bg-bottom"></div>
 
-      <section className="relative text-black py-16 px-8">
-        <div className="absolute top-[40%] left-[-5%] text-[8rem] font-black text-black opacity-5 rotate-[6deg] pointer-events-none z-0 mix-blend-multiply">
+      <section className="relative text-black py-32 px-8 border-t border-black">
+        <div className="absolute top-[40%] left-[-5%] text-[8rem] font-black text-black opacity-5 rotate-[6deg] pointer-events-none z-0">
           REMEMBER
         </div>
-        <motion.div
-          style={{ y: ySlow }}
-          className="absolute -top-12 -left-16 w-80 h-80 bg-[#fcd34d] opacity-20 rotate-[15deg] z-0"
-        />
-        <div className="flex flex-col md:flex-row items-center gap-12 px-8 md:px-24 relative z-10 max-w-5xl mx-auto">
+        <div className="absolute -top-12 -left-16 w-80 h-80 bg-[#fcd34d] opacity-20 rotate-[15deg] z-0"></div>
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col md:flex-row items-center md:items-start gap-12">
           <div className="flex-1">
             <div className="inline-block bg-black text-white text-xs px-2 py-1 uppercase tracking-wide rotate-[-6deg] mb-3">
               Manifesto
@@ -114,7 +106,7 @@ export default function Hero() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.7 }}
-                className="text-4xl font-bold uppercase tracking-wider mb-6 transition-all duration-700 ease-in-out hover:opacity-90"
+                className="text-4xl font-bold uppercase tracking-wider mb-6"
               >
                 You Are the Miracle
               </motion.h2>
@@ -130,12 +122,9 @@ export default function Hero() {
         </div>
       </section>
 
-      <section className="relative text-black py-16 px-8">
-        <motion.div
-          style={{ y: yFast }}
-          className="absolute bottom-0 right-[-60px] w-80 h-80 opacity-40 rounded-full blur-2xl rotate-[-10deg] z-0 mix-blend-multiply"
-        />
-        <div className="flex flex-col md:flex-row-reverse items-center md:items-start md:text-right gap-12 px-8 md:px-24 relative z-10 max-w-5xl mx-auto">
+      <section className="relative  text-black py-32 px-8 border-t border-black">
+        <div className="absolute bottom-0 right-[-60px] w-80 h-80 bg-[#f472b6] opacity-20 rounded-full blur-2xl rotate-[-10deg] z-0"></div>
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center md:items-start md:text-right gap-12">
           <div className="flex-1">
             <div className="inline-block bg-black text-white text-xs px-2 py-1 uppercase tracking-wide rotate-[8deg] mb-3">
               Excerpt
@@ -147,28 +136,25 @@ export default function Hero() {
               transition={{ duration: 0.8 }}
               className="border-t-4 border-b-4 border-black py-6 px-4 bg-white shadow-[4px_4px_0_rgba(0,0,0,1)] rotate-[1deg]"
             >
-              <blockquote className="italic text-2xl leading-loose tracking-tight max-w-xl mb-6">
+              <blockquote className="italic text-2xl leading-loose tracking-tight">
                 “The scar doesn’t block the miracle. But hiding it might.”<br />
                 “You don’t just change the world around you. You begin to live in a new one.”
               </blockquote>
             </motion.div>
           </div>
-          <div className="w-56 h-56 bg-purple-200 rounded-full shadow-md border-4 border-black rotate-[6deg] transition-all duration-700 ease-in-out hover:opacity-90"></div>
+          <div className="w-56 h-56 bg-purple-200 rounded-full shadow-md border-4 border-black rotate-[6deg]"></div>
         </div>
       </section>
 
-      <section className="relative text-black py-16 px-8 text-center">
-        <div className="absolute top-[20%] right-[-5%] text-[6rem] font-black text-black opacity-5 -rotate-[8deg] pointer-events-none z-0 mix-blend-multiply">
+      <section className="relative  text-black py-32 px-8 text-center border-t border-black">
+        <div className="absolute top-[20%] right-[-5%] text-[6rem] font-black text-black opacity-5 -rotate-[8deg] pointer-events-none z-0">
           BEGIN
         </div>
-        <motion.div
-          style={{ y: yMedium }}
-          className="absolute top-0 left-[50%] transform -translate-x-1/2 w-96 h-96 bg-yellow-100 opacity-25 rounded-full blur-2xl rotate-[12deg] z-0"
-        />
+        <div className="absolute top-0 left-[50%] transform -translate-x-1/2 w-96 h-96 bg-yellow-100 opacity-25 rounded-full blur-2xl rotate-[12deg] z-0"></div>
         <div className="relative z-10 max-w-3xl mx-auto">
-          {/* <div className="absolute -top-10 left-1/4 text-[7rem] font-black text-black opacity-10 rotate-[4deg] z-0">
+          <div className="absolute -top-10 left-1/4 text-[7rem] font-black text-black opacity-10 rotate-[4deg] z-0">
             LIGHT
-          </div> */}
+          </div>
           <div className="inline-block bg-black text-white text-xs px-2 py-1 uppercase tracking-wide rotate-[-8deg] mb-4 relative z-10">
             Invitation
           </div>
@@ -177,7 +163,7 @@ export default function Hero() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="text-3xl font-bold uppercase tracking-wider mb-4 relative z-10 transition-all duration-700 ease-in-out hover:opacity-90"
+            className="text-3xl font-bold uppercase tracking-wider mb-4 relative z-10"
           >
             Your Invitation
           </motion.h2>
@@ -191,25 +177,22 @@ export default function Hero() {
           >
             Start Reading
           </a>
+          <div className="mt-4 w-full border-t-[2px] border-dashed border-black relative z-10"></div>
         </div>
       </section>
-
       {/* Learn More Section */}
-      <section className="relative text-black py-16 px-8">
-        {/* <div className="absolute top-10 right-[-5%] text-[6rem] font-black text-black opacity-5 rotate-[6deg] pointer-events-none z-0 mix-blend-multiply">
+      <section className="relative  text-black py-32 px-8 border-t border-black">
+        <div className="absolute top-10 right-[-5%] text-[6rem] font-black text-black opacity-5 rotate-[6deg] pointer-events-none z-0">
           LEARN
-        </div> */}
-        <motion.div
-          style={{ y: ySlow }}
-          className="absolute top-[30%] left-[-6%] w-80 h-80 bg-[#fde68a] opacity-30 rotate-[-8deg] rounded-full blur-2xl z-0 mix-blend-multiply"
-        />
-        <div className="flex flex-col md:flex-row items-center gap-12 px-8 md:px-24 relative z-10 max-w-5xl mx-auto">
+        </div>
+        <div className="absolute top-[30%] left-[-6%] w-80 h-80 bg-[#fde68a] opacity-30 rotate-[-8deg] rounded-full blur-2xl z-0"></div>
+        <div className="relative z-10 max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="bg-white border-4 border-black p-6 shadow-[6px_6px_0_rgba(0,0,0,1)] rotate-[2deg] transition-all duration-700 ease-in-out hover:opacity-90 flex-1"
+            className="bg-white border-4 border-black p-6 shadow-[6px_6px_0_rgba(0,0,0,1)] rotate-[2deg]"
           >
             <h2 className="text-3xl font-bold uppercase tracking-wider mb-4">
               Beyond the Page
@@ -225,7 +208,7 @@ export default function Hero() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white border-4 border-black p-6 shadow-[6px_6px_0_rgba(0,0,0,1)] -rotate-[2deg] transition-all duration-700 ease-in-out hover:opacity-90 flex-1"
+            className="bg-white border-4 border-black p-6 shadow-[6px_6px_0_rgba(0,0,0,1)] -rotate-[2deg]"
           >
             <h2 className="text-3xl font-bold uppercase tracking-wider mb-4">
               Inner Invitation
@@ -238,9 +221,8 @@ export default function Hero() {
           </motion.div>
         </div>
       </section>
-
       {/* Message of the Day Section */}
-      <section className="relative bg-black text-white py-12 px-8 text-center">
+      <section className="relative bg-black text-white py-24 px-8 border-t border-white text-center">
         <div className="absolute inset-0 z-0 bg-[url('/images/noise.png')] opacity-10 pointer-events-none"></div>
         <div className="relative z-10 max-w-3xl mx-auto">
           <button
@@ -255,7 +237,7 @@ export default function Hero() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="text-4xl font-bold uppercase tracking-wider mb-4 transition-all duration-700 ease-in-out hover:opacity-90"
+              className="text-4xl font-bold uppercase tracking-wider mb-4"
             >
               Today’s Reflection
             </motion.h2>
