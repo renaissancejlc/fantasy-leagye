@@ -53,22 +53,12 @@ export default function Home() {
             <>
             {/* HERO SECTION */}
             <RadiantBackground>
-              <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-12 pt-28">
-                <div className="absolute top-6 left-6 text-[10rem] font-bold text-white opacity-10 leading-none z-0">MIRACLE</div>
-                <div className="absolute bottom-[10%] right-[-5%] text-[8rem] font-black text-white opacity-10 rotate-[12deg] leading-none z-0">BECOME</div>
-                <div className="absolute z-0 left-[65%] top-[50%] w-[280px] md:w-[320px] lg:w-[360px] shadow-2xl rounded-md -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                  <img
-                    src="/images/miracleCover.png"
-                    alt="Book Cover"
-                    className="w-full h-auto"
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="max-w-7xl w-full flex flex-wrap items-center justify-between gap-6 sm:gap-12">
-                  <div className="relative flex-1" style={{ fontFamily: "'Chiefland Variable', serif" }}>
+              <section className="relative min-h-screen flex flex-col lg:flex-row items-center justify-center px-4 sm:px-12 pt-28 gap-12">
+                <div className="max-w-7xl w-full flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-12">
+                  <div className="flex-1 order-2 lg:order-1" style={{ fontFamily: "'Chiefland Variable', serif" }}>
                     <div className="relative z-10">
                       <h1
-                        className="text-[12vw] leading-[0.85] font-serif font-bold text-black select-none"
+                        className="text-[10vw] leading-[0.85] font-serif font-bold text-black select-none"
                         style={{ lineHeight: 0.85 }}
                       >
                         BECOME THE MIRACLE
@@ -78,16 +68,23 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col flex-shrink-0 max-w-sm text-right pr-8 z-10 px-4 sm:px-0">
+                  <div className="flex flex-col flex-shrink-0 max-w-sm text-right pr-8 z-10 px-4 sm:px-0 order-3">
                     <p className="italic text-xl md:text-2xl text-gray-800 mb-6" style={{ fontFamily: "'Chiefland Variable', serif" }}>
-                      Awaken your gift. <br></br>Answer the call. <br></br>Become the light.
+                      Awaken your gift. <br />Answer the call. <br />Become the light.
                     </p>
                     <button className="px-6 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-900 transition duration-300 w-fit self-end">
                       Pre order Now
                     </button>
                   </div>
+                  <div className="relative z-0 w-[280px] md:w-[320px] lg:w-[360px] pointer-events-none order-1 lg:order-2">
+                    <img
+                      src="/images/miracleCover.png"
+                      alt="Book Cover"
+                      className="w-full h-auto shadow-2xl rounded-md"
+                      aria-hidden="true"
+                    />
+                  </div>
                 </div>
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-24 h-[2px] bg-black opacity-20 rounded-full" />
               </section>
             </RadiantBackground>
       
