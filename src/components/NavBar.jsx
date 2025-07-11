@@ -20,8 +20,8 @@ export default function NavBar() {
         </button>
       </div>
 
-      <div className="flex justify-center">
-        <ul className="flex space-x-16 text-sm text-gray-600 tracking-wide font-light mt-4 font-sans uppercase">
+      <div className="flex justify-center overflow-x-auto sm:overflow-visible">
+        <ul className="flex space-x-8 sm:space-x-16 text-sm text-gray-600 tracking-wide font-light mt-4 font-sans uppercase px-4 sm:px-0">
           <li className="relative cursor-pointer hover:text-black hover:after:absolute hover:after:left-0 hover:after:bottom-0 hover:after:h-[1px] hover:after:w-full hover:after:bg-black transition-all duration-200 ease-in-out">
             <Link to="/">Home</Link>
           </li>
