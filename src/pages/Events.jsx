@@ -31,9 +31,9 @@ const Events = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="text-[10vw] md:text-[7vw] font-black uppercase text-center mb-16 leading-none tracking-tight"
+                className="text-[6vw] md:text-[4.5vw] font-black uppercase text-center mb-16 leading-none tracking-tight transition-all duration-100 hover:italic"
               >
-                Speaking
+                - Speaking -
               </motion.h1>
             </section>
 

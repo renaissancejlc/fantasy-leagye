@@ -25,9 +25,9 @@ export default function Books() {
             </div>
             <div className="relative z-10 flex flex-col items-center text-center md:items-start md:text-left bg-white/80 backdrop-blur-sm p-1 md:p-1 rounded-md ml-[-1rem] md:ml-[-1.5rem]">
               <div className="relative w-full text-center md:text-left font-black text-[10vw] md:text-[7vw] tracking-tight leading-none z-10">
-                <span className="block text-[#000000] drop-shadow-md">BECOME</span>
-                <span className="block text-[#000000] -mt-2 ml-6 md:ml-10 drop-shadow-md">THE</span>
-                <span className="block text-[#000000] -mt-2 ml-12 md:ml-20 drop-shadow-md">
+  <span className="block text-[#000000] drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">BECOME</span>
+                <span className="block text-[#000000] -mt-2 ml-6 md:ml-10 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">THE</span>
+                <span className="block text-[#000000] -mt-2 ml-12 md:ml-20 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
                   MIRACLE
                   <span className="text-yellow-400">.</span>
                 </span>

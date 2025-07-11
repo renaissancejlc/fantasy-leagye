@@ -16,7 +16,11 @@ export default function About() {
         <section className="grid md:grid-cols-2 gap-12 items-center">
           <img src='./images/doug1' alt="Doug Cooper" className="rounded-xl shadow-xl w-full max-w-sm mx-auto" />
           <div>
-            <h1 className="text-5xl font-bold mb-4 font-fraunces site-title">Meet Doug Cooper</h1>
+            <h1 className="text-5xl font-bold mb-4 font-fraunces site-title transition-all duration-100 group hover:italic">
+              <span className="group-hover:opacity-100 opacity-0 transition-opacity duration-100">- </span>
+              Meet Doug Cooper
+              <span className="group-hover:opacity-100 opacity-0 transition-opacity duration-100"> -</span>
+            </h1>
             <p className="text-lg leading-relaxed">
               Author. Speaker. Storyteller. Doug believes in the power of words to spark transformation.
             </p>

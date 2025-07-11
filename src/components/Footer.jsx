@@ -1,5 +1,6 @@
 import React from 'react';
 import { Facebook, Instagram, Youtube, Twitter } from 'lucide-react';
+import { FaTiktok } from 'react-icons/fa';
 
 export default function Footer() {
   return (
@@ -24,8 +25,9 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              {/* TikTok icon not available in Lucide, consider using a custom SVG or another icon set */}
-              <span className="h-5 w-5 bg-white rounded-sm inline-block" title="TikTok"></span>
+              <a href="#" aria-label="TikTok">
+                <FaTiktok className="h-5 w-5 hover:text-gray-400 transition" />
+              </a>
             </li>
             <li>
               <a href="#" aria-label="Twitter">

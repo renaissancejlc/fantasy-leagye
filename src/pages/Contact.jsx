@@ -18,10 +18,9 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="text-[10vw] md:text-[7vw] font-black uppercase text-center mb-16 leading-none tracking-tight"
+                className="text-[6vw] md:text-[4vw] font-black uppercase text-center mb-16 leading-none tracking-tight hover:italic hover:scale-105 transition-transform duration-300"
               >
-                Contact
-                
+                - Contact -
               </motion.h1>
               <p className="text-center max-w-xl mx-auto text-lg text-gray-600 mt-4">
           Want to book Doug for a talk, ask a question, or share your story? Drop a message below.
