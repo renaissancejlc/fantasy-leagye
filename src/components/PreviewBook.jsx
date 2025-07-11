@@ -8,7 +8,7 @@ const Page = React.forwardRef(({ children }, ref) => {
   return (
     <div
       ref={ref}
-      className="bg-white border border-black shadow-lg rounded-md w-full h-full p-8 flex flex-col justify-center items-center font-serif text-xl leading-loose text-center"
+      className="bg-white shadow-sm rounded w-full h-full p-1 flex flex-col justify-center items-center font-serif text-xl leading-loose text-center"
     >
       {children}
     </div>
@@ -32,7 +32,7 @@ const PreviewBook = () => {
         className="shadow-xl"
       >
         <Page>
-          <img src={miracleCover} alt="Book Cover" className="w-full h-full object-cover rounded-md" />
+          <img src={miracleCover} alt="Book Cover" className="w-full h-full object-cover m-0 p-0" />
         </Page>
         <Page>
           <h2 className="text-2xl font-bold mb-4">Contents</h2>

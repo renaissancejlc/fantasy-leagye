@@ -11,7 +11,7 @@ export default function Contact() {
     <>
       <Navbar />
           <main className="w-full text-black border-t-4 border-black pl-0 ml-0">
-            <section className="bg-white px-4 md:px-8 pt-14 pb-12 relative">
+            <section className="bg-white px-4 md:px-8 pt-14 pb-6 relative">
               <div className="absolute left-0 top-20 rotate-[-90deg] text-xs tracking-widest uppercase text-black/60">
               </div>
               <motion.h1
@@ -22,13 +22,13 @@ export default function Contact() {
               >
                 - Contact -
               </motion.h1>
-              <p className="text-center max-w-xl mx-auto text-lg text-gray-600 mt-4">
-          Want to book Doug for a talk, ask a question, or share your story? Drop a message below.
-        </p>
+              <p className="text-center max-w-xl mx-auto text-lg text-gray-600 mt-2">
+                Want to book Doug for a talk, ask a question, or share your story? Drop a message below.
+              </p>
             </section>
         
 
-        <div className="relative z-20 max-w-4xl mx-auto p-8 mt-12 bg-white shadow-lg rounded-lg">
+        <div className="relative z-20 max-w-4xl mx-auto p-8 mt-[-2rem] bg-white shadow-lg rounded-lg">
           <form
             onSubmit={async (e) => {
               e.preventDefault();

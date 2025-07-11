@@ -248,6 +248,8 @@ export default function Hero() {
         </div>
         <div className="absolute bottom-0 left-0 w-full h-6 bg-[url('/images/torn-paper.svg')] bg-repeat-x bg-bottom opacity-100 z-20"></div>
       </section>
+            <div className="w-full h-[1px] bg-gray-300 opacity-70" />
+
       </>
       )}
     </>
