@@ -623,8 +623,8 @@ export default function Checkout() {
                 <div className="flex items-center gap-4 mt-2 mb-2">
                   <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" className="h-6 w-auto" />
                   <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6 w-auto" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Discover_Card_logo.svg" alt="Discover" className="h-6 w-auto" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/AMEX_Logo.svg" alt="American Express" className="h-6 w-auto" />
+                  <img src="./images/discover.jpg" alt="Discover" className="h-6 w-auto" />
+                  <img src="./images/amex.png" alt="American Express" className="h-6 w-auto" />
                 </div>
                 {/* <input ... /> */}
               </div>
