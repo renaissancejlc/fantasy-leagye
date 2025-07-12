@@ -15,6 +15,7 @@ export default function NavBar() {
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
   const searchRef = useRef(null);
 
   const players = [
@@ -56,66 +57,93 @@ export default function NavBar() {
 
   return (
     <nav className="w-full bg-black text-white px-6 py-4 shadow-md font-sans">
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="text-2xl font-extrabold tracking-wide uppercase hover:text-lime-400 transition-colors">
-            League Hub
-          </Link>
-        </div>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-2xl font-extrabold tracking-wide uppercase hover:text-lime-400 transition-colors">
+              League Hub
+            </Link>
+          </div>
 
-        <div className="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest">
-          <Link to="/" className="hover:text-lime-400 transition-colors">Home</Link>
-          <Link to="/teams" className="hover:text-lime-400 transition-colors">Teams</Link>
-          <Link to="/matchups" className="hover:text-lime-400 transition-colors">Matchups</Link>
-          <Link to="/rankings" className="hover:text-lime-400 transition-colors">Rankings</Link>
-          <Link to="/history" className="hover:text-lime-400 transition-colors">History</Link>
-          <Link to="/prize" className="hover:text-lime-400 transition-colors">Prize</Link>
-        </div>
-
-        <div className="flex items-center gap-4">
+          {/* Hamburger for mobile */}
           <button
-            aria-label="Search"
-            onClick={() => setSearchOpen(prev => !prev)}
-            className="hover:text-lime-400 transition-colors"
+            className="md:hidden focus:outline-none"
+            onClick={() => setMobileOpen(prev => !prev)}
+            aria-label="Toggle navigation menu"
           >
-            <Search className="w-5 h-5" />
+            <div className="space-y-1">
+              <span className="block w-6 h-0.5 bg-white"></span>
+              <span className="block w-6 h-0.5 bg-white"></span>
+              <span className="block w-6 h-0.5 bg-white"></span>
+            </div>
           </button>
-        </div>
-      </div>
 
-      {searchOpen && (
-        <div className="mt-4 max-w-7xl mx-auto">
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search for a player..."
-            className="w-full bg-gray-900 text-white border border-lime-400 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400"
-          />
-          {query && (
-            <ul className="bg-gray-800 border border-lime-400 mt-2 rounded-md max-h-48 overflow-y-auto text-sm text-white">
-              {filtered.length > 0 ? (
-                filtered.map(player => (
-                  <li key={player.name}>
-                    <Link
-                      to={player.path}
-                      className="block px-4 py-2 hover:bg-lime-600 hover:text-black transition-colors search-result-link"
-                      onClick={() => {
-                        setQuery('');
-                        setSearchOpen(false);
-                      }}
-                    >
-                      {player.name}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <li className="px-4 py-2 text-gray-400 italic">No matches found</li>
-              )}
-            </ul>
-          )}
+          <div className="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest">
+            <Link to="/" className="hover:text-lime-400 transition-colors">Home</Link>
+            <Link to="/teams" className="hover:text-lime-400 transition-colors">Teams</Link>
+            <Link to="/matchups" className="hover:text-lime-400 transition-colors">Matchups</Link>
+            <Link to="/rankings" className="hover:text-lime-400 transition-colors">Rankings</Link>
+            <Link to="/history" className="hover:text-lime-400 transition-colors">History</Link>
+            <Link to="/prize" className="hover:text-lime-400 transition-colors">Prize</Link>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              aria-label="Search"
+              onClick={() => setSearchOpen(prev => !prev)}
+              className="hover:text-lime-400 transition-colors"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="flex flex-col gap-4 mt-4 md:hidden text-sm font-semibold uppercase tracking-widest">
+            <Link to="/" className="hover:text-lime-400 transition-colors">Home</Link>
+            <Link to="/teams" className="hover:text-lime-400 transition-colors">Teams</Link>
+            <Link to="/matchups" className="hover:text-lime-400 transition-colors">Matchups</Link>
+            <Link to="/rankings" className="hover:text-lime-400 transition-colors">Rankings</Link>
+            <Link to="/history" className="hover:text-lime-400 transition-colors">History</Link>
+            <Link to="/prize" className="hover:text-lime-400 transition-colors">Prize</Link>
+          </div>
+        )}
+
+        {searchOpen && (
+          <div className="mt-4">
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search for a player..."
+              className="w-full bg-gray-900 text-white border border-lime-400 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400"
+            />
+            {query && (
+              <ul className="bg-gray-800 border border-lime-400 mt-2 rounded-md max-h-48 overflow-y-auto text-sm text-white">
+                {filtered.length > 0 ? (
+                  filtered.map(player => (
+                    <li key={player.name}>
+                      <Link
+                        to={player.path}
+                        className="block px-4 py-2 hover:bg-lime-600 hover:text-black transition-colors search-result-link"
+                        onClick={() => {
+                          setQuery('');
+                          setSearchOpen(false);
+                        }}
+                      >
+                        {player.name}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-2 text-gray-400 italic">No matches found</li>
+                )}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
