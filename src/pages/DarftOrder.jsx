@@ -79,33 +79,7 @@ export default function DarftOrder() {
           </a>
         </div>
 
-        {/* 2025 Home Run Derby Participants Section */}
-        <div className="max-w-5xl mx-auto mt-20 text-left">
-          <h2 className="text-2xl font-bold uppercase text-lime-400 mb-6 text-center">2025 Home Run Derby Participants</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { name: 'Cal Raleigh', team: 'Seattle Mariners', image: 'cal-raleigh.jpg' },
-              { name: 'James Wood', team: 'Washington Nationals', image: 'james-wood.jpg' },
-              { name: 'Byron Buxton', team: 'Minnesota Twins', image: 'byron-buxton.jpg' },
-              { name: 'Oneil Cruz', team: 'Pittsburgh Pirates', image: 'oneil-cruz.jpg' },
-              { name: 'Junior Caminero', team: 'Tampa Bay Rays', image: 'junior-caminero.jpg' },
-              { name: 'Brent Rooker', team: 'Oakland Athletics', image: 'brent-rooker.jpg' },
-              { name: 'Jazz Chisholm Jr.', team: 'Miami Marlins', image: 'jazz-chisholm-jr.jpg' },
-              { name: 'Matt Olson', team: 'Atlanta Braves', image: 'matt-olson.jpg' }
-            ].map((p, idx) => (
-              <div key={idx} className="bg-gray-900 p-4 rounded-lg shadow-lg text-center">
-                <img
-                  src={`/images/players/${p.image}`}
-                  alt={p.name}
-                  className="w-24 h-24 mx-auto rounded-full object-cover mb-4 border-2 border-lime-400"
-                />
-                <p className="font-semibold text-white">{p.name}</p>
-                <p className="text-sm text-gray-400">{p.team}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
+       
         <div className="max-w-3xl mx-auto bg-gray-900 rounded-lg shadow-lg p-6">
           <h3 className="text-xl font-bold uppercase text-lime-400 mb-1">Player Guesses</h3>
 
