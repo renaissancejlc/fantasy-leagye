@@ -45,6 +45,17 @@ export default function Prize() {
         <p className="text-gray-300 mb-2">
           Dues are $10 per player for the 2025 season. Your contribution goes toward engraving, trophy maintenance, and bragging rights.
         </p>
+        <p className="text-lime-300 mt-4">
+          Send your payment directly via Venmo:&nbsp;
+          <a 
+            href="https://venmo.com/reny-carr" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="underline text-lime-400 hover:text-lime-300"
+          >
+            @reny-carr
+          </a>
+        </p>
         <p className="text-red-400 mt-2 font-semibold flex items-center gap-2">
           <AlertTriangle size={18} /> Penalty: Failure to pay will result in loss of a first-round draft pick next season.
         </p>
