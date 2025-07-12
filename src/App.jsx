@@ -17,8 +17,19 @@ import Faq from './pages/Faq';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Confirmation from './pages/Confirmation';
+import Rules from './pages/Rules';
+import Prize from './pages/Prize';
+import Rankings from './pages/Rankings';
+import Teams from './pages/Teams';
+
 
 import { useLocation, Navigate } from 'react-router-dom';
+import DarftOrder from './pages/DarftOrder';
+import Timeline from './pages/Timeline';
+import PowerRankings from './pages/PowerRankings';
+import Matchup from './pages/Matchup';
+import History from './pages/History';
+
 
 function ProtectedConfirmation() {
   const location = useLocation();
@@ -54,19 +65,21 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/become-the-miracle" element={<BecomeTheMiracle />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-use" element={<TermsOfUse />} />
-            <Route path="/press" element={<Press />} />
-            <Route path="/faq" element={<Faq />} />
-            <Route path="/shipping-and-returns" element={<ShippingAndReturns />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/confirmation" element={<ProtectedConfirmation />} />
+
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/draft-order" element={<DarftOrder />} />
+            <Route path="/prize" element={<Prize />} />
+            <Route path="/timeline" element={<Timeline />} />
+            <Route path="/rankings" element={<Rankings />} />
+            <Route path="/power-rankings" element={<PowerRankings />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/matchups" element={<Matchup />} />
+            <Route path="/history" element={<History />} />
+
+
+
+
+
 
           </Routes>
         </Router>
