@@ -5,14 +5,14 @@ import { Trophy, ScrollText, DollarSign, AlertTriangle } from 'lucide-react';
 
 const members = [
   'Dad',
-  'Dustin Carr',
-  'Callie Everson',
-  'Kevin Carr',
+  'Dustin',
+  'Callie',
+  'Kevin',
   'Simon',
-  'River Carr',
-  'Christian Carr',
-  'Utsav Roommate',
-  'Tariq Muhammad',
+  'River',
+  'Christian',
+  'Utsav',
+  'Tariq',
   'Daisy',
   'Raphy'
 ];
