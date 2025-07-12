@@ -6,14 +6,14 @@ const DRAFT_DATE = new Date('2025-07-14T17:00:00-07:00');
 
 const players = [
   { name: 'Dad', guess: null },
-  { name: 'Dustin Carr', guess: { player: 'James Wood', homeruns: 49 } },
-  { name: 'Callie Everson', guess: { player: 'Cal Raleigh', homeruns: 52 } },
-  { name: 'Kevin Carr', guess: { player: 'Junior Caminero', homeruns: 50 } },
+  { name: 'Dustin', guess: { player: 'James Wood', homeruns: 49 } },
+  { name: 'Callie', guess: { player: 'Cal Raleigh', homeruns: 52 } },
+  { name: 'Kevin', guess: { player: 'Junior Caminero', homeruns: 50 } },
   { name: 'Simon', guess: { player: 'Matt Olson', homeruns: 50 } },
-  { name: 'River Carr', guess: null },
-  { name: 'Christian Carr', guess: { player: 'Oneil Cruz', homeruns: 57 } },
-  { name: 'Utsav Roommate', guess: null },
-  { name: 'Tariq Muhammad', guess: { player: 'Ronald Acuña Jr.', homeruns: 50 } },
+  { name: 'River', guess: null },
+  { name: 'Christian', guess: { player: 'Oneil Cruz', homeruns: 57 } },
+  { name: 'Utsav', guess: null },
+  { name: 'Tariq', guess: { player: 'Ronald Acuña Jr.', homeruns: 50 } },
   { name: 'Daisy', guess: null },
   { name: 'Raphy', guess: null }
 ];
