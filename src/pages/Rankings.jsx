@@ -28,11 +28,11 @@ export default function Rankings() {
           The season has begun. The slate is clean. Let the rankings begin.
         </p>
 
-        <div className="max-w-3xl mx-auto bg-gray-900 rounded-lg shadow-xl overflow-hidden">
-          <table className="w-full table-auto text-left text-gray-300">
-            <thead className="bg-gray-800 text-lime-400 uppercase text-sm">
+        <div className="max-w-4xl mx-auto bg-gray-900 rounded-xl shadow-2xl overflow-hidden">
+          <table className="w-full table-auto text-left text-gray-200">
+            <thead className="bg-gradient-to-r from-lime-600 via-lime-500 to-lime-400 text-black text-sm uppercase tracking-wide">
               <tr>
-                <th className="px-6 py-4">Rank</th>
+                <th className="px-6 py-4">#</th>
                 <th className="px-6 py-4">Player</th>
                 <th className="px-6 py-4">Record</th>
                 <th className="px-6 py-4">Total Points</th>
@@ -41,10 +41,15 @@ export default function Rankings() {
             <tbody>
               {players.map((player, index) => (
                 <tr key={index} className="border-t border-gray-700 hover:bg-gray-800 transition">
-                  <td className="px-6 py-4 font-bold text-lg text-lime-300">{index + 1}</td>
-                  <td className="px-6 py-4">{player.name}</td>
+                  <td className="px-6 py-4 font-extrabold text-xl text-lime-300">{index + 1}</td>
+                  <td className="px-6 py-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold uppercase">
+                      {player.name.charAt(0)}
+                    </div>
+                    <span className="text-lg font-medium">{player.name}</span>
+                  </td>
                   <td className="px-6 py-4">{player.record}</td>
-                  <td className="px-6 py-4">{player.points}</td>
+                  <td className="px-6 py-4 font-semibold text-lime-200">{player.points}</td>
                 </tr>
               ))}
             </tbody>

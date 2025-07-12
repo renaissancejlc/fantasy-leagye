@@ -16,7 +16,7 @@ export default function PowerRankings() {
           2025 Power Rankings
         </h1>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-12">
-          These aren’t just standings — this is *vibe-based supremacy*. Updated weekly by the Commissioner and league drama. Let the narratives unfold.
+          These aren’t official standings. Updated weekly by the Commissioner and league drama. 
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">

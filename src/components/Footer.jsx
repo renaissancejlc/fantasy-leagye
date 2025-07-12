@@ -21,7 +21,7 @@ export default function Footer() {
           <ul className="space-y-2">
             <li><a href="/champions" className="hover:text-lime-400 transition">Champions Gallery</a></li>
             <li><a href="/hall-of-fame" className="hover:text-lime-400 transition">Hall of Fame</a></li>
-            <li><a href="/hall-of-shame" className="hover:text-lime-400 transition">Hall of Shame</a></li>
+            {/* <li><a href="/hall-of-shame" className="hover:text-lime-400 transition">Hall of Shame</a></li> */}
             <li><a href="/timeline" className="hover:text-lime-400 transition">Season Timeline</a></li>
           </ul>
         </div>

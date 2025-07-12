@@ -79,34 +79,28 @@ export default function DarftOrder() {
           </a>
         </div>
 
-       
-        <div className="max-w-3xl mx-auto bg-gray-900 rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-bold uppercase text-lime-400 mb-1">Player Guesses</h3>
-
-          <table className="w-full table-auto text-left">
-            <thead>
-              <tr className="text-gray-400 border-b border-gray-700 text-sm uppercase">
-                <th className="pb-2">Player</th>
-                <th className="pb-2">Guessed HR Derby Player</th>
-                <th className="pb-2">Guessed HRs</th>
+        <div className="max-w-3xl mx-auto bg-gray-950 border border-lime-400 rounded-xl shadow-2xl p-6 mt-12">
+          <h2 className="text-2xl font-bold text-white mb-4 mt-12 tracking-wide uppercase">Player Pickings</h2>
+          <table className="w-full table-fixed border-2 border-lime-500 divide-y divide-gray-700 bg-gray-950 text-sm">
+            <thead className="bg-gray-900 text-gray-300 border-b border-lime-500 text-xs font-bold uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3 text-left w-1/3 font-bold font-condensed border-r border-lime-500">League Member</th>
+                <th className="px-4 py-3 text-left w-1/3 font-bold font-condensed border-r border-lime-500">Chosen Slugger</th>
+                <th className="px-4 py-3 text-right w-1/3 font-bold font-condensed">HR</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-gray-100 divide-y divide-gray-700">
               {players.map((p, idx) => (
-                <tr key={idx} className="border-b border-gray-800">
-                  <td className="py-3">{p.name}</td>
-                  <td className="py-3 text-lime-300">
-                    {p.guess && p.guess.player ? p.guess.player : '—'}
-                  </td>
-                  <td className="py-3 text-lime-300">
-                    {p.guess && typeof p.guess.homeruns === 'number' ? p.guess.homeruns : '—'}
-                  </td>
+                <tr key={idx} className="odd:bg-gray-950 even:bg-gray-900 hover:bg-gray-800 transition">
+                  <td className="px-4 py-3 font-bold text-white border-r border-gray-700">{p.name}</td>
+                  <td className="px-4 py-3 text-lime-400 border-r border-gray-700">{p.guess?.player || '—'}</td>
+                  <td className="px-4 py-3 text-right text-lime-300 font-mono">{typeof p.guess?.homeruns === 'number' ? p.guess.homeruns : '—'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="text-sm text-gray-400 italic mt-4">
-            If your guessed player is inactive and you don’t submit a correction by the deadline, your guess will default to: Matt Olson → James Wood → Byron Buxton (in that order). If all are out, you’ll be placed at the bottom of the draft order.
+          <p className="text-xs text-gray-500 mt-4 border-t border-gray-700 pt-2 italic">
+            Inactive sluggers uncorrected before deadline will default to: Matt Olson → James Wood → Byron Buxton. If all are inactive, ranking defaults to last.
           </p>
         </div>
       </section>

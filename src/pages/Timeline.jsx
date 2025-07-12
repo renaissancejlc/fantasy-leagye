@@ -27,25 +27,17 @@ export default function SeasonTimeline() {
           Here's your playbook for the entire fantasy football season. Know the deadlines. Respect the grind.
         </p>
 
-        <div className="max-w-4xl mx-auto bg-gray-900 rounded-lg shadow-xl overflow-hidden">
-          <table className="w-full table-auto text-left text-gray-300">
-            <thead className="bg-gray-800 text-lime-400 uppercase text-sm">
-              <tr>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Event</th>
-                <th className="px-6 py-4">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {timeline.map((item, idx) => (
-                <tr key={idx} className="border-t border-gray-700 hover:bg-gray-800 transition">
-                  <td className="px-6 py-4 font-medium">{item.date}</td>
-                  <td className="px-6 py-4">{item.event}</td>
-                  <td className="px-6 py-4 text-sm text-gray-400">{item.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="relative border-l-4 border-lime-500 max-w-4xl mx-auto pl-6 space-y-12">
+          {timeline.map((item, idx) => (
+            <div key={idx} className="relative pl-6">
+              <div className="absolute -left-3 top-1 w-6 h-6 rounded-full bg-lime-500 border-4 border-black"></div>
+              <div className="bg-gray-950 border border-gray-800 rounded-md p-5 shadow-md">
+                <p className="text-sm text-gray-400 font-mono">{item.date}</p>
+                <h3 className="text-2xl font-bold text-white mt-1">{item.event}</h3>
+                <p className="text-sm text-gray-400 mt-1">{item.note}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
       <Footer />
