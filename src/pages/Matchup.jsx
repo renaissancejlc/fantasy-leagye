@@ -12,7 +12,7 @@ export default function Matchup() {
           Matchup Report
         </h1>
         <div className="text-xs uppercase tracking-widest font-semibold text-lime-300 mb-12" style={{fontVariantCaps: 'small-caps'}}>
-          REPORT BY CARR LEAGUE ANALYSTS
+          REPORT BY CARR LEAGUE ANALYSTS - fake data , real tbd
         </div>
 
         {/* Week 1 Matchups Section */}

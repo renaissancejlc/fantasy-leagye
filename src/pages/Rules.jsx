@@ -10,7 +10,7 @@ export default function Rules() {
 
       <section className="px-6 py-20 max-w-4xl mx-auto text-white">
         <h1 className="text-5xl font-black uppercase text-lime-400 mb-4 tracking-tight">
-          Official League Rules
+          Official League Rules- full rules tbd
         </h1>
         <p className="text-sm text-gray-400 mb-12">Last updated: July 11, 2025</p>
 

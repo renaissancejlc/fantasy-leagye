@@ -25,11 +25,14 @@ export default function Home() {
             </a>
           </div>
           <div className="flex justify-center">
-            <img
-              src="/images/league-logo-placeholder.png"
-              alt="League Logo"
-              className="w-64 h-64 object-contain"
-            />
+            <div className="relative flex items-center justify-center w-80 h-80">
+              <div className="absolute w-80 h-80 rounded-full bg-lime-400 blur-3xl opacity-40 animate-pulse z-0"></div>
+              <img
+                src="/images/logo.png"
+                alt="League Logo"
+                className="w-72 h-72 object-contain relative z-10 transition-transform duration-300 hover:scale-105"
+              />
+            </div>
           </div>
         </div>
       </section>

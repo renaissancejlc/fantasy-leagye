@@ -9,7 +9,7 @@ export default function History() {
       <NavBar />
       <section className="px-6 py-20 text-center">
        <h1 className="text-5xl font-extrabold uppercase tracking-wide mb-6 text-lime-400">
-         League History
+         League History - fake data , real tbd
         </h1>
         <div className="text-xs uppercase tracking-widest text-zinc-400 mb-12">
           Official Archival Record

@@ -21,6 +21,8 @@ import Rules from './pages/Rules';
 import Prize from './pages/Prize';
 import Rankings from './pages/Rankings';
 import Teams from './pages/Teams';
+import Comissioner from './pages/Comissioner';
+
 
 
 import { useLocation, Navigate } from 'react-router-dom';
@@ -75,6 +77,7 @@ export default function App() {
             <Route path="/teams" element={<Teams />} />
             <Route path="/matchups" element={<Matchup />} />
             <Route path="/history" element={<History />} />
+            <Route path="/comissioner" element={<Comissioner />} />
 
 
 
