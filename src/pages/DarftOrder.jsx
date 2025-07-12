@@ -12,9 +12,9 @@ const players = [
   { name: 'Simon', guess: { player: 'Matt Olson', homeruns: 50 } },
   { name: 'River', guess: null },
   { name: 'Christian', guess: { player: 'Oneil Cruz', homeruns: 57 } },
-  { name: 'Utsav', guess: null },
+  { name: 'Utsav Roommate', guess: { player: 'Cal Raleigh', homeruns: 39 } },
   { name: 'Tariq', guess: { player: 'Ronald Acuña Jr.', homeruns: 50 } },
-  { name: 'Daisy', guess: null },
+  { name: 'Daisy', guess: { player: 'Oneil Cruz', homeruns: 50 } },
   { name: 'Raphy', guess: null }
 ];
 
@@ -46,10 +46,7 @@ export default function DarftOrder() {
         <h1 className="text-4xl md:text-5xl font-extrabold uppercase tracking-wide mb-6 text-lime-400">
           Draft Order: Home Run Derby Edition
         </h1>
-        <p className="text-lg text-gray-400 mb-4 max-w-2xl mx-auto">
-          To determine the draft order, each league member will guess how many home runs will be hit in the 2025 Home Run Derby.
-          Closest guess wins! Ties go to a coin flip. All guesses must be submitted by Sunday night.
-        </p>
+      
 
         <div className="mt-10 mb-16">
           <h2 className="text-2xl uppercase font-semibold text-white mb-4">Derby Countdown</h2>
@@ -102,6 +99,20 @@ export default function DarftOrder() {
           <p className="text-xs text-gray-500 mt-4 border-t border-gray-700 pt-2 italic">
             Inactive sluggers uncorrected before deadline will default to: Matt Olson → James Wood → Byron Buxton. If all are inactive, ranking defaults to last.
           </p>
+           <p className="text-lg text-gray-400 mb-4 max-w-2xl mx-auto">
+          The 2025 draft order will be determined by the <strong>Home Run Derby Challenge</strong>. Each league member predicts:
+          <ul className="list-disc list-inside mt-2 mb-4 text-left">
+            <li>Which batter will win the 2025 MLB Home Run Derby</li>
+            <li>How many home runs that batter will hit</li>
+          </ul>
+          Final standings from the challenge determine the order in which players choose their position in the 2025 snake draft. The first-place finisher chooses their draft slot first, second chooses next, and so on.
+          <br /><br />
+          <strong>Ranking is determined as follows:</strong><br />
+          1. First priority goes to any player who correctly guesses the winning batter <em>and</em> is closest to their actual home run count.<br />
+          2. Remaining correct batter guesses are ranked by proximity to the actual home run total.<br />
+          3. Players who did not guess the correct batter are then ranked by how close their guess was to the winning batter’s actual total.<br />
+          Ties are resolved by a coin toss.
+        </p>
         </div>
       </section>
 
