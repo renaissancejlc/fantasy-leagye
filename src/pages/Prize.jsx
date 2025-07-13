@@ -61,7 +61,7 @@ export default function Prize() {
 
         <h2 className="text-2xl font-bold uppercase text-white mb-4 mt-16 flex items-center gap-2"><DollarSign size={22} /> League Dues</h2>
         <p className="text-gray-300 mb-2">
-          Dues are $10 per player for the 2025 season. Your contribution goes toward engraving, trophy maintenance, and bragging rights.
+          Dues are $20 per player for the 2025 season. Your contribution goes toward engraving, trophy maintenance, and bragging rights.
         </p>
         <p className="text-lime-300 mt-4">
           Send your payment directly via Venmo:&nbsp;
@@ -75,7 +75,7 @@ export default function Prize() {
           </a>
         </p>
         <p className="text-red-400 mt-2 font-semibold flex items-center gap-2">
-          <AlertTriangle size={18} /> Penalty: Failure to pay will result in loss of a first-round draft pick next season.
+          <AlertTriangle size={18} /> Penalty: Failure to pay will result forfeiture of prize moeny. The prize money will roll over into next season's winnings.
         </p>
 
         <div className="bg-gray-900 rounded-lg shadow-lg mt-8 overflow-hidden">
@@ -98,7 +98,7 @@ export default function Prize() {
                   <tr key={idx} className="border-b border-gray-700 last:border-none">
                     <td className="py-2 text-gray-200">{name}</td>
                     <td className="py-2 text-gray-400">2025 League Entry Fee</td>
-                    <td className="py-2 text-gray-200">$10.00</td>
+                    <td className="py-2 text-gray-200">$20.00</td>
                     <td className="py-2 text-red-400 font-semibold">Unpaid</td>
                   </tr>
                 ))}
