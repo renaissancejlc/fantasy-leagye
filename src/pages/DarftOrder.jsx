@@ -13,7 +13,7 @@ const players = [
   { name: 'River', guess: null },
   { name: 'Christian', guess: { player: 'Oneil Cruz', homeruns: 57 } },
   { name: 'Utsav Roommate', guess: { player: 'Cal Raleigh', homeruns: 39 } },
-  { name: 'Tariq', guess: { player: 'Ronald Acuña Jr.', homeruns: 50 } },
+  { name: 'Tariq', guess: { player: 'Oneil Cruz', homeruns: 55 } },
   { name: 'Daisy', guess: { player: 'Oneil Cruz', homeruns: 50 } },
   { name: 'Raphy', guess: null }
 ];
