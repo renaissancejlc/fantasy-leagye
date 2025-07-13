@@ -10,7 +10,7 @@ const players = [
   { name: 'Callie', guess: { player: 'Cal Raleigh', homeruns: 52 } },
   { name: 'Kevin', guess: { player: 'Junior Caminero', homeruns: 50 } },
   { name: 'Simon', guess: { player: 'Matt Olson', homeruns: 50 } },
-  { name: 'River', guess: null },
+  { name: 'River', guess: { player: 'Cal Raleigh', homeruns: 55 } },
   { name: 'Christian', guess: { player: 'Oneil Cruz', homeruns: 57 } },
   { name: 'Utsav Roommate', guess: { player: 'Cal Raleigh', homeruns: 39 } },
   { name: 'Tariq', guess: { player: 'Oneil Cruz', homeruns: 55 } },
