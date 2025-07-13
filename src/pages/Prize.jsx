@@ -75,7 +75,7 @@ export default function Prize() {
           </a>
         </p>
         <p className="text-red-400 mt-2 font-semibold flex items-center gap-2">
-          <AlertTriangle size={18} /> Penalty: Failure to pay will result forfeiture of prize moeny. The prize money will roll over into next season's winnings.
+          <AlertTriangle size={18} /> Penalty: Failure to pay will result forfeiture of prize money. The prize money will roll over into next season's winnings.
         </p>
 
         <div className="bg-gray-900 rounded-lg shadow-lg mt-8 overflow-hidden">
