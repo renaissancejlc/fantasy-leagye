@@ -45,7 +45,7 @@ export default function CommissionerInfo() {
           <div className="bg-zinc-900 p-6 rounded-xl shadow-lg border border-lime-400/20 hover:shadow-lime-400/20 transition">
             <h2 className="text-2xl font-bold text-lime-300 mb-2">💸 Dues Management</h2>
             <ul className="list-disc list-inside space-y-2 text-base text-gray-300">
-              <li>Each player owes <strong>$10</strong>.</li>
+              <li>Each player owes <strong>$20</strong>.</li>
               <li>Track payments (Venmo: <a href="https://venmo.com/reny-carr" target="_blank" className="underline text-lime-400"> @reny-carr</a>).</li>
               <li>Remind unpaid players on Aug 15 and Aug 18.</li>
               <li><span className="text-red-400 font-semibold">Penalty:</span> If not paid by Aug 18, player loses 1st round pick.</li>

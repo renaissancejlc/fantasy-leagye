@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 export default function SeasonTimeline() {
   const timeline = [
     { date: 'July 14', event: 'Home Run Derby', note: 'Determines draft order' },
-    { date: 'July 28', event: 'Dues Deadline', note: '$10 or lose 1st round pick' },
+    { date: 'August 3', event: 'Dues Deadline', note: '$20 or lose 1st round pick' },
     { date: 'August 3–10', event: 'Fantasy Draft Week', note: 'Live or slow draft' },
     { date: 'August 15', event: 'Roster Lock', note: 'Trades + lineups must be set' },
     { date: 'September 4', event: 'NFL Kickoff (Week 1)', note: 'Chiefs vs TBD' },
