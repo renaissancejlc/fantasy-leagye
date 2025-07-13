@@ -10,7 +10,7 @@ export default function Rules() {
 
       <section className="px-6 py-20 max-w-4xl mx-auto text-white">
         <h1 className="text-5xl font-black uppercase text-lime-400 mb-4 tracking-tight">
-          Official League Rules- full rules tbd
+          Official League Rules
         </h1>
         <p className="text-sm text-gray-400 mb-12">Last updated: July 12, 2025</p>
 
@@ -43,7 +43,7 @@ export default function Rules() {
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
             <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><DollarSign size={20} /> Dues</h2>
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
-              League dues are <strong>$20 per player</strong> and must be paid by <strong>Week 1 kickoff</strong>. Any player who fails to submit payment on time will <strong>forfeit their first-round pick</strong> the following season.
+              League dues are <strong>$20 per player</strong> and must be paid by <strong>Week 1 kickoff</strong>. Any player who fails to submit payment on time will <strong>forfeit their cash winnings</strong>, the winnings will rollover into the following season.
             </p>
           </div>
 
