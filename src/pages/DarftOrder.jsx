@@ -15,7 +15,7 @@ const players = [
   { name: 'Utsav Roommate', guess: { player: 'Cal Raleigh', homeruns: 39 } },
   { name: 'Tariq', guess: { player: 'Oneil Cruz', homeruns: 55 } },
   { name: 'Daisy', guess: { player: 'Oneil Cruz', homeruns: 50 } },
-  { name: 'Raphy', guess: null }
+  { name: 'Raphy', guess: { player: 'James Wood', homeruns: 56 } }
 ];
 
 function getTimeRemaining() {
