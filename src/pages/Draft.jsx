@@ -9,6 +9,8 @@ const draftOrder = ['Christian', 'Kevin', 'Callie', 'Dustin', 'Dad', 'Simon', 'R
 //   picks: Array.from({ length: 15 }, (_, i) => '—')
 // }));
 
+const normalize = str => str?.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim();
+
 export default function DraftPage() {
   const [timeLeft, setTimeLeft] = useState({
     total: 0,
@@ -56,9 +58,13 @@ export default function DraftPage() {
         }));
         setPlayersPicks(formatted);
         // Detect duplicate picks
-        const allPicks = formatted.flatMap(player => player.picks).filter(pick => pick && pick !== '—');
-        const duplicates = allPicks.filter((item, index) => allPicks.indexOf(item) !== index);
-        setDuplicatePicks(new Set(duplicates.map(p => p.trim().toLowerCase())));
+        const allPicks = formatted
+          .flatMap(player => player.picks)
+          .filter(pick => pick && pick !== '—')
+          .map(normalize);
+
+        const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
+        setDuplicatePicks(new Set(duplicates));
       })
       .catch(error => console.error("Error fetching draft data:", error));
   }, []);
@@ -139,7 +145,7 @@ export default function DraftPage() {
                 <tr key={idx} className="even:bg-gray-800/50 hover:bg-lime-300/10 hover:scale-[1.01] transition-transform duration-150">
                   <td className="px-3 py-2 font-semibold">{name}</td>
                   {picks.map((pick, roundIdx) => {
-                    const isDuplicate = duplicatePicks.has((pick || '').trim().toLowerCase());
+                    const isDuplicate = duplicatePicks.has(normalize(pick));
                     return (
                       <td
                         key={roundIdx}
