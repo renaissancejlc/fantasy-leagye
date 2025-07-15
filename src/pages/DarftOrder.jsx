@@ -10,6 +10,7 @@ const players = [
   { name: 'Callie', guess: { player: 'Cal Raleigh', homeruns: 52 } },
   { name: 'Kevin', guess: { player: 'Junior Caminero', homeruns: 50 } },
   { name: 'Simon', guess: { player: 'Matt Olson', homeruns: 50 } },
+  { name: 'Simon', guess: { player: 'Matt Olson', homeruns: 50 } },
   { name: 'River', guess: { player: 'Cal Raleigh', homeruns: 55 } },
   { name: 'Christian', guess: { player: 'Oneil Cruz', homeruns: 57 } },
   { name: 'Utsav Roommate', guess: { player: 'Cal Raleigh', homeruns: 39 } },
@@ -27,6 +28,31 @@ function getTimeRemaining() {
   const days = Math.floor(total / (1000 * 60 * 60 * 24));
   return { total, days, hours, minutes, seconds };
 }
+
+const DERBY_WINNER = { player: 'Vladimir Guerrero Jr.', homeruns: 51 };
+
+function calculateDraftOrder(players, winner) {
+  const correctGuesses = players.filter(p => p.guess.player === winner.player);
+  const incorrectGuesses = players.filter(p => p.guess.player !== winner.player);
+
+  const sortedCorrect = correctGuesses
+    .map(p => ({
+      ...p,
+      diff: Math.abs(p.guess.homeruns - winner.homeruns)
+    }))
+    .sort((a, b) => a.diff - b.diff);
+
+  const sortedIncorrect = incorrectGuesses
+    .map(p => ({
+      ...p,
+      diff: Math.abs(p.guess.homeruns - winner.homeruns)
+    }))
+    .sort((a, b) => a.diff - b.diff);
+
+  return [...sortedCorrect, ...sortedIncorrect].map(p => p.name);
+}
+
+const finalDraftOrder = calculateDraftOrder(players, DERBY_WINNER);
 
 export default function DarftOrder() {
   const [timeLeft, setTimeLeft] = useState(getTimeRemaining());
@@ -114,6 +140,167 @@ export default function DarftOrder() {
           Ties are resolved by a coin toss.
         </p>
         </div>
+      {/* Derby Results: High-Energy Sports Presentation */}
+      <section className="bg-black text-white py-16 px-4 md:px-12 rounded-lg shadow-2xl border-l-8 border-lime-500 mt-16 mb-10">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-wide text-lime-400 mb-6 drop-shadow-lg">🏆 2025 Home Run Derby Champion</h2>
+          <p className="text-xl md:text-2xl font-medium text-gray-300 mb-2 tracking-wide">Cal Raleigh <span className="text-lime-300 font-bold">(Seattle Mariners)</span></p>
+          <p className="text-lg md:text-xl text-gray-400 mb-6 italic">Defeated Junior Caminero <span className="text-lime-300">18–15</span> in the Finals</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mt-10">
+            <div className="bg-zinc-900 rounded-lg py-6 px-4 shadow-inner border-2 border-lime-500">
+              <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Total Home Runs</h3>
+              <p className="text-4xl md:text-5xl font-mono text-lime-300 font-extrabold drop-shadow">54</p>
+            </div>
+            <div className="bg-zinc-900 rounded-lg py-6 px-4 shadow-inner border-2 border-lime-500">
+              <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Semifinals</h3>
+              <p className="text-sm text-gray-400 mb-1">Defeated Oneil Cruz</p>
+              <p className="text-4xl md:text-5xl font-mono text-lime-300 font-extrabold drop-shadow">19–13</p>
+            </div>
+            <div className="bg-zinc-900 rounded-lg py-6 px-4 shadow-inner border-2 border-lime-500">
+              <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Finals</h3>
+              <p className="text-4xl md:text-5xl font-mono text-lime-300 font-extrabold drop-shadow">18–15</p>
+            </div>
+          </div>
+          <div className="mt-10 flex flex-col md:flex-row md:justify-between items-center gap-4">
+            <ul className="text-gray-200 text-lg md:text-xl list-disc list-inside text-left md:ml-8">
+              <li><span className="font-bold text-white">1st Round:</span> <span className="text-lime-200">17</span> homers</li>
+              <li><span className="font-bold text-white">Semifinals:</span> <span className="text-lime-200">19</span> homers</li>
+              <li><span className="font-bold text-white">Finals:</span> <span className="text-lime-200">18</span> homers</li>
+            </ul>
+            <div className="hidden md:block w-2 h-24 bg-lime-500 rounded-full mx-4" aria-hidden="true"></div>
+            <div className="text-gray-400 text-base md:text-lg italic mt-4 md:mt-0 text-center md:text-right max-w-md">
+              These results lock in the draft order standings.<br />
+              <span className="text-lime-400 font-semibold">Congratulations to those who nailed the prediction!</span>
+            </div>
+          </div>
+        </div>
+      </section>
+        <div className="max-w-3xl mx-auto bg-gray-950 border border-lime-500 rounded-xl shadow-lg p-6 mt-10">
+  <h2 className="text-2xl font-bold text-lime-400 mb-4 uppercase tracking-wide">Final Draft Order</h2>
+  {/* League Player Ranking List with standout styling */}
+  <ol className="text-white space-y-3 text-lg text-left">
+    <li>
+      <span className="text-lime-300 font-bold">1.</span>
+      <span className="font-bold text-lime-400 text-lg ml-1">River</span>
+      {/* Crown icon for #1 */}
+      <svg xmlns="http://www.w3.org/2000/svg" className="inline w-5 h-5 ml-2 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 17l2-5 2 5 2-10 2 10 2-5 2 5" />
+      </svg>
+      {' — Guessed '}<strong>Cal Raleigh</strong>, 55 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-green-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+        Winner, off by 1)
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">2.</span>
+      <span className="font-bold text-lime-400 text-lg ml-1">Callie</span>
+      {' — Guessed '}<strong>Cal Raleigh</strong>, 52 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-green-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+        Winner, off by 2)
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">3.</span>
+      <span className="font-bold text-lime-400 text-lg ml-1">Utsav Roommate</span>
+      {' — Guessed '}<strong>Cal Raleigh</strong>, 39 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-green-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+        Winner, off by 15)
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">4.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Tariq</span>
+      {' — Guessed '}<strong>Oneil Cruz</strong>, 55 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 1)
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">5.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Dad</span>
+      {' — Guessed '}<strong>Matt Olson</strong>, 52 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 2) — TIE, coin toss winner
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">6.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Raphy</span>
+      {' — Guessed '}<strong>James Wood</strong>, 56 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 2) — TIE
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">7.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Christian</span>
+      {' — Guessed '}<strong>Oneil Cruz</strong>, 57 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 3)
+    </li>
+        <li>
+      <span className="text-lime-300 font-bold">8.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Daisy</span>
+      {' — Guessed '}<strong>Oneil Cruz</strong>, 50 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 4) — TIE, spinning wheel winner
+    </li>
+        <li>
+      <span className="text-lime-300 font-bold">9.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Kevin</span>
+      {' — Guessed '}<strong>Junior Caminero</strong>, 50 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 4) — TIE, coin toss winner
+    </li>
+    <li>
+      <span className="text-lime-300 font-bold">10.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Simon</span>
+      {' — Guessed '}<strong>Matt Olson</strong>, 50 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 4) — TIE
+    </li>
+
+
+    <li>
+      <span className="text-lime-300 font-bold">11.</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Dustin</span>
+      {' — Guessed '}<strong>James Wood</strong>, 49 HRs (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Wrong player, off by 5)
+    </li>
+  </ol>
+  <p className="text-sm text-gray-400 mt-6 italic">
+    <span className="inline-flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
+      = Correctly predicted Cal Raleigh as winner. Order among winners based on closeness to 54 HRs.
+    </span>
+    <br />
+    <span className="inline-flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      = Wrong batter, ordered by closeness to actual winner’s total.
+    </span>
+  </p>
+</div>
       </section>
 
       <Footer />
