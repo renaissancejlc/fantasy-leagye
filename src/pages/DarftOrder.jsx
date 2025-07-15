@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 const DRAFT_DATE = new Date('2025-07-14T17:00:00-07:00');
 
 const players = [
-  { name: 'Dad', guess: { player: 'Matt Olson', homeruns: 45 } },
+  { name: 'Dad', guess: { player: 'Matt Olson', homeruns: 52 } },
   { name: 'Dustin', guess: { player: 'James Wood', homeruns: 49 } },
   { name: 'Callie', guess: { player: 'Cal Raleigh', homeruns: 52 } },
   { name: 'Kevin', guess: { player: 'Junior Caminero', homeruns: 50 } },
@@ -15,7 +15,7 @@ const players = [
   { name: 'Utsav Roommate', guess: { player: 'Cal Raleigh', homeruns: 39 } },
   { name: 'Tariq', guess: { player: 'Oneil Cruz', homeruns: 55 } },
   { name: 'Daisy', guess: { player: 'Oneil Cruz', homeruns: 50 } },
-  { name: 'Raphy', guess: null }
+  { name: 'Raphy', guess: { player: 'James Wood', homeruns: 56 } }
 ];
 
 function getTimeRemaining() {
