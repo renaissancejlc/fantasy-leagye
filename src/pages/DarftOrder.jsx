@@ -175,7 +175,7 @@ export default function DarftOrder() {
           </div>
         </div>
       </section>
-        <div className="max-w-3xl mx-auto bg-gray-950 border border-lime-500 rounded-xl shadow-lg p-6 mt-10">
+        <div id="results"className="max-w-3xl mx-auto bg-gray-950 border border-lime-500 rounded-xl shadow-lg p-6 mt-10">
   <h2 className="text-2xl font-bold text-lime-400 mb-4 uppercase tracking-wide">Final Draft Order</h2>
   {/* League Player Ranking List with standout styling */}
   <ol className="text-white space-y-3 text-lg text-left">
