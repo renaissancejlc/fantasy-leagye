@@ -32,6 +32,8 @@ export default function Footer() {
             <li><a href="/rules" className="hover:text-lime-400 transition">Rules</a></li>
             <li><a href="/power-rankings" className="hover:text-lime-400 transition">Power Rankings</a></li>
             <li><a href="/draft-order" className="hover:text-lime-400 transition">Draft Order</a></li>
+            <li><a href="/draft" className="hover:text-lime-400 transition">Draft</a></li>
+
           </ul>
         </div>
 
