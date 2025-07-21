@@ -98,9 +98,9 @@ export default function Contact() {
               </motion.div>
             )}
           </form>
-          <div className="mt-12 text-center text-sm text-gray-500">
+          {/* <div className="mt-12 text-center text-sm text-gray-500">
             You can also find Doug on <a href="#" className="underline">Instagram</a> and <a href="#">YouTube</a>.
-          </div>
+          </div> */}
         </div>
       </main>
       <Footer />
