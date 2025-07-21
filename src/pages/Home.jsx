@@ -1,8 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 export default function Home() {
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const now = new Date();
+    const draftDate = new Date('2025-08-17T09:30:00-07:00');
+    const total = draftDate - now;
+    return {
+      total,
+      days: Math.floor(total / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((total / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((total / 1000 / 60) % 60),
+      seconds: Math.floor((total / 1000) % 60),
+    };
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const draftDate = new Date('2025-08-17T09:30:00-07:00');
+      const total = draftDate - now;
+      setTimeLeft({
+        total,
+        days: Math.floor(total / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((total / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((total / 1000 / 60) % 60),
+        seconds: Math.floor((total / 1000) % 60),
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="relative text-white bg-black min-h-screen font-sans overflow-x-hidden">
       <NavBar />
@@ -57,23 +87,35 @@ export default function Home() {
 
       {/* CALL TO ACTION */}
       <section className="bg-gradient-to-b from-black to-gray-900 text-center py-24 px-6">
-        <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-wide mb-6">
-          Are You Ready?
+        <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-wide mb-6 text-lime-400">
+          Draft Day is Coming
         </h2>
-        <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
-          Draft day is coming. Trash talk is heating up. Legends are born here.
-        </p>
-        <div className="flex justify-center items-center gap-3 mb-8 text-white">
+                <div className="flex justify-center items-center gap-3 mb-8 text-white">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-lime-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 4h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z" />
           </svg>
           <span className="text-lg font-semibold tracking-wide">August 17 · 9:30am PST</span>
         </div>
+        
+        {/* COUNTDOWN */}
+        <div className="mt-10 mb-16">
+
+          <h3 className="text-2xl uppercase font-semibold text-white mb-4"> Countdown</h3>
+                    <p className="text-lg text-gray-400 mb-2 max-w-2xl mx-auto">
+          Are you ready? Solidify your strategy. Prepare for the snake.        </p>
+          {timeLeft.total > 0 ? (
+            <div className="text-4xl md:text-5xl font-mono text-lime-400 tracking-wider">
+              {`${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}
+            </div>
+          ) : (
+            <div className="text-4xl font-bold text-red-500">The Draft Has Begun!</div>
+          )}
+        </div>
         <a
           href="/draft"
           className="inline-block bg-lime-500 text-black text-sm font-bold uppercase px-8 py-4 rounded hover:bg-lime-400 transition"
         >
-          See Draft Order
+          See Order
         </a>
       </section>
 
