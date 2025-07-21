@@ -3,7 +3,7 @@ import axios from 'axios';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
-const draftOrder = ['Christian', 'Kevin', 'Callie', 'Dustin', 'Dad', 'Simon', 'River', 'Utsav', 'Tariq', 'Daisy', 'Raphy'];
+const draftOrder = ['Christian', 'Kevin', 'Callie', 'Dustin', 'Dad', 'Simon', 'Daisy', 'Utsav', 'Tariq', 'River', 'Raphy'];
 // const playersPicks = draftOrder.map(name => ({
 //   name,
 //   picks: Array.from({ length: 15 }, (_, i) => '—')
