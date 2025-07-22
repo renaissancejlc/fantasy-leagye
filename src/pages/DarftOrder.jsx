@@ -202,7 +202,7 @@ export default function DarftOrder() {
     </li>
     <li>
       <span className="text-lime-300 font-bold">3.</span>
-      <span className="font-bold text-lime-400 text-lg ml-1">Utsav Roommate</span>
+      <span className="font-bold text-lime-400 text-lg ml-1">Utsav</span>
       {' — Guessed '}<strong>Cal Raleigh</strong>, 39 HRs (
         <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-green-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
