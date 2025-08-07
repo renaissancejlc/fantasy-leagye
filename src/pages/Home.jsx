@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState(() => {
     const now = new Date();
-    const draftDate = new Date('2025-08-17T09:30:00-07:00');
+    const draftDate = new Date('2025-08-14T09:30:00-07:00');
     const total = draftDate - now;
     return {
       total,
@@ -19,7 +19,7 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const draftDate = new Date('2025-08-17T09:30:00-07:00');
+      const draftDate = new Date('2025-08-14T09:30:00-07:00');
       const total = draftDate - now;
       setTimeLeft({
         total,
@@ -90,11 +90,15 @@ export default function Home() {
         <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-wide mb-6 text-lime-400">
           Draft Day is Coming
         </h2>
-                <div className="flex justify-center items-center gap-3 mb-8 text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-lime-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 4h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z" />
-          </svg>
-          <span className="text-lg font-semibold tracking-wide">August 17 · 9:30am PST</span>
+        <div className="mb-10 px-6 py-4 max-w-xl mx-auto border-l-4 border-red-500 bg-gray-800 bg-opacity-60 rounded">
+          <div className="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+            </svg>
+            <p className="text-sm sm:text-base text-red-300 font-medium">
+              Important Update: Draft has been moved to <span className="font-bold text-white">Thursday, August 14 · 9:30am PST</span>
+            </p>
+          </div>
         </div>
         
         {/* COUNTDOWN */}

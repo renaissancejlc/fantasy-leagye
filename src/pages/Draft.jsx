@@ -23,7 +23,7 @@ export default function DraftPage() {
   const [duplicatePicks, setDuplicatePicks] = useState(new Set());
 
   useEffect(() => {
-    const draftDate = new Date('August 17, 2025 09:30:00 PST');
+    const draftDate = new Date('2025-08-14T09:30:00-07:00');
     const updateCountdown = () => {
       const now = new Date();
       const diff = draftDate - now;
@@ -78,9 +78,12 @@ export default function DraftPage() {
           2025 Draft Day
         </h1>
         <div className="text-center mb-10">
-          <p className="text-xl md:text-2xl text-gray-300 font-medium hover:animate-pulse transition duration-200">
-            Scheduled Draft: <span className="text-lime-400 font-bold">August 17th, 9:30 AM PST</span>
-          </p>
+          <div className="inline-block bg-red-600 bg-opacity-20 border-l-4 border-red-500 px-4 py-3 rounded-md shadow text-left text-sm sm:text-base max-w-xl mx-auto">
+            <strong className="text-red-400 font-semibold block mb-1">🚨 Draft Date Updated</strong>
+            <span className="text-white font-medium">
+              The draft has been moved to <span className="text-lime-300 font-bold">Thursday, August 14 · 9:30 AM PST</span>. Please mark your calendars!
+            </span>
+          </div>
         </div>
 
         <div className="mt-14 mb-20 text-center">

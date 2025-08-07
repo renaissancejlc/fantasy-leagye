@@ -94,14 +94,19 @@ export default function Prize() {
                 </tr>
               </thead>
               <tbody>
-                {members.map((name, idx) => (
-                  <tr key={idx} className="border-b border-gray-700 last:border-none">
-                    <td className="py-2 text-gray-200">{name}</td>
-                    <td className="py-2 text-gray-400">2025 League Entry Fee</td>
-                    <td className="py-2 text-gray-200">$20.00</td>
-                    <td className="py-2 text-red-400 font-semibold">Unpaid</td>
-                  </tr>
-                ))}
+                {members.map((name, idx) => {
+                  const isPaid = ["Dad", "Utsav"].includes(name);
+                  return (
+                    <tr key={idx} className="border-b border-gray-700 last:border-none">
+                      <td className="py-2 text-gray-200">{name}</td>
+                      <td className="py-2 text-gray-400">2025 League Entry Fee</td>
+                      <td className="py-2 text-gray-200">$20.00</td>
+                      <td className={`py-2 font-semibold ${isPaid ? "text-green-400" : "text-red-400"}`}>
+                        {isPaid ? "Paid" : "Unpaid"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
