@@ -4,7 +4,7 @@ import { FaTiktok } from 'react-icons/fa';
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white px-6 py-16 font-sans">
+    <footer className="bg-gray-900 text-white px-6 py-16 font-sans">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 text-sm uppercase tracking-wider">
         <div>
           <h3 className="font-bold text-lime-400 mb-4">League</h3>

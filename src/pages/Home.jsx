@@ -85,8 +85,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CALL TO ACTION */}
+      {/* GET READY FOR WEEK ONE */}
       <section className="bg-gradient-to-b from-black to-gray-900 text-center py-24 px-6">
+        <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-wide mb-6 text-lime-400">
+          Get Ready for Week One
+        </h2>
+        <div className="mb-10 px-6 py-4 max-w-xl mx-auto border-l-4 border-lime-500 bg-gray-800 bg-opacity-60 rounded">
+          <div className="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-lime-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-3-3v6m6-9a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm sm:text-base text-lime-300 font-medium">
+              Week 1 kicks off <span className="font-bold text-white">Wednesday, September 4</span> — set your lineup and make it count.
+            </p>
+          </div>
+        </div>
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+          This is it. Every point matters. Let’s start the season with a statement.
+        </p>
+        <a
+          href="/schedule"
+          className="inline-block bg-lime-500 text-black text-sm font-bold uppercase px-8 py-4 rounded hover:bg-lime-400 transition tracking-wider"
+        >
+          Check Schedule
+        </a>
+      </section>
+
+      
+      {/* CALL TO ACTION */}
+      <section className="bg-gradient-to-b from-gray-900 to-black text-center py-24 px-6">
         <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-wide mb-6 text-lime-400">
           Draft Day is Coming
         </h2>
@@ -124,7 +151,7 @@ export default function Home() {
       </section>
 
       {/* DERBY CHALLENGE */}
-      <section className="bg-gradient-to-b from-gray-900 to-black text-center py-24 px-6">
+      <section className="bg-gradient-to-b from-black to-gray-900 text-center py-24 px-6">
         <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-wide mb-6 text-lime-400">
           Derby Draft Challenge
         </h2>
