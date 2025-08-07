@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
-
-const draftOrder = ['Christian', 'Kevin', 'Callie', 'Dustin', 'Dad', 'Simon', 'Daisy', 'Utsav', 'Tariq', 'River', 'Raphy'];
 // const playersPicks = draftOrder.map(name => ({
 //   name,
 //   picks: Array.from({ length: 15 }, (_, i) => '—')
@@ -48,25 +46,32 @@ export default function DraftPage() {
   }, []);
 
   useEffect(() => {
-    axios.get('https://api.sheetbest.com/sheets/2d64a4bb-aedf-478d-abb1-504cd6fa2d1f')
-      .then(response => {
-        const formatted = response.data.map(row => ({
-          name: row.Player,
-          picks: Object.entries(row)
-            .filter(([key]) => key !== 'Player')
-            .map(([, value]) => value || '—')
-        }));
-        setPlayersPicks(formatted);
-        // Detect duplicate picks
-        const allPicks = formatted
-          .flatMap(player => player.picks)
-          .filter(pick => pick && pick !== '—')
-          .map(normalize);
+    const fetchDraftData = () => {
+      axios.get('https://api.sheetbest.com/sheets/2d64a4bb-aedf-478d-abb1-504cd6fa2d1f')
+        .then(response => {
+          const formatted = response.data.map(row => ({
+            name: row.Player,
+            picks: Object.entries(row)
+              .filter(([key]) => key !== 'Player')
+              .map(([, value]) => value || '—')
+          }));
+          setPlayersPicks(formatted);
 
-        const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
-        setDuplicatePicks(new Set(duplicates));
-      })
-      .catch(error => console.error("Error fetching draft data:", error));
+          const allPicks = formatted
+            .flatMap(player => player.picks)
+            .filter(pick => pick && pick !== '—')
+            .map(normalize);
+
+          const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
+          setDuplicatePicks(new Set(duplicates));
+        })
+        .catch(error => console.error("Error fetching draft data:", error));
+    };
+
+    fetchDraftData(); // initial fetch
+    const interval = setInterval(fetchDraftData, 10000); // poll every 10 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   return (

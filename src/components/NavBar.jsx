@@ -29,7 +29,9 @@ export default function NavBar() {
     { name: "Utsav", path: "/teams/utsav" },
     { name: "Tariq", path: "/teams/tariq" },
     { name: "Daisy", path: "/teams/daisy" },
-    { name: "Raphy", path: "/teams/raphy" }
+    { name: "Raphy", path: "/teams/raphy" },
+    { name: "Cisco", path: "/teams/cisco" }
+
   ];
 
   const filtered = players.filter(player =>

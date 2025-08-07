@@ -15,6 +15,7 @@ export default function Rankings() {
     { name: 'Daisy', record: '0-0', points: 0 },
     { name: 'Raphy', record: '0-0', points: 0 },
     { name: 'Dad', record: '0-0', points: 0 },
+    { name: 'Cisco', record: '0-0', points: 0 },
   ];
 
   return (

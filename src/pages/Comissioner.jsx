@@ -14,7 +14,9 @@ const members = [
   'Utsav',
   'Tariq',
   'Daisy',
-  'Raphy'
+  'Raphy',
+  'Cisco'
+
 ];
 
 export default function CommissionerInfo() {
