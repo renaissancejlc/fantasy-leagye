@@ -32,6 +32,7 @@ import PowerRankings from './pages/PowerRankings';
 import Matchup from './pages/Matchup';
 import History from './pages/History';
 import Draft from './pages/Draft';
+import Votes from './pages/Votes';
 
 
 
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/history" element={<History />} />
             <Route path="/comissioner" element={<Comissioner />} />
             <Route path="/draft" element={<Draft />} />
+            <Route path="/vote" element={<Votes />} />
 
 
 
