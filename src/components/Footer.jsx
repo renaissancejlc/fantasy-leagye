@@ -29,10 +29,10 @@ export default function Footer() {
         </div>
 
         <div>
-          <h3 className="font-bold text-lime-400 mb-4">Extras</h3>
+          <h3 className="font-bold text-lime-400 mb-4">Participate</h3>
           <ul className="space-y-2">
             <li><a href="/rules" className="hover:text-lime-400 transition">Rules</a></li>
-            <li><a href="/power-rankings" className="hover:text-lime-400 transition">Power Rankings</a></li>
+            {/* <li><a href="/power-rankings" className="hover:text-lime-400 transition">Power Rankings</a></li> */}
             <li><a href="/draft-order" className="hover:text-lime-400 transition">Draft Order</a></li>
             <li><a href="/draft" className="hover:text-lime-400 transition">Draft</a></li>
             <li><a href="/vote" className="hover:text-lime-400 transition">Vote</a></li>
