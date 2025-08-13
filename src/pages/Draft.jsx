@@ -405,14 +405,7 @@ export default function DraftPage() {
         <h1 className="text-6xl md:text-7xl font-extrabold uppercase tracking-wider mb-6 text-white drop-shadow-[0_0_20px_rgba(0,255,0,0.5)]">
           2025 Draft Day
         </h1>
-        <div className="text-center mb-10">
-          <div className="inline-block bg-red-600 bg-opacity-20 border-l-4 border-red-500 px-4 py-3 rounded-md shadow text-left text-sm sm:text-base max-w-xl mx-auto">
-            <strong className="text-red-400 font-semibold block mb-1">🚨 Draft Date Updated</strong>
-            <span className="text-white font-medium">
-              The draft has been moved to <span className="text-lime-300 font-bold">Thursday, August 14 · 9:30 AM PST</span>. Please mark your calendars!
-            </span>
-          </div>
-        </div>
+       
 
         <div className="mt-14 mb-20 text-center">
           <h2 className="text-4xl md:text-5xl uppercase font-extrabold text-lime-300 tracking-tight mb-4">
@@ -460,10 +453,14 @@ export default function DraftPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold uppercase tracking-wide bg-lime-500/10 border-lime-400 text-lime-300">
               <span className="w-2 h-2 rounded-full bg-current inline-block" />
               On the Clock: <span className="ml-1 text-white">{onTheClock || '—'}</span> · Round {currentRound} · Pick {overallPick}
-              <span className="mx-2">•</span>
-              <span className="text-gray-300 normal-case">Time Left:</span>
-              <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'Expired'}</span>
-              <span className="ml-2 text-gray-400 normal-case">({getPickWindowHours(currentRound)}h window)</span>
+              {!draftNotStarted && (
+                <>
+                  <span className="mx-2">•</span>
+                  <span className="text-gray-300 normal-case">Time Left:</span>
+                  <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'Expired'}</span>
+                  <span className="ml-2 text-gray-400 normal-case">({getPickWindowHours(currentRound)}h window)</span>
+                </>
+              )}
             </div>
           </div>
 
