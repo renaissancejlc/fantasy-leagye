@@ -3,6 +3,37 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 
+// Resolve team/player SVGs robustly via Vite glob imports
+const playerSvgs = import.meta.glob('../assets/players/*.svg', { eager: true, as: 'url' });
+
+const normalize = (s = '') => s
+  .toLowerCase()
+  .replace(/&/g, 'and')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '');
+
+const iconMap = Object.entries(playerSvgs).reduce((acc, [path, url]) => {
+  const base = path.split('/').pop().replace(/\.svg$/i, '');
+  acc[normalize(base)] = url;
+  return acc;
+}, {});
+
+const resolveIcon = (names = []) => {
+  const candidates = (Array.isArray(names) ? names : [names])
+    .filter(Boolean)
+    .map((n) => normalize(n));
+  for (const key of candidates) {
+    if (iconMap[key]) return iconMap[key];
+  }
+  // Try generic fallbacks
+  if (iconMap['default']) return iconMap['default'];
+  try {
+    return new URL('../assets/players/default.svg', import.meta.url).href;
+  } catch {
+    return '/images/players/default.svg';
+  }
+};
+
 export default function Teams() {
   const teams = [
     { id: 1, abbr: 'Nbr.', teamName: 'The Happy Accidents', division: 'World', managers: ['Dustin Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: false },
@@ -37,7 +68,7 @@ export default function Teams() {
             const uniqueManagers = Array.from(new Set(team.managers || []));
             const primaryManager = uniqueManagers.length ? uniqueManagers[0] : '';
             const slug = slugify(team.teamName || team.abbr || String(team.id));
-            const imgSrc = `/images/players/${encodeURIComponent(primaryManager || team.teamName)}.svg`;
+            const imgSrc = resolveIcon([primaryManager, team.teamName, team.abbr]);
 
             return (
               <Link
@@ -54,9 +85,19 @@ export default function Teams() {
                 <div className="flex items-center gap-4">
                   <img
                     src={imgSrc}
-                    alt={`${team.teamName} crest`}
+                    alt={`Team crest for ${team.teamName}`}
+                    width={64}
+                    height={64}
                     loading="lazy"
-                    onError={(e) => { e.currentTarget.src = '/images/players/default.svg'; }}
+                    decoding="async"
+                    draggable="false"
+                    onError={(e) => {
+                      // prevent infinite loop
+                      if (!e.currentTarget.dataset.fallback) {
+                        e.currentTarget.dataset.fallback = '1';
+                        e.currentTarget.src = resolveIcon('default');
+                      }
+                    }}
                     className="w-16 h-16 rounded-full object-contain bg-black/40 border border-gray-700"
                   />
 

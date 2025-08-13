@@ -118,7 +118,7 @@ export default function Prize() {
               </thead>
               <tbody>
                 {members.map((name, idx) => {
-                  const isPaid = ["Dad", "Utsav", "Raphy", "Christian"].includes(name);
+                  const isPaid = ["Dad", "Utsav", "Raphy", "Christian", "Dustin", "Callie"].includes(name);
                   return (
                     <tr key={idx} className="border-b border-gray-700 last:border-none">
                       <td className="py-2 text-gray-200">{name}</td>
