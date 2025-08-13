@@ -89,6 +89,91 @@ export default function DraftPage() {
   const [newPin, setNewPin] = useState('');
   const [newPinConfirm, setNewPinConfirm] = useState('');
   const [pinError, setPinError] = useState('');
+  // Confirm modal state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPickLabel, setPendingPickLabel] = useState('');
+  const completeSubmit = async (pickLabel) => {
+    try {
+      setIsSubmitting(true);
+      // Re-check time window at confirmation time
+      if (pickMsLeft <= 0) {
+        setSubmitError('Time expired — pick was passed.');
+        setConfirmOpen(false);
+        return;
+      }
+
+      // PIN enforcement
+      if (pinRecord) {
+        if (pinInput.length < 4) { setPinError('Enter your PIN'); return; }
+        const ok = await verifyPinAgainstRecord(pinInput, pinRecord);
+        if (!ok) { setPinError('Incorrect PIN'); return; }
+      } else {
+        if (newPin.length < 4 || newPin !== newPinConfirm) {
+          setPinError('Create a PIN (min 4) and confirm it.');
+          return;
+        }
+        await createOrUpdatePin(voterName, newPin);
+      }
+
+      // Refresh sheet before we write (prevent race)
+      const latest = await axios.get(DRAFT_SHEET_URL);
+      const formatted = latest.data.map(row => ({
+        name: row.Player,
+        picks: Object.entries(row)
+          .filter(([key]) => key !== 'Player')
+          .map(([, value]) => value || '—')
+      }));
+
+      const teamIdx = formatted.findIndex(p => normalize(p.name) === normalize(voterName));
+      if (teamIdx === -1) { setSubmitError('Name not found in draft sheet.'); return; }
+
+      const roundCol = `Round ${currentRound}`;
+
+      // Duplicate pick check
+      const allPicks = formatted.flatMap(p => p.picks).filter(x => x && x !== '—').map(normalize);
+      if (allPicks.includes(normalize(pickLabel))) {
+        setSubmitError('That player is already drafted.');
+        return;
+      }
+
+      // Ensure target cell is empty
+      const rowObj = latest.data[teamIdx] || {};
+      if (rowObj[roundCol] && rowObj[roundCol] !== '—') {
+        setSubmitError('This pick was just taken. Refresh and try again.');
+        return;
+      }
+
+      // Write the pick to the sheet (PATCH by search on Player)
+      await axios.patch(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/search`, { [roundCol]: pickLabel }, { params: { Player: voterName } });
+
+      // Log the pick in DraftLog
+      await axios.post(getDraftLogUrl(''), {
+        pickNumber: overallPick,
+        round: currentRound,
+        team: voterName,
+        pick: pickLabel,
+        status: 'PICKED',
+        submittedAt: new Date().toISOString(),
+        windowHours: getPickWindowHours(currentRound),
+      });
+
+      // Optimistic UI update
+      setPlayersPicks(prev => prev.map(p => (
+        normalize(p.name) === normalize(voterName)
+          ? { ...p, picks: p.picks.map((v, i) => (i === (currentRound - 1) ? pickLabel : v)) }
+          : p
+      )));
+
+      setPickInput('');
+      setPinInput('');
+      setConfirmOpen(false);
+    } catch (err) {
+      console.error(err);
+      setSubmitError('Could not submit your pick.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Global tick for per-pick clock
   const [now, setNow] = useState(new Date());
@@ -320,81 +405,11 @@ export default function DraftPage() {
       return;
     }
 
-    // PIN enforcement
-    try {
-      setIsSubmitting(true);
-      if (pinRecord) {
-        if (pinInput.length < 4) { setPinError('Enter your PIN'); setIsSubmitting(false); return; }
-        const ok = await verifyPinAgainstRecord(pinInput, pinRecord);
-        if (!ok) { setPinError('Incorrect PIN'); setIsSubmitting(false); return; }
-      } else {
-        if (newPin.length < 4 || newPin !== newPinConfirm) {
-          setPinError('Create a PIN (min 4) and confirm it.');
-          setIsSubmitting(false);
-          return;
-        }
-        await createOrUpdatePin(voterName, newPin);
-      }
-
-      // Refresh sheet before we write (prevent race)
-      const latest = await axios.get(DRAFT_SHEET_URL);
-      const formatted = latest.data.map(row => ({
-        name: row.Player,
-        picks: Object.entries(row)
-          .filter(([key]) => key !== 'Player')
-          .map(([, value]) => value || '—')
-      }));
-
-      const teamIdx = formatted.findIndex(p => normalize(p.name) === normalize(voterName));
-      if (teamIdx === -1) { setSubmitError('Name not found in draft sheet.'); setIsSubmitting(false); return; }
-
-      const roundCol = `Round ${currentRound}`;
-
-      // Duplicate pick check
-      const allPicks = formatted.flatMap(p => p.picks).filter(x => x && x !== '—').map(normalize);
-      if (allPicks.includes(normalize(pickInput))) {
-        setSubmitError('That player is already drafted.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Ensure target cell is empty
-      const rowObj = latest.data[teamIdx] || {};
-      if (rowObj[roundCol] && rowObj[roundCol] !== '—') {
-        setSubmitError('This pick was just taken. Refresh and try again.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Write the pick to the sheet (PATCH by search on Player)
-      await axios.patch(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/search`, { [roundCol]: pickInput.trim() }, { params: { Player: voterName } });
-
-      // Log the pick in DraftLog
-      await axios.post(getDraftLogUrl(''), {
-        pickNumber: overallPick,
-        round: currentRound,
-        team: voterName,
-        pick: pickInput.trim(),
-        status: 'PICKED',
-        submittedAt: new Date().toISOString(),
-        windowHours: getPickWindowHours(currentRound),
-      });
-
-      // Optimistic UI update
-      setPlayersPicks(prev => prev.map(p => (
-        normalize(p.name) === normalize(voterName)
-          ? { ...p, picks: p.picks.map((v, i) => (i === (currentRound - 1) ? pickInput.trim() : v)) }
-          : p
-      )));
-
-      setPickInput('');
-      setPinInput('');
-    } catch (err) {
-      console.error(err);
-      setSubmitError('Could not submit your pick.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Open styled confirmation modal (picks are FINAL once submitted)
+    const pickLabel = pickInput.trim();
+    setPendingPickLabel(pickLabel);
+    setConfirmOpen(true);
+    return;
   };
 
   return (
@@ -491,6 +506,7 @@ export default function DraftPage() {
                 required
               />
               <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
+              <p className="text-[11px] text-red-400 mt-1">Heads up: Picks are <span className="font-semibold">FINAL</span> once submitted.</p>
             </div>
 
             {/* PIN Security */}
@@ -611,6 +627,47 @@ export default function DraftPage() {
             </button>
           </form>
 
+          {confirmOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isSubmitting && setConfirmOpen(false)} />
+              <div role="dialog" aria-modal="true" className="relative z-10 w-[92%] max-w-md bg-gradient-to-b from-gray-900 to-black border-2 border-lime-400 rounded-2xl shadow-2xl p-6 text-left">
+                <div className="flex items-center gap-3 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-lime-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM11 7h2v6h-2V7zm0 8h2v2h-2v-2z"/></svg>
+                  <h3 className="text-xl font-extrabold uppercase tracking-wide">Confirm Pick</h3>
+                </div>
+                <p className="text-sm text-gray-300 mb-2">Team: <span className="text-white font-semibold">{voterName || '—'}</span></p>
+                <div className="bg-black/60 border border-lime-500/40 rounded-lg px-4 py-3 mb-3">
+                  <div className="text-xs uppercase text-gray-400">Your Selection</div>
+                  <div className="text-lg font-bold text-white">{pendingPickLabel}</div>
+                </div>
+                <p className="text-xs text-red-400 mb-4">This pick is <span className="font-semibold">FINAL</span> once submitted.</p>
+                {!draftNotStarted && (
+                  <p className="text-xs text-gray-400 mb-4">
+                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'Expired'}</span>
+                  </p>
+                )}
+                {submitError && <div className="text-red-400 text-xs mb-3">{submitError}</div>}
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => !isSubmitting && setConfirmOpen(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => completeSubmit(pendingPickLabel)}
+                    disabled={isSubmitting}
+                    className="px-5 py-2 rounded-lg bg-lime-500 text-black font-extrabold uppercase tracking-wide hover:bg-lime-400 disabled:opacity-50"
+                  >
+                    Confirm Pick
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Backup link to edit sheet directly (commissioner use) */}
           <div className="text-center mt-4">
             <a
