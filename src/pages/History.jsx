@@ -54,7 +54,7 @@ export default function History() {
             <li className="border border-zinc-700 bg-zinc-900 p-4 rounded-md shadow-sm font-mono flex items-center gap-3 ring-1 ring-zinc-700">
               <Trophy className="text-lime-400 w-6 h-6" />
               <span>
-                <span className="text-zinc-200 font-semibold">2024</span> - Angelo Carr <span className="text-zinc-400">(Patty's Pub • Record: 7-7)</span>
+                <span className="text-zinc-200 font-semibold">2024</span> - Angelo <span className="text-zinc-400">(Patty's Pub • Record: 7-7)</span>
                 <span className="block text-xs uppercase tracking-widest text-zinc-400 mt-1">League Champion</span>
               </span>
             </li>

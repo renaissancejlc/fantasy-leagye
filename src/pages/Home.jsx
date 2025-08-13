@@ -110,7 +110,7 @@ export default function Home() {
 
         <div className="flex flex-wrap gap-4 justify-center">
           <a
-            href="/votes"
+            href="/vote"
             className="inline-block bg-lime-500 text-black text-sm font-bold uppercase px-8 py-4 rounded hover:bg-lime-400 transition tracking-wider"
           >
             See Open Votes
