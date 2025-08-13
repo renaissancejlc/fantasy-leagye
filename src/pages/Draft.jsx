@@ -619,7 +619,7 @@ export default function DraftPage() {
               rel="noopener noreferrer"
               className="inline-block text-lime-300 hover:text-lime-200 underline text-sm"
             >
-              Raw Draft Picks Sheet (Commissioner)
+              Raw Draft Picks Sheet
             </a>
           </div>
         </div>
