@@ -17,19 +17,19 @@ const SEASON_START_ISO = '2025-09-04T17:20:00-07:00';
 
 // League members (one person, one vote per motion)
 const members = [
-  'Reny- Test', // test user
-  'Dad',
-  'Dustin',
   'Callie',
-  'Kevin',
-  'Simon',
-  'River',
   'Christian',
-  'Utsav',
-  'Tariq',
+  'Cisco',
+  'Dad',
   'Daisy',
+  'Dustin',
+  'Kevin',
   'Raphy',
-  'Cisco'
+  'Reny- Test', // test user
+  'River',
+  'Simon',
+  'Tariq',
+  'Utsav'
 ];
 
 // Sheet column keys for motion metadata (sheet uses 'propesedBy' typo)
