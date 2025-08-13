@@ -11,7 +11,7 @@ export default function History() {
     { rk: 4, team: 'Tyreek it Till you Make it', manager: 'Tariq Muhummad', rec: '9-5-0', pf: 1616.22, pa: 1613.48, pfg: 115.4, pag: 115.2, div: '1-4-0', home: '6-2-0', away: '3-3-0', strk: 'W6', moves: 22 },
     { rk: 5, team: 'The Program', manager: 'Christian Carr', rec: '10-4-0', pf: 1879.14, pa: 1565.34, pfg: 134.2, pag: 111.8, div: '3-2-0', home: '5-2-0', away: '5-2-0', strk: 'W5', moves: 26 },
     { rk: 6, team: 'Luna', manager: 'Imani Muhammad', rec: '7-7-0', pf: 1640.7, pa: 1581.14, pfg: 117.2, pag: 112.9, div: '3-2-0', home: '2-4-0', away: '5-3-0', strk: 'W2', moves: 6 },
-    { rk: 7, team: 'The Replacements', manager: 'David Carr & David Carr', rec: '11-3-0', pf: 1762.8, pa: 1548.18, pfg: 125.9, pag: 110.6, div: '4-1-0', home: '4-1-0', away: '7-2-0', strk: 'L1', moves: 10 },
+    { rk: 7, team: 'The Replacements', manager: 'David Carr', rec: '11-3-0', pf: 1762.8, pa: 1548.18, pfg: 125.9, pag: 110.6, div: '4-1-0', home: '4-1-0', away: '7-2-0', strk: 'L1', moves: 10 },
     { rk: 8, team: 'Team Ustav', manager: 'Utsav Pandey', rec: '10-4-0', pf: 1775.32, pa: 1551.06, pfg: 126.8, pag: 110.8, div: '3-2-0', home: '4-3-0', away: '6-1-0', strk: 'W1', moves: 10 },
     { rk: 9, team: 'Santee Eagles', manager: 'Thomas Carr', rec: '4-10-0', pf: 1555.8, pa: 1719.56, pfg: 111.1, pag: 122.8, div: '0-5-0', home: '2-5-0', away: '2-5-0', strk: 'W1', moves: 27 },
     { rk: 10, team: 'The Happy Accidents', manager: 'Dustin Carr', rec: '3-11-0', pf: 1508.04, pa: 1720.7, pfg: 107.7, pag: 122.9, div: '1-4-0', home: '1-7-0', away: '2-4-0', strk: 'L1', moves: 0 },
@@ -29,7 +29,7 @@ export default function History() {
     { rk: 7, team: 'Team Simon', manager: 'Simon Carr', rec: '8-6-0', pf: 1898.12, pa: 1745.26, pfg: 135.6, pag: 124.7, div: '5-3-0', home: '4-3-0', away: '4-3-0', strk: 'W2', moves: 8 },
     { rk: 8, team: 'No Punt Intended', manager: 'Callie Everson', rec: '6-8-0', pf: 1831.66, pa: 1889.9, pfg: 130.8, pag: 135.0, div: '3-2-0', home: '4-3-0', away: '2-5-0', strk: 'L1', moves: 23 },
     { rk: 9, team: 'No Rodgers No Cry', manager: 'Dustin Carr', rec: '3-11-0', pf: 1594.92, pa: 1886.58, pfg: 113.9, pag: 134.8, div: '1-4-0', home: '2-5-0', away: '1-6-0', strk: 'L2', moves: 38 },
-    { rk: 10, team: 'The Replacements', manager: 'david carr, David Carr', rec: '5-9-0', pf: 1605.36, pa: 1731.74, pfg: 114.7, pag: 123.7, div: '3-4-0', home: '3-4-0', away: '2-5-0', strk: 'L2', moves: 9 },
+    { rk: 10, team: 'The Replacements', manager: 'David Carr', rec: '5-9-0', pf: 1605.36, pa: 1731.74, pfg: 114.7, pag: 123.7, div: '3-4-0', home: '3-4-0', away: '2-5-0', strk: 'L2', moves: 9 },
   ];
 
   return (
