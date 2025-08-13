@@ -249,25 +249,44 @@ export default function Votes() {
         abstain: 0,
         total: 0,
         lastTimestamp: null,
+        openAt: null, // track when the motion was proposed/opened
       };
+
+      // Tally choices
       const choice = (v.choice || '').toLowerCase();
       if (choice === 'yes') existing.yes += 1;
       else if (choice === 'no') existing.no += 1;
       else existing.abstain += 1;
       existing.total += 1;
+
+      // Track last activity
       const ts = new Date(v.timestamp);
-      if (!existing.lastTimestamp || (ts > existing.lastTimestamp)) existing.lastTimestamp = ts;
+      if (!existing.lastTimestamp || ts > existing.lastTimestamp) existing.lastTimestamp = ts;
+
+      // Track motion open date (prefer sheet column `dateProposed`, fallback to CURRENT_MOTION or first timestamp)
+      const rawOpen = v.dateProposed || (v.motionId === CURRENT_MOTION.id ? CURRENT_MOTION.createdAt : null) || v.timestamp;
+      const openAt = parseDateLocalIfDateOnly(rawOpen);
+      if (!existing.openAt || openAt < existing.openAt) existing.openAt = openAt;
+
       map.set(key, existing);
     }
     const arr = Array.from(map.values());
     arr.forEach((r) => {
-      if (r.yes > r.no) r.outcome = 'Passes';
-      else if (r.no > r.yes) r.outcome = 'Fails';
-      else r.outcome = 'Tie';
+      // Determine deadline from the motion's openAt
+      const openAt = r.openAt ? new Date(r.openAt) : null;
+      const windowMs = 3 * 24 * 60 * 60 * 1000; // 3 days
+      const deadline = openAt ? new Date(openAt.getTime() + windowMs) : null;
+      r.deadline = deadline;
+
+      const closed = deadline ? (new Date() >= deadline) : false;
+
+      if (r.yes > r.no) r.outcome = closed ? 'Passed' : 'Projected to Pass';
+      else if (r.no > r.yes) r.outcome = closed ? 'Failed' : 'Projected to Fail';
+      else r.outcome = closed ? 'Tie' : 'Too Close to Call';
     });
     arr.sort((a, b) => (b.lastTimestamp?.getTime() || 0) - (a.lastTimestamp?.getTime() || 0));
     return arr;
-  }, [allVotes]);
+  }, [allVotes, now]);
 
   const [pendingChoice, setPendingChoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
