@@ -12,7 +12,7 @@ export default function Rules() {
         <h1 className="text-5xl font-black uppercase text-lime-400 mb-4 tracking-tight">
           Official League Rules
         </h1>
-        <p className="text-sm text-gray-400 mb-12">Last updated: July 12, 2025</p>
+        <p className="text-sm text-gray-400 mb-12">Last updated: August 13, 2025</p>
 
         <div className="space-y-10 text-gray-100">
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
