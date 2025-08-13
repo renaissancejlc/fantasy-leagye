@@ -15,7 +15,7 @@ const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6
 // After this date = queued decision for NEXT season (but voting is locked in-season).
 const SEASON_START_ISO = '2025-09-04T17:20:00-07:00';
 
-// League members (one person, one vote)
+// League members (one person, one vote per motion)
 const members = [
   'Reny- Test', // test user
   'Dad',
@@ -32,8 +32,7 @@ const members = [
   'Cisco'
 ];
 
-const USE_REMOTE = Boolean(VOTES_API && !VOTES_API.includes('xxxxxxxx'));
-const LOCAL_KEY = 'fantasy:votes-archive';
+// Sheet column keys for motion metadata (sheet uses 'propesedBy' typo)
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -49,6 +48,51 @@ const fmt = (d) =>
     minute: '2-digit',
   });
 
+// Date-only formatter (no time shown)
+const fmtDate = (d) =>
+  new Date(d).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+
+
+// Treat YYYY-MM-DD as local midnight instead of UTC
+const parseDateLocalIfDateOnly = (value) => {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, d] = value.split('-').map(Number);
+    return new Date(y, m - 1, d, 0, 0, 0);
+  }
+  return new Date(value);
+};
+
+// --- PIN (voting code) helpers -------------------------------------------------
+const getPinsUrl = (suffix = '') => `${VOTES_API.replace(/\/$/, '')}/tabs/Pins${suffix}`;
+
+const toHex = (buffer) =>
+  Array.prototype.map.call(new Uint8Array(buffer), (x) => x.toString(16).padStart(2, '0')).join('');
+
+async function sha256Hex(str) {
+  const enc = new TextEncoder();
+  const data = enc.encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return toHex(hash);
+}
+
+function makeSalt(len = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = '';
+  const arr = new Uint8Array(len);
+  (crypto.getRandomValues ? crypto.getRandomValues(arr) : arr.fill(Math.floor(Math.random() * 256))).forEach((n) => {
+    s += chars[n % chars.length];
+  });
+  return s;
+}
+
+async function saltedHash(pin, salt) {
+  return sha256Hex(`${salt}:${pin}`);
+}
+
+
 const seasonStart = new Date(SEASON_START_ISO);
 const getSeasonBucket = (now = new Date()) =>
   now < seasonStart ? `${seasonStart.getFullYear()}` : `${seasonStart.getFullYear() + 1}`;
@@ -62,7 +106,8 @@ const CURRENT_MOTION = {
   question:
     "Should we add a second wide receiver (WR2) slot to each team's weekly starting lineup?",
   createdAt: '2025-08-13',
-  proposedBy: 'Commissioner',
+  proposedBy: 'Raphy',
+  expedited: false, // allow if opened within 3 days of kickoff
 };
 
 export default function Votes() {
@@ -74,14 +119,23 @@ export default function Votes() {
     return () => clearInterval(t);
   }, []);
 
-  // 3-day voting window from motion creation
+  // 3-day voting window from this motion's creation
   const VOTING_WINDOW_DAYS = 3;
-  const motionOpenAt = useMemo(() => new Date(CURRENT_MOTION.createdAt), []);
+  const motionOpenAt = useMemo(() => parseDateLocalIfDateOnly(CURRENT_MOTION.createdAt), []);
   const motionDeadline = useMemo(
-    () => new Date(new Date(CURRENT_MOTION.createdAt).getTime() + VOTING_WINDOW_DAYS * 24 * 60 * 60 * 1000),
+    () => new Date(motionOpenAt.getTime() + VOTING_WINDOW_DAYS * 24 * 60 * 60 * 1000),
+    [motionOpenAt]
+  );
+  // Motions must be opened no later than 3 days before season start, unless expedited
+  const LATEST_MOTION_OPEN = useMemo(
+    () => new Date(seasonStart.getTime() - 3 * 24 * 60 * 60 * 1000),
     []
   );
-  const windowOpen = now >= motionOpenAt && now < motionDeadline;
+  const motionOpenAllowed = useMemo(
+    () => CURRENT_MOTION.expedited === true || parseDateLocalIfDateOnly(CURRENT_MOTION.createdAt) <= LATEST_MOTION_OPEN,
+    [LATEST_MOTION_OPEN]
+  );
+  const windowOpen = motionOpenAllowed && now >= motionOpenAt && now < motionDeadline;
   const remainingStr = useMemo(() => {
     const ms = motionDeadline.getTime() - now.getTime();
     if (ms <= 0) return '';
@@ -102,6 +156,12 @@ export default function Votes() {
   useEffect(() => {
     setLeagueMembers(members);
   }, []);
+  useEffect(() => {
+    if (!leagueMembers.length) return;
+    if (!leagueMembers.includes(voterName)) {
+      setVoterName('');
+    }
+  }, [leagueMembers]);
 
   // Persisted identity
   const [voterName, setVoterName] = useState(
@@ -119,26 +179,14 @@ export default function Votes() {
 
   const fetchVotes = () => {
     setError('');
-    if (USE_REMOTE) {
-      axios
-        .get(VOTES_API)
-        .then((res) => {
-          setAllVotes(Array.isArray(res.data) ? res.data : []);
-          setLastUpdated(new Date());
-        })
-        .catch(() => setError('Could not load votes.'))
-        .finally(() => setLoading(false));
-    } else {
-      try {
-        const stored = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
-        setAllVotes(Array.isArray(stored) ? stored : []);
+    axios
+      .get(VOTES_API)
+      .then((res) => {
+        setAllVotes(Array.isArray(res.data) ? res.data : []);
         setLastUpdated(new Date());
-      } catch {
-        setAllVotes([]);
-      } finally {
-        setLoading(false);
-      }
-    }
+      })
+      .catch(() => setError('Could not load votes.'))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -163,12 +211,12 @@ export default function Votes() {
     [motionVotes, currentBucket]
   );
 
-  const hasVotedThisBucket = useMemo(() => {
+  const hasVotedThisMotion = useMemo(() => {
     if (!voterName) return false;
-    return currentSeasonVotes.some(
+    return motionVotes.some(
       (v) => normalize(v.voter) === normalize(voterName)
     );
-  }, [currentSeasonVotes, voterName]);
+  }, [motionVotes, voterName]);
 
   const myVoteRecord = useMemo(() => {
     if (!voterName) return null;
@@ -185,6 +233,7 @@ export default function Votes() {
 
   const aCurrent = aggregate(currentSeasonVotes);
   const aNext = aggregate(nextSeasonVotes);
+
 
   // Archive: group by motion + season, show totals (not individual votes)
   const groupedResults = useMemo(() => {
@@ -222,11 +271,69 @@ export default function Votes() {
 
   const [pendingChoice, setPendingChoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // PIN state
+  const [pinRecord, setPinRecord] = useState(null);
+  const [pinMode, setPinMode] = useState('verify'); // 'verify' | 'set' | 'change'
+  const [pinInput, setPinInput] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [newPinConfirm, setNewPinConfirm] = useState('');
+  const [pinError, setPinError] = useState('');
+
+  // Fetch PIN record for selected voter
+  useEffect(() => {
+    setPinError('');
+    setPinInput('');
+    setNewPin('');
+    setNewPinConfirm('');
+    if (!voterName) {
+      setPinRecord(null);
+      setPinMode('verify');
+      return;
+    }
+    axios
+      .get(getPinsUrl('/search'), { params: { voter: voterName } })
+      .then((res) => {
+        const rec = Array.isArray(res.data) && res.data[0] ? res.data[0] : null;
+        setPinRecord(rec);
+        setPinMode(rec ? 'verify' : 'set');
+      })
+      .catch(() => {
+        setPinRecord(null);
+        setPinMode('set');
+      });
+  }, [voterName]);
+
+  const getPinHashFromRecord = (rec) => rec?.pinHash || rec?.pinhash || rec?.hash;
+  const getSaltFromRecord = (rec) => rec?.salt || '';
+
+  const verifyPinAgainstRecord = async (pin, rec) => {
+    if (!rec) return false;
+    const salt = getSaltFromRecord(rec);
+    const expected = getPinHashFromRecord(rec);
+    const computed = await saltedHash(pin, salt);
+    return expected === computed;
+  };
+
+  const createOrUpdatePin = async (voter, pin) => {
+    const salt = makeSalt(8);
+    const pinHash = await saltedHash(pin, salt);
+    // remove any existing row(s) for this voter, then create one
+    try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
+    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: new Date().toISOString() });
+    setPinRecord({ voter, salt, pinHash });
+    setPinMode('verify');
+  };
+
+  const changePin = async (currentPin, newPinValue) => {
+    const ok = await verifyPinAgainstRecord(currentPin, pinRecord);
+    if (!ok) throw new Error('Current PIN is incorrect.');
+    await createOrUpdatePin(voterName, newPinValue);
+  };
 
   const submitVote = async (e) => {
     e.preventDefault();
     if (!voterName || !pendingChoice) return;
-    if (hasVotedThisBucket) return;
+    if (hasVotedThisMotion) return;
     if (!isOffseason) return; // hard lock in-season
 
     const payload = {
@@ -236,18 +343,29 @@ export default function Votes() {
       choice: pendingChoice, // 'Yes' | 'No' | 'Abstain'
       seasonBucket: getSeasonBucket(new Date()),
       timestamp: new Date().toISOString(),
+      // Also store these simple metadata fields on each row
+      propesedBy: CURRENT_MOTION.proposedBy,
+      dateProposed: CURRENT_MOTION.createdAt,
     };
 
     try {
       setIsSubmitting(true);
-      if (USE_REMOTE) {
-        await axios.post(VOTES_API, payload);
-        setAllVotes((prev) => [...prev, payload]);
+      // PIN enforcement
+      setPinError('');
+      if (pinRecord) {
+        if (pinInput.length < 4) { setPinError('Enter your PIN'); return; }
+        const ok = await verifyPinAgainstRecord(pinInput, pinRecord);
+        if (!ok) { setPinError('Incorrect PIN'); return; }
       } else {
-        const updated = [...allVotes, payload];
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
-        setAllVotes(updated);
+        if (newPin.length < 4 || newPin !== newPinConfirm) {
+          setPinError('Create a PIN (min 4 characters) and confirm it.');
+          return;
+        }
+        await createOrUpdatePin(voterName, newPin);
       }
+
+      await axios.post(VOTES_API, payload);
+      setAllVotes((prev) => [...prev, payload]);
       setPendingChoice('');
     } catch {
       setError('Could not submit your vote. Please try again.');
@@ -261,35 +379,28 @@ export default function Votes() {
     if (!myVoteRecord) return;
     try {
       setIsSubmitting(true);
-      if (USE_REMOTE) {
-        // Delete matching row(s) from remote sheet (SheetBest search delete)
-        await axios.delete(`${VOTES_API.replace(/\/$/, '')}/search`, {
-          params: {
-            motionId: CURRENT_MOTION.id,
-            voter: voterName,
-            seasonBucket: currentBucket,
-          },
-        });
-        // Optimistically update UI
-        const updated = allVotes.filter(
-          (v) =>
-            !(
-              v.motionId === CURRENT_MOTION.id &&
-              normalize(v.voter) === normalize(voterName) &&
-              `${v.seasonBucket}` === `${currentBucket}`
-            )
-        );
-        setAllVotes(updated);
-      } else {
-        // Remove only this motion + this season + this voter (local mode)
-        const updated = allVotes.filter((v) => !(
-          v.motionId === CURRENT_MOTION.id &&
-          normalize(v.voter) === normalize(voterName) &&
-          `${v.seasonBucket}` === `${currentBucket}`
-        ));
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
-        setAllVotes(updated);
-      }
+      // PIN enforcement for removal
+      setPinError('');
+      if (!pinRecord) { setPinError('Set your PIN first to remove your vote.'); return; }
+      if (pinInput.length < 4) { setPinError('Enter your PIN'); return; }
+      const ok = await verifyPinAgainstRecord(pinInput, pinRecord);
+      if (!ok) { setPinError('Incorrect PIN'); return; }
+
+      await axios.delete(`${VOTES_API.replace(/\/$/, '')}/search`, {
+        params: {
+          motionId: CURRENT_MOTION.id,
+          voter: voterName,
+        },
+      });
+      // Optimistically update UI
+      const updated = allVotes.filter(
+        (v) =>
+          !(
+            v.motionId === CURRENT_MOTION.id &&
+            normalize(v.voter) === normalize(voterName)
+          )
+      );
+      setAllVotes(updated);
     } finally {
       setIsSubmitting(false);
     }
@@ -334,9 +445,9 @@ export default function Votes() {
             <span className="w-2 h-2 rounded-full bg-current inline-block" />
             {!isOffseason
               ? 'In-Season: Voting LOCKED (resumes offseason)'
-              : windowOpen
-                ? `Offseason: Voting OPEN • Closes in ${remainingStr}`
-                : `Offseason: Voting CLOSED • Closed ${fmt(motionDeadline)}`}
+              : !motionOpenAllowed
+                ? 'Offseason: Motion Not Allowed (opened too close to kickoff)'
+                : `Offseason • Ends ${new Date(SEASON_START_ISO).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
           </div>
           <div className="text-xs text-gray-400 mt-2">
             Season start: {new Date(SEASON_START_ISO).toLocaleString()}
@@ -351,33 +462,51 @@ export default function Votes() {
                 {CURRENT_MOTION.title}
               </h2>
               <span className="text-xs text-gray-400">
-                Opened {fmt(CURRENT_MOTION.createdAt)}
+                Opened {fmtDate(motionOpenAt)} • Proposed by {CURRENT_MOTION.proposedBy}
               </span>
             </div>
             <p className="text-gray-200 mb-6 leading-relaxed">
               {CURRENT_MOTION.question}
             </p>
 
+            {/* Motion-specific status banner */}
+            <div className="mb-6">
+              {!motionOpenAllowed ? (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold uppercase tracking-wide bg-amber-500/10 border-amber-400 text-amber-300">
+                  <span className="w-2 h-2 rounded-full bg-current inline-block" />
+                  Not Allowed: Opened too close to kickoff (needs expedited)
+                </div>
+              ) : windowOpen ? (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold uppercase tracking-wide bg-lime-500/10 border-lime-400 text-lime-300">
+                  <span className="w-2 h-2 rounded-full bg-current inline-block" />
+                  Voting OPEN • Closes in {remainingStr}
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold uppercase tracking-wide bg-gray-500/10 border-gray-400 text-gray-300">
+                  <span className="w-2 h-2 rounded-full bg-current inline-block" />
+                  Voting CLOSED • Closed {fmtDate(motionDeadline)}
+                </div>
+              )}
+            </div>
+
             <form onSubmit={submitVote} className="space-y-4">
               <div>
                 <label className="block text-xs uppercase text-gray-400 mb-1">
                   Your Name
                 </label>
-                <input
-                  list="league-members"
+                <select
                   value={voterName}
                   onChange={(e) => setVoterName(e.target.value)}
-                  placeholder="Select or type your league name"
                   className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
                   required
-                />
-                <datalist id="league-members">
+                >
+                  <option value="" disabled>-- Select your name --</option>
                   {leagueMembers.map((n) => (
-                    <option key={n} value={n} />
+                    <option key={n} value={n}>{n}</option>
                   ))}
-                </datalist>
+                </select>
                 <p className="text-[11px] text-gray-500 mt-1">
-                  One person, one vote. Use your league name as it appears on the draft sheet.
+                  One person, one vote per motion. Use your league name.
                 </p>
               </div>
 
@@ -408,6 +537,125 @@ export default function Votes() {
                 </div>
               </div>
 
+              {/* PIN Security */}
+              <div className="mt-2">
+                <label className="block text-xs uppercase text-gray-400 mb-2">Security PIN</label>
+
+                {pinMode === 'verify' && (
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Enter your PIN"
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <button
+                      type="button"
+                      className="text-xs text-lime-300 underline"
+                      onClick={() => { setPinMode('change'); setPinError(''); setPinInput(''); }}
+                    >
+                      Change PIN
+                    </button>
+                  </div>
+                )}
+
+                {pinMode === 'set' && (
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Create a 4+ digit PIN"
+                      value={newPin}
+                      onChange={(e) => setNewPin(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Confirm PIN"
+                      value={newPinConfirm}
+                      onChange={(e) => setNewPinConfirm(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                  </div>
+                )}
+
+                {pinMode === 'change' && (
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Current PIN"
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="New PIN (4+ digits)"
+                      value={newPin}
+                      onChange={(e) => setNewPin(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Confirm new PIN"
+                      value={newPinConfirm}
+                      onChange={(e) => setNewPinConfirm(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <div>
+                      <button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={async () => {
+                          try {
+                            setIsSubmitting(true);
+                            setPinError('');
+                            if (newPin.length < 4 || newPin !== newPinConfirm) {
+                              setPinError('Enter matching new PINs (min 4).');
+                            } else {
+                              await changePin(pinInput, newPin);
+                              setPinMode('verify');
+                              setPinInput('');
+                              setNewPin('');
+                              setNewPinConfirm('');
+                            }
+                          } catch (e) {
+                            setPinError(e.message || 'Could not change PIN.');
+                          } finally {
+                            setIsSubmitting(false);
+                          }
+                        }}
+                        className="text-xs px-3 py-2 border border-lime-400 rounded-lg"
+                      >
+                        Update PIN
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs ml-3 underline text-gray-400"
+                        onClick={() => { setPinMode('verify'); setPinError(''); setPinInput(''); setNewPin(''); setNewPinConfirm(''); }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {pinError && <div className="text-red-400 text-xs mt-2">{pinError}</div>}
+                {pinMode === 'set' && !pinError && <div className="text-gray-400 text-xs mt-2">You’ll set your PIN on first vote.</div>}
+              </div>
+
               {myVoteRecord && (
                 <div className="text-xs text-gray-400">
                   You previously voted{' '}
@@ -425,16 +673,18 @@ export default function Votes() {
                   !voterName ||
                   !pendingChoice ||
                   isSubmitting ||
-                  hasVotedThisBucket ||
+                  hasVotedThisMotion ||
                   !isOffseason ||
+                  !motionOpenAllowed ||
                   !windowOpen
                 }
                 className={`w-full uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
                   !voterName ||
                   !pendingChoice ||
                   isSubmitting ||
-                  hasVotedThisBucket ||
+                  hasVotedThisMotion ||
                   !isOffseason ||
+                  !motionOpenAllowed ||
                   !windowOpen
                     ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
                     : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
@@ -442,20 +692,22 @@ export default function Votes() {
               >
                 {!isOffseason
                   ? 'Voting Locked (In-Season)'
+                  : !motionOpenAllowed
+                  ? 'Not Allowed (Too Close to Kickoff)'
                   : !windowOpen
                   ? 'Voting Closed'
-                  : hasVotedThisBucket
-                  ? 'Already Voted for This Season'
+                  : hasVotedThisMotion
+                  ? 'Already Voted for This Motion'
                   : 'Submit Vote'}
               </button>
 
-              {myVoteRecord && `${myVoteRecord.seasonBucket}` === `${currentBucket}` && (
+              {myVoteRecord && (
                 <button
                   type="button"
                   onClick={removeMyVote}
-                  disabled={isSubmitting || !windowOpen || !isOffseason}
+                  disabled={isSubmitting || !windowOpen || !isOffseason || !motionOpenAllowed}
                   className={`w-full mt-2 uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
-                    isSubmitting || !windowOpen || !isOffseason
+                    isSubmitting || !windowOpen || !isOffseason || !motionOpenAllowed
                       ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
                       : 'bg-black text-red-300 border-red-400 hover:bg-red-400 hover:text-black'
                   }`}
@@ -470,9 +722,15 @@ export default function Votes() {
                   offseason and, if passed, apply next season.
                 </p>
               )}
-              {isOffseason && !windowOpen && (
+              {isOffseason && !motionOpenAllowed && (
                 <p className="text-[11px] text-gray-500">
-                  Voting window closed. Results were locked on {fmt(motionDeadline)}.
+                  This motion was opened within the final 3 days before kickoff (cutoff {fmtDate(LATEST_MOTION_OPEN)}).
+                  Voting requires an expedited override by the commissioner.
+                </p>
+              )}
+              {isOffseason && !windowOpen && motionOpenAllowed && (
+                <p className="text-[11px] text-gray-500">
+                  Voting window closed. Results were locked on {fmtDate(motionDeadline)}.
                 </p>
               )}
 
@@ -501,17 +759,19 @@ export default function Votes() {
               </div>
             </div>
 
-            <div>
-              <div className="text-sm uppercase text-gray-300 mb-2">
-                Queued for Next Season
+            {!isOffseason && (
+              <div>
+                <div className="text-sm uppercase text-gray-300 mb-2">
+                  Queued for Next Season
+                </div>
+                <Bar label="Yes" value={aNext.yes} total={aNext.total} />
+                <Bar label="No" value={aNext.no} total={aNext.total} />
+                <Bar label="Abstain" value={aNext.abstain} total={aNext.total} />
+                <div className="text-xs text-gray-400 mt-1">
+                  Total votes: {aNext.total}
+                </div>
               </div>
-              <Bar label="Yes" value={aNext.yes} total={aNext.total} />
-              <Bar label="No" value={aNext.no} total={aNext.total} />
-              <Bar label="Abstain" value={aNext.abstain} total={aNext.total} />
-              <div className="text-xs text-gray-400 mt-1">
-                Total votes: {aNext.total}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

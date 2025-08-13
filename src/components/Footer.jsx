@@ -4,7 +4,7 @@ import { FaTiktok } from 'react-icons/fa';
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white px-6 py-16 font-sans">
+    <footer className="bg-black text-white px-6 py-16 font-sans">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 text-sm uppercase tracking-wider">
         <div>
           <h3 className="font-bold text-lime-400 mb-4">League</h3>
@@ -13,6 +13,8 @@ export default function Footer() {
             <li><a href="/teams" className="hover:text-lime-400 transition">Teams</a></li>
             <li><a href="/matchups" className="hover:text-lime-400 transition">Matchups</a></li>
             <li><a href="/rankings" className="hover:text-lime-400 transition">Rankings</a></li>
+            <li><a href="/prize" className="hover:text-lime-400 transition">Prize</a></li>
+
           </ul>
         </div>
 
@@ -33,6 +35,8 @@ export default function Footer() {
             <li><a href="/power-rankings" className="hover:text-lime-400 transition">Power Rankings</a></li>
             <li><a href="/draft-order" className="hover:text-lime-400 transition">Draft Order</a></li>
             <li><a href="/draft" className="hover:text-lime-400 transition">Draft</a></li>
+            <li><a href="/vote" className="hover:text-lime-400 transition">Vote</a></li>
+
 
           </ul>
         </div>

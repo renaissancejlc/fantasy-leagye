@@ -20,7 +20,7 @@ export default function Rules() {
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
               For 2025, the league will follow a <strong>snake draft format</strong>. The draft order will be determined by participants’ selections based on the results of the MLB Home Run Derby. Each player may choose their draft position based on proximity of their derby guess to the actual outcome. 
               <br /><br />
-              Drafts will begin on <strong>August 17, 2025</strong>. The first 3 rounds will allow 24 hours per pick; rounds 4–20 will allow 12 hours. All picks must be submitted offline via a shared Google Sheet and announced in the group message. 
+              Drafts will begin on <strong>August 14, 2025</strong>. The first 3 rounds will allow 24 hours per pick; rounds 4–20 will allow 12 hours. All picks must be submitted offline via a shared Google Sheet and announced in the group message. 
               <br /><br />
               There are <strong>no keepers</strong> for 2025. Beginning in 2026, the league will adopt a full-keeper format. Each team will retain their entire roster and participate in a <strong>5-round rookie draft</strong> each season.
             </p>
