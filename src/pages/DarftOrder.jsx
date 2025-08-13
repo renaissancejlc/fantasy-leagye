@@ -8,7 +8,7 @@ const players = [
   { name: 'Dad', guess: { player: 'Matt Olson', homeruns: 52 } },
   { name: 'Dustin', guess: { player: 'James Wood', homeruns: 49 } },
   { name: 'Callie', guess: { player: 'Cal Raleigh', homeruns: 52 } },
-  { name: 'Kevin', guess: { player: 'Junior Caminero', homeruns: 50 } },
+  { name: 'Angelo', guess: { player: 'Junior Caminero', homeruns: 50 } },
   { name: 'Simon', guess: { player: 'Matt Olson', homeruns: 50 } },
   { name: 'River', guess: { player: 'Cal Raleigh', homeruns: 55 } },
   { name: 'Christian', guess: { player: 'Oneil Cruz', homeruns: 57 } },
@@ -256,7 +256,7 @@ export default function DarftOrder() {
     </li>
         <li>
       <span className="text-lime-300 font-bold">9.</span>
-      <span className="font-bold text-yellow-400 text-lg ml-1">Kevin</span>
+      <span className="font-bold text-yellow-400 text-lg ml-1">Angelo</span>
       {' — Guessed '}<strong>Junior Caminero</strong>, 50 HRs (
         <svg xmlns="http://www.w3.org/2000/svg" className="inline h-4 w-4 text-red-400 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

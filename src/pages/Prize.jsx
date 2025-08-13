@@ -7,7 +7,7 @@ const members = [
   'Dad',
   'Dustin',
   'Callie',
-  'Kevin',
+  'Angelo',
   'Simon',
   'River',
   'Christian',
@@ -30,6 +30,28 @@ export default function Prize() {
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
           Earn the honor.
         </p>
+
+        <div className="max-w-3xl mx-auto -mt-8 mb-12">
+          <div className="relative overflow-hidden rounded-xl border-2 border-lime-400/40 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 shadow-[0_0_40px_rgba(192,255,102,0.25)] ring-1 ring-lime-400/20">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime-400/40 to-transparent" />
+            <div className="flex items-center gap-3 px-4 py-3">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-lime-500/20 border border-lime-400/40">
+                <Trophy size={18} className="text-lime-300" />
+              </span>
+              <div className="flex-1">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-400">Defending Champion</div>
+                <div className="text-lg font-extrabold text-white">
+                  Patty&apos;s Pub <span className="text-gray-400 font-normal">• 7-7-0 • (4th of 6, World)</span>
+                </div>
+                <div className="text-xs text-gray-300">
+                  Owner: <span className="font-semibold text-white">Angelo Carr</span>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-lime-400/10 blur-2xl pointer-events-none" />
+            <div className="absolute -left-12 -bottom-10 w-32 h-32 rounded-full bg-lime-500/10 blur-3xl pointer-events-none" />
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-10 mb-12">
           <div className="relative bg-zinc-900/70 backdrop-blur-xl border-4 border-lime-500/30 shadow-[0_0_40px_rgba(192,255,102,0.2)] rounded-2xl p-8 ring-1 ring-lime-400/20 hover:scale-[1.01] transition-transform duration-300">

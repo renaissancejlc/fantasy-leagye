@@ -22,7 +22,7 @@ export default function NavBar() {
     { name: "Dad", path: "/teams/dad" },
     { name: "Dustin", path: "/teams/dustin" },
     { name: "Callie", path: "/teams/callie" },
-    { name: "Kevin", path: "/teams/kevin" },
+    { name: "Angelo", path: "/teams/angelo" },
     { name: "Simon", path: "/teams/simon" },
     { name: "River", path: "/teams/river" },
     { name: "Christian", path: "/teams/christian" },

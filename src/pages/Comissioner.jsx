@@ -7,7 +7,7 @@ const members = [
   'Dad',
   'Dustin',
   'Callie',
-  'Kevin',
+  'Angelo',
   'Simon',
   'River',
   'Christian',

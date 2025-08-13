@@ -17,7 +17,7 @@ const RAW_DRAFT_ORDER = [
   'Dad',
   'Dustin',
   'Cisco',
-  'Kevin',
+  'Angelo',
   'Daisy',
   'River',
   'Raphy',

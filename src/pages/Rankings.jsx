@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 export default function Rankings() {
   const players = [
     { name: 'Christian', record: '0-0', points: 0 },
-    { name: 'Kevin', record: '0-0', points: 0 },
+    { name: 'Angelo', record: '0-0', points: 0 },
     { name: 'Callie', record: '0-0', points: 0 },
     { name: 'Dustin', record: '0-0', points: 0 },
     { name: 'Tariq', record: '0-0', points: 0 },

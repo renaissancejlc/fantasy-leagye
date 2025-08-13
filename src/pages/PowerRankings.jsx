@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 
 export default function PowerRankings() {
   const players = [
-    'Christian', 'Kevin', 'Callie', 'Dustin', 'Tariq', 'Simon',
+    'Christian', 'Angelo', 'Callie', 'Dustin', 'Tariq', 'Simon',
     'River', 'Utsav', 'Daisy', 'Raphy', 'Dad', 'Cisco'
   ];
 

@@ -23,7 +23,7 @@ const members = [
   'Dad',
   'Daisy',
   'Dustin',
-  'Kevin',
+  'Angelo',
   'Raphy',
   'Reny- Test', // test user
   'River',
