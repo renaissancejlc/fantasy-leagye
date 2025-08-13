@@ -107,7 +107,7 @@ export default function Teams() {
                     </div>
                     <h3 className="text-xl font-extrabold text-white group-hover:text-lime-400 transition-colors">{team.teamName}</h3>
                     <p className="text-sm text-gray-300">
-                      {uniqueManagers.length ? `Mgr: ${uniqueManagers.join(', ')}` : 'Mgr: TBD'}
+                      {uniqueManagers.length ? `Mgr: ${uniqueManagers.join(', ')}` : 'Mgr: Cisco'}
                     </p>
                   </div>
                 </div>
