@@ -683,9 +683,7 @@ export default function DraftPage() {
 
         <div className="overflow-x-auto max-w-full mb-16 bg-gradient-to-r from-black via-gray-900 to-black p-2 rounded-xl">
           <h2 className="text-3xl font-bold text-white mb-6 uppercase tracking-wide">Player Picks</h2>
-          <p className="text-sm text-gray-300 mb-2 italic">
-            Duplicate picks will appear <span className="text-red-400 font-semibold">highlighted in red</span>.
-          </p>
+
           <table className="min-w-[1200px] w-full bg-black/60 text-white font-mono backdrop-blur-md">
             <thead>
               <tr className="bg-lime-400/80 text-black uppercase font-bold text-xs tracking-wide">
