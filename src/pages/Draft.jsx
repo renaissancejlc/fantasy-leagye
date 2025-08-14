@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
 import NavBar from '../components/NavBar';
@@ -35,6 +35,7 @@ async function notifyDiscord(payload) {
 
 const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
 const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
+const PLAYERS_URL = `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Players`;
 // Explicit snake-draft order (display + turn control)
 // Note: uses provided spellings; mapped to actual sheet names via normalization
 const RAW_DRAFT_ORDER = [
@@ -123,6 +124,64 @@ export default function DraftPage() {
   // Confirm modal state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingPickLabel, setPendingPickLabel] = useState('');
+
+  // --- Player autocomplete (pulls from SheetBest: /tabs/Players) ---
+  const [playerNames, setPlayerNames] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightIdx, setHighlightIdx] = useState(0);
+  const pickInputRef = useRef(null);
+
+  useEffect(() => {
+    // Expect a sheet with a tab named "Players" and a column named Name or Player
+    axios
+      .get(PLAYERS_URL)
+      .then((res) => {
+        const rows = Array.isArray(res.data) ? res.data : [];
+        const names = Array.from(
+          new Set(
+            rows
+              .map((r) => (r.Name || r.Player || r.name || r.player || '').toString().trim())
+              .filter(Boolean)
+          )
+        );
+        setPlayerNames(names);
+      })
+      .catch(() => {
+        setPlayerNames([]); // graceful: no suggestions if tab missing
+      });
+  }, []);
+
+  const normStr = (s = '') => s.toLowerCase();
+  const buildSuggestions = (q) => {
+    const query = normStr(q || '');
+    if (query.length < 2 || !playerNames.length) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightIdx(0);
+      return;
+    }
+    const starts = [];
+    const contains = [];
+    for (const name of playerNames) {
+      const n = normStr(name);
+      if (n.startsWith(query) || n.split(' ').some((t) => t.startsWith(query))) starts.push(name);
+      else if (n.includes(query)) contains.push(name);
+      if (starts.length >= 8 && contains.length >= 8) break;
+    }
+    const out = [...starts, ...contains.filter((c) => !starts.includes(c))].slice(0, 12);
+    setSuggestions(out);
+    setShowSuggestions(true);
+    setHighlightIdx(0);
+  };
+
+  const chooseSuggestion = (name) => {
+    setPickInput(name);
+    setPendingPickLabel(name);
+    setShowSuggestions(false);
+    // focus stays in the input for fast submit
+    if (pickInputRef.current) pickInputRef.current.focus();
+  };
 
   // --- Test Notification state + helper ---
   const [testSending, setTestSending] = useState(false);
@@ -592,13 +651,50 @@ export default function DraftPage() {
 
             <div>
               <label className="block text-xs uppercase text-gray-400 mb-1">Your Pick</label>
-              <input
-                value={pickInput}
-                onChange={(e) => setPickInput(e.target.value)}
-                placeholder="Type the player name"
-                className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                required
-              />
+              <div className="relative">
+                <input
+                  ref={pickInputRef}
+                  value={pickInput}
+                  onChange={(e) => { setPickInput(e.target.value); buildSuggestions(e.target.value); }}
+                  onFocus={() => buildSuggestions(pickInput)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                  onKeyDown={(e) => {
+                    if (!showSuggestions || suggestions.length === 0) return;
+                    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightIdx((i) => (i + 1) % suggestions.length); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightIdx((i) => (i - 1 + suggestions.length) % suggestions.length); }
+                    else if (e.key === 'Enter') { e.preventDefault(); chooseSuggestion(suggestions[highlightIdx]); }
+                    else if (e.key === 'Escape') { setShowSuggestions(false); }
+                  }}
+                  placeholder="Type the player name"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  required
+                />
+
+                {/* Suggestions dropdown */}
+                {showSuggestions && (
+                  suggestions.length > 0 ? (
+                    <ul className="absolute z-20 mt-1 w-full max-h-72 overflow-auto bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left">
+                      {suggestions.map((name, i) => (
+                        <li
+                          key={`${name}-${i}`}
+                          onMouseDown={(e) => { e.preventDefault(); chooseSuggestion(name); }}
+                          className={`px-3 py-2 cursor-pointer ${i === highlightIdx ? 'bg-lime-500/20 text-lime-200' : 'hover:bg-gray-800'}`}
+                        >
+                          <span className="font-semibold text-white">{name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    pickInput && pickInput.length >= 2 && (
+                      <div className="absolute z-20 mt-1 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left px-3 py-2 text-gray-400">
+                        No matches
+                      </div>
+                    )
+                  )
+                )}
+              </div>
               <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
               <p className="text-[11px] text-red-400 mt-1">Heads up: Picks are <span className="font-semibold">FINAL</span> once submitted.</p>
             </div>
