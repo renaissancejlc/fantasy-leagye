@@ -761,14 +761,7 @@ export default function DraftPage() {
           {/* Backup link to edit sheet directly (commissioner use) + Test Notification */}
           <div className="text-center mt-4">
             <div className="inline-flex items-center gap-3 flex-wrap justify-center">
-              <a
-                href="https://docs.google.com/spreadsheets/d/1NDVTuhiF8lpWKFLAvP83Llu8Owkq25bx3bHKvvC4bag/edit?usp=sharing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-lime-300 hover:text-lime-200 underline text-sm"
-              >
-                Raw Draft Picks Sheet
-              </a>
+             
               {/* <button
                 type="button"
                 onClick={sendTestNotification}
