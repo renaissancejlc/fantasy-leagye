@@ -149,13 +149,16 @@ export default function DraftPage() {
         );
         setPlayerNames(names);
 
-        // Build normalized name -> position index for display (e.g., "Christian McCaffrey (RB)")
+        // Build normalized name -> position index (first occurrence wins)
         const index = {};
         for (const r of rows) {
           const nm = (r.Name || r.Player || r.name || r.player || '').toString().trim();
           if (!nm) continue;
           const pos = (r.Pos || r.POS || r.position || r.Position || '').toString().trim();
-          index[normalize(nm)] = pos;
+          const key = normalize(nm);
+          if (pos && index[key] == null) {
+            index[key] = pos; // keep the first-seen position only
+          }
         }
         setPlayerPosIndex(index);
       })
