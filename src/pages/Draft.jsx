@@ -4,7 +4,7 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 
-const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/2d64a4bb-aedf-478d-abb1-504cd6fa2d1f';
+const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
 const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
 // Explicit snake-draft order (display + turn control)
 // Note: uses provided spellings; mapped to actual sheet names via normalization
