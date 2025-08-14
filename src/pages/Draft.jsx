@@ -1,7 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
+
+// --- Discord Notification (client-side fallback) ---
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1405602854244188182/ZI4aYoCLTTqPgY0qJP-x6bxB4L0cCeiLQeu0OsxtyUpQ-rFU9vxvi8_2VJyLxLvO_0Bn";
+
+const formatDiscordMessage = (p) => {
+  const head = `🏈 Round ${p.round}, Pick ${p.pickNumber}`;
+  if (p.status === 'PASSED') return `${head} — **${p.team}** passes.`;
+  if (p.status === 'TEST') return `${head} — **${p.team}** selects **${p.pick}** (test).`;
+  return `${head} — **${p.team}** selects **${p.pick}**.`;
+};
+
+async function notifyDiscord(payload) {
+  // Try app endpoint first (if you later add a real /api/notifyPick). If 404 or network error, fall back to direct webhook.
+  try {
+    await axios.post('/api/notifyPick', payload);
+    return true;
+  } catch (e) {
+    try {
+      await axios.post(DISCORD_WEBHOOK, { content: formatDiscordMessage(payload) }, { headers: { 'Content-Type': 'application/json' } });
+      return true;
+    } catch (err) {
+      console.warn('Direct Discord webhook failed', err);
+      return false;
+    }
+  }
+}
 
 
 const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
@@ -74,6 +101,8 @@ export default function DraftPage() {
   });
   const [playersPicks, setPlayersPicks] = useState([]);
   const [duplicatePicks, setDuplicatePicks] = useState(new Set());
+  // Logging is optional; allow dismissing the warning banner
+  const [showLogWarning, setShowLogWarning] = useState(true);
 
   // Submit flow state
   const [voterName, setVoterName] = useState(localStorage.getItem('fantasy:draftVoter') || '');
@@ -92,6 +121,32 @@ export default function DraftPage() {
   // Confirm modal state
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingPickLabel, setPendingPickLabel] = useState('');
+
+  // --- Test Notification state + helper ---
+  const [testSending, setTestSending] = useState(false);
+  const [testMessage, setTestMessage] = useState('');
+
+  const sendTestNotification = async () => {
+    try {
+      setTestMessage('');
+      setTestSending(true);
+      const payload = {
+        pickNumber: overallPick,
+        round: currentRound,
+        team: voterName || onTheClock || 'Test Team',
+        pick: pendingPickLabel || pickInput || 'Test Player',
+        status: 'TEST',
+        submittedAt: new Date().toISOString(),
+      };
+      await notifyDiscord(payload);
+      setTestMessage('✅ Test notification sent. Check Discord.');
+    } catch (e) {
+      setTestMessage('⚠️ Could not send test. Check network or /api/notifyPick.');
+    } finally {
+      setTestSending(false);
+      setTimeout(() => setTestMessage(''), 5000);
+    }
+  };
   const completeSubmit = async (pickLabel) => {
     try {
       setIsSubmitting(true);
@@ -146,15 +201,29 @@ export default function DraftPage() {
       // Write the pick to the sheet (PATCH by search on Player)
       await axios.patch(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/search`, { [roundCol]: pickLabel }, { params: { Player: voterName } });
 
-      // Log the pick in DraftLog
-      await axios.post(getDraftLogUrl(''), {
+      // Log the pick in DraftLog (best-effort, non-blocking)
+      try {
+        await axios.post(getDraftLogUrl(''), {
+          pickNumber: overallPick,
+          round: currentRound,
+          team: voterName,
+          pick: pickLabel,
+          status: 'PICKED',
+          submittedAt: new Date().toISOString(),
+          windowHours: getPickWindowHours(currentRound),
+        });
+      } catch (e) {
+        console.warn('DraftLog write failed (non-blocking). Proceeding without log.');
+      }
+
+      // Notify Discord (non-blocking)
+      notifyDiscord({
         pickNumber: overallPick,
         round: currentRound,
         team: voterName,
         pick: pickLabel,
         status: 'PICKED',
         submittedAt: new Date().toISOString(),
-        windowHours: getPickWindowHours(currentRound),
       });
 
       // Optimistic UI update
@@ -323,15 +392,29 @@ export default function DraftPage() {
 
         // Mark PASS in sheet
         await axios.patch(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/search`, { [roundCol]: 'PASS' }, { params: { Player: onTheClock } });
-        // Log the pass
-        await axios.post(getDraftLogUrl(''), {
+        // Log the pass (best-effort)
+        try {
+          await axios.post(getDraftLogUrl(''), {
+            pickNumber: overallPick,
+            round: currentRound,
+            team: onTheClock,
+            pick: 'PASS',
+            status: 'PASSED',
+            submittedAt: new Date().toISOString(),
+            windowHours: pickWindowHours,
+          });
+        } catch (e) {
+          console.warn('DraftLog pass log failed (non-blocking).');
+        }
+
+        // Notify Discord of PASS (non-blocking)
+        notifyDiscord({
           pickNumber: overallPick,
           round: currentRound,
           team: onTheClock,
           pick: 'PASS',
           status: 'PASSED',
           submittedAt: new Date().toISOString(),
-          windowHours: pickWindowHours,
         });
 
         // Optimistic UI update
@@ -452,14 +535,21 @@ export default function DraftPage() {
 
         <div className="max-w-2xl mx-auto">
           {/* DraftLog readiness banner */}
-          {!logsReady && (
+          {!logsReady && showLogWarning && (
             <div className="mb-4 text-center">
-              <div className="inline-block bg-red-600/20 border-l-4 border-red-500 px-4 py-3 rounded-md shadow text-left text-sm max-w-xl mx-auto">
-                <strong className="text-red-400 font-semibold block mb-1">DraftLog Setup Required</strong>
-                <span className="text-white">
-                  Create a <span className="font-semibold text-lime-300">DraftLog</span> tab with headers:
+              <div className="inline-block bg-amber-600/20 border-l-4 border-amber-500 px-4 py-3 rounded-md shadow text-left text-sm max-w-xl mx-auto">
+                <strong className="text-amber-400 font-semibold block mb-1">DraftLog Not Detected</strong>
+                <span className="text-white block mb-2">
+                  Picks will still work. DraftLog powers the per-pick clock & recap. To enable later, add a <span className="font-semibold text-lime-300">DraftLog</span> tab with headers:
                   <code className="ml-1 bg-black/40 px-2 py-0.5 rounded">pickNumber,round,team,pick,status,submittedAt,windowHours</code>
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setShowLogWarning(false)}
+                  className="text-xs uppercase tracking-wider text-amber-300 underline"
+                >
+                  Dismiss
+                </button>
               </div>
             </div>
           )}
@@ -616,9 +706,9 @@ export default function DraftPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting || !voterName || !pickInput || !logsReady || draftNotStarted}
+              disabled={isSubmitting || !voterName || !pickInput || draftNotStarted}
               className={`w-full uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
-                isSubmitting || !voterName || !pickInput || !logsReady || draftNotStarted
+                isSubmitting || !voterName || !pickInput || draftNotStarted
                   ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
                   : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
               }`}
@@ -668,16 +758,42 @@ export default function DraftPage() {
               </div>
             </div>
           )}
-          {/* Backup link to edit sheet directly (commissioner use) */}
+          {/* Backup link to edit sheet directly (commissioner use) + Test Notification */}
           <div className="text-center mt-4">
-            <a
-              href="https://docs.google.com/spreadsheets/d/1NDVTuhiF8lpWKFLAvP83Llu8Owkq25bx3bHKvvC4bag/edit?usp=sharing"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-lime-300 hover:text-lime-200 underline text-sm"
-            >
-              Raw Draft Picks Sheet
-            </a>
+            <div className="inline-flex items-center gap-3 flex-wrap justify-center">
+              <a
+                href="https://docs.google.com/spreadsheets/d/1NDVTuhiF8lpWKFLAvP83Llu8Owkq25bx3bHKvvC4bag/edit?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-lime-300 hover:text-lime-200 underline text-sm"
+              >
+                Raw Draft Picks Sheet
+              </a>
+              {/* <button
+                type="button"
+                onClick={sendTestNotification}
+                disabled={testSending}
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
+                title="Sends a test message to Discord via /api/notifyPick"
+              >
+                {testSending ? 'Sending…' : 'Send Test Notification'}
+              </button> */}
+              <a
+                href="https://discord.gg/7Ud9D2XA"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black transition"
+                title="Join Discord to get notified when picks are made"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" className="opacity-90">
+                  <path d="M20.317 4.369A19.791 19.791 0 0016.558 3c-.197.35-.42.82-.574 1.2a18.4 18.4 0 00-7.968 0c-.154-.38-.377-.85-.574-1.2A19.789 19.789 0 003.683 4.37C1.803 7.216 1.156 9.96 1.33 12.662c2.1 1.567 4.137 2.52 6.106 3.145.47-.646.892-1.338 1.257-2.067a11.71 11.71 0 01-1.905-.902c.16-.118.315-.242.464-.37 3.692 1.74 7.69 1.74 11.383 0 .149.129.304.252.464.37-.611.345-1.253.64-1.905.902.365.729.787 1.421 1.257 2.067 1.97-.625 4.006-1.578 6.106-3.145.252-3.958-.68-6.67-2.74-8.293zM9.5 12.5c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2zm5 0c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2z" fill="currentColor"/>
+                </svg>
+                Get notified through Discord
+              </a>
+            </div>
+            {testMessage && (
+              <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testMessage}</div>
+            )}
           </div>
         </div>
 
