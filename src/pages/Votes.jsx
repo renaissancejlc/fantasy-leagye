@@ -32,6 +32,9 @@ const members = [
   'Utsav'
 ];
 
+// Early decision threshold: 12 voters -> 7 locks in an outcome immediately
+const AUTO_DECISIVE_VOTES = 7;
+
 // Sheet column keys for motion metadata (sheet uses 'propesedBy' typo)
 
 // ---------------------------------------------------------------------------
@@ -280,9 +283,18 @@ export default function Votes() {
 
       const closed = deadline ? (new Date() >= deadline) : false;
 
-      if (r.yes > r.no) r.outcome = closed ? 'Passed' : 'Projected to Pass';
-      else if (r.no > r.yes) r.outcome = closed ? 'Failed' : 'Projected to Fail';
-      else r.outcome = closed ? 'Tie' : 'Too Close to Call';
+      // Auto-decision: as soon as YES or NO reaches the threshold, lock the outcome
+      if (r.yes >= AUTO_DECISIVE_VOTES) {
+        r.outcome = 'Passed';
+      } else if (r.no >= AUTO_DECISIVE_VOTES) {
+        r.outcome = 'Failed';
+      } else if (r.yes > r.no) {
+        r.outcome = closed ? 'Passed' : 'Projected to Pass';
+      } else if (r.no > r.yes) {
+        r.outcome = closed ? 'Failed' : 'Projected to Fail';
+      } else {
+        r.outcome = closed ? 'Tie' : 'Too Close to Call';
+      }
     });
     arr.sort((a, b) => (b.lastTimestamp?.getTime() || 0) - (a.lastTimestamp?.getTime() || 0));
     return arr;
@@ -834,7 +846,12 @@ export default function Votes() {
                       <td className="px-3 py-2 text-red-400">{r.no}</td>
                       <td className="px-3 py-2 text-gray-300">{r.abstain}</td>
                       <td className="px-3 py-2">{r.total}</td>
-                      <td className={`px-3 py-2 ${r.outcome === 'Passes' ? 'text-lime-300' : r.outcome === 'Fails' ? 'text-red-400' : 'text-yellow-300'}`}>{r.outcome}</td>
+                      <td className={`px-3 py-2 ${
+  r.outcome === 'Passed' ? 'text-lime-300' :
+  r.outcome === 'Failed' ? 'text-red-400' :
+  r.outcome === 'Tie' ? 'text-gray-300' :
+  'text-yellow-300'
+}`}>{r.outcome}</td>
                       <td className="px-3 py-2 whitespace-nowrap text-gray-200">{r.lastTimestamp ? fmt(r.lastTimestamp) : '-'}</td>
                     </tr>
                   ))}

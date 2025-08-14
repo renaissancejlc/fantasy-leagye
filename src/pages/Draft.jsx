@@ -131,6 +131,8 @@ export default function DraftPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightIdx, setHighlightIdx] = useState(0);
   const pickInputRef = useRef(null);
+  // Map normalized player name -> position (from Players tab)
+  const [playerPosIndex, setPlayerPosIndex] = useState({});
 
   useEffect(() => {
     // Expect a sheet with a tab named "Players" and a column named Name or Player
@@ -146,6 +148,16 @@ export default function DraftPage() {
           )
         );
         setPlayerNames(names);
+
+        // Build normalized name -> position index for display (e.g., "Christian McCaffrey (RB)")
+        const index = {};
+        for (const r of rows) {
+          const nm = (r.Name || r.Player || r.name || r.player || '').toString().trim();
+          if (!nm) continue;
+          const pos = (r.Pos || r.POS || r.position || r.Position || '').toString().trim();
+          index[normalize(nm)] = pos;
+        }
+        setPlayerPosIndex(index);
       })
       .catch(() => {
         setPlayerNames([]); // graceful: no suggestions if tab missing
@@ -682,7 +694,14 @@ export default function DraftPage() {
                           onMouseDown={(e) => { e.preventDefault(); chooseSuggestion(name); }}
                           className={`px-3 py-2 cursor-pointer ${i === highlightIdx ? 'bg-lime-500/20 text-lime-200' : 'hover:bg-gray-800'}`}
                         >
-                          <span className="font-semibold text-white">{name}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-white">{name}</span>
+                            {playerPosIndex[normalize(name)] && (
+                              <span className="ml-3 text-[11px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-300">
+                                {playerPosIndex[normalize(name)]}
+                              </span>
+                            )}
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -914,13 +933,18 @@ export default function DraftPage() {
                 <tr key={idx} className="even:bg-gray-800/50 hover:bg-lime-300/10 hover:scale-[1.01] transition-transform duration-150">
                   <td className="px-3 py-2 font-semibold">{name}</td>
                   {picks.map((pick, roundIdx) => {
-                    const isDuplicate = duplicatePicks.has(normalize(pick));
+                    const normPick = normalize(pick);
+                    const isDuplicate = duplicatePicks.has(normPick);
+                    const pos = playerPosIndex[normPick];
+                    const displayPick = (pos && pick && pick !== '—' && normPick !== 'pass')
+                      ? `${pick} (${pos})`
+                      : pick;
                     return (
                       <td
                         key={roundIdx}
                         className={`px-3 py-2 text-center ${isDuplicate ? 'bg-red-600 text-white font-bold' : ''}`}
                       >
-                        {pick}
+                        {displayPick}
                       </td>
                     );
                   })}
