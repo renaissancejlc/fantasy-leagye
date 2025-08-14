@@ -18,13 +18,15 @@ async function notifyDiscord(payload) {
   // Try app endpoint first (if you later add a real /api/notifyPick). If 404 or network error, fall back to direct webhook.
   try {
     await axios.post('/api/notifyPick', payload);
+    console.info('[notifyDiscord] sent via /api/notifyPick');
     return true;
   } catch (e) {
     try {
       await axios.post(DISCORD_WEBHOOK, { content: formatDiscordMessage(payload) }, { headers: { 'Content-Type': 'application/json' } });
+      console.info('[notifyDiscord] sent via direct Discord webhook');
       return true;
     } catch (err) {
-      console.warn('Direct Discord webhook failed', err);
+      console.warn('[notifyDiscord] direct webhook failed', err);
       return false;
     }
   }
@@ -216,8 +218,8 @@ export default function DraftPage() {
         console.warn('DraftLog write failed (non-blocking). Proceeding without log.');
       }
 
-      // Notify Discord (non-blocking)
-      notifyDiscord({
+      // Notify Discord (await so we don't accidentally lose the call on fast state changes)
+      const sent = await notifyDiscord({
         pickNumber: overallPick,
         round: currentRound,
         team: voterName,
@@ -225,6 +227,7 @@ export default function DraftPage() {
         status: 'PICKED',
         submittedAt: new Date().toISOString(),
       });
+      if (!sent) console.warn('[notifyDiscord] pick notification failed');
 
       // Optimistic UI update
       setPlayersPicks(prev => prev.map(p => (
@@ -407,8 +410,8 @@ export default function DraftPage() {
           console.warn('DraftLog pass log failed (non-blocking).');
         }
 
-        // Notify Discord of PASS (non-blocking)
-        notifyDiscord({
+        // Notify Discord of PASS (await)
+        const passSent = await notifyDiscord({
           pickNumber: overallPick,
           round: currentRound,
           team: onTheClock,
@@ -416,6 +419,7 @@ export default function DraftPage() {
           status: 'PASSED',
           submittedAt: new Date().toISOString(),
         });
+        if (!passSent) console.warn('[notifyDiscord] pass notification failed');
 
         // Optimistic UI update
         setPlayersPicks((prev) => prev.map((p) => (
@@ -761,8 +765,15 @@ export default function DraftPage() {
           {/* Backup link to edit sheet directly (commissioner use) + Test Notification */}
           <div className="text-center mt-4">
             <div className="inline-flex items-center gap-3 flex-wrap justify-center">
-             
-              {/* <button
+              {/* <a
+                href="https://docs.google.com/spreadsheets/d/1NDVTuhiF8lpWKFLAvP83Llu8Owkq25bx3bHKvvC4bag/edit?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-lime-300 hover:text-lime-200 underline text-sm"
+              >
+                Raw Draft Picks Sheet
+              </a>
+              <button
                 type="button"
                 onClick={sendTestNotification}
                 disabled={testSending}
