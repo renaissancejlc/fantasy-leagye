@@ -82,9 +82,9 @@ export default function NavBar() {
 
           <div className="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest">
             <Link to="/" className="hover:text-lime-400 transition-colors">Home</Link>
-            <Link to="/teams" className="hover:text-lime-400 transition-colors">Teams</Link>
             <Link to="/matchups" className="hover:text-lime-400 transition-colors">Matchups</Link>
-            <Link to="/rankings" className="hover:text-lime-400 transition-colors">Rankings</Link>
+            <Link to="/vote" className="hover:text-lime-400 transition-colors">Votes</Link>
+            <Link to="/draft" className="hover:text-lime-400 transition-colors">Draft</Link>
             <Link to="/history" className="hover:text-lime-400 transition-colors">History</Link>
             <Link to="/prize" className="hover:text-lime-400 transition-colors">Prize</Link>
           </div>
