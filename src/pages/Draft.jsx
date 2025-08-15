@@ -34,7 +34,7 @@ async function notifyDiscord(payload) {
 
 
 const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e';
-const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
+const VOTES_API = 'https://api.sheetbest.com/sheets/fd6ab79a-a239-4109-a6ac-6a3ca70702f3';
 const PLAYERS_URL = `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Players`;
 // Explicit snake-draft order (display + turn control)
 // Note: uses provided spellings; mapped to actual sheet names via normalization
