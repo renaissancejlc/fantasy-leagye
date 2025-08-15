@@ -33,7 +33,7 @@ async function notifyDiscord(payload) {
 }
 
 
-const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
+const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e';
 const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
 const PLAYERS_URL = `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Players`;
 // Explicit snake-draft order (display + turn control)
