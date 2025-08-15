@@ -33,7 +33,7 @@ async function notifyDiscord(payload) {
 }
 
 
-const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
+const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e';
 const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
 const PLAYERS_URL = `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Players`;
 // Explicit snake-draft order (display + turn control)
@@ -64,6 +64,10 @@ const fmtDuration = (ms) => {
   const s = totalSec % 60;
   return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
 };
+
+
+// ---- Feature flags ----
+const AUTO_PASS_ENABLED = false; // hard-disable auto-pass per commissioner request
 
 const getPickWindowHours = (round) => (round <= 3 ? 24 : 12);
 
@@ -442,22 +446,51 @@ export default function DraftPage() {
   const pickWindowHours = getPickWindowHours(currentRound);
   const clockDeadline = React.useMemo(() => new Date(clockStart.getTime() + pickWindowHours * 3600 * 1000), [clockStart, pickWindowHours]);
   const pickMsLeft = Math.max(0, clockDeadline.getTime() - now.getTime());
-  const draftNotStarted = timeLeft.total > 0;
+  // --- Draft start time logic (fetch from Sheet.best if available) ---
+  // If you want to fetch startTime from Sheet.best, do it here:
+  // For now, fallback to static date as before.
+  const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
+  useEffect(() => {
+    // Example: fetch from Sheet.best if you have a config tab/row with startTime
+    // axios.get('https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e/tabs/Config')
+    //   .then(res => {
+    //     const row = Array.isArray(res.data) ? res.data[0] : null;
+    //     if (row && row.startTime) setStartTime(row.startTime);
+    //   })
+    //   .catch(() => {});
+    // For now, keep static fallback.
+    setStartTime('2025-08-14T09:30:00-07:00');
+  }, []);
+
+  // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
+  const hasDraftStarted = new Date() >= new Date(startTime);
+  const draftNotStarted = !hasDraftStarted;
+  const draftStarted = hasDraftStarted;
 
   const [passInFlight, setPassInFlight] = useState(false);
+  // --- Auto-pass logic with updated checks ---
+  // Helper: check if the current pick is expired
+  function pickExpired() {
+    // Defensive: if pickMsLeft is defined and <= 0, and after draft start
+    return hasDraftStarted && pickMsLeft <= 0;
+  }
   useEffect(() => {
-    // Only run after draft starts
-    if (timeLeft.total > 0) return;
-    if (!logsReady) return;
-    if (pickMsLeft > 0) return;
-    if (passInFlight) return;
+    if (!AUTO_PASS_ENABLED) return; // <— hard-disable auto-pass
+    // Helper function: check and auto-pass if needed
+    const checkAndAutoPass = async () => {
+      // Only run if draft has started or if current pick is truly expired
+      if (!hasDraftStarted) return;
+      if (!logsReady) return;
+      if (!pickExpired()) return;
+      if (passInFlight) return;
 
-    const teamIdx = playersPicks.findIndex((p) => normalize(p.name) === normalize(onTheClock));
-    if (teamIdx === -1) return;
-    const currentCell = playersPicks[teamIdx]?.picks?.[currentRound - 1];
-    if (currentCell && currentCell !== '—') return; // already filled
+      // Determine if pick is already made
+      const teamIdx = playersPicks.findIndex((p) => normalize(p.name) === normalize(onTheClock));
+      if (teamIdx === -1) return;
+      const currentCell = playersPicks[teamIdx]?.picks?.[currentRound - 1];
+      // Prevent passing if current pick is already made
+      if (currentCell && currentCell !== '—') return;
 
-    (async () => {
       try {
         setPassInFlight(true);
         const roundCol = `Round ${currentRound}`;
@@ -506,8 +539,13 @@ export default function DraftPage() {
       } finally {
         setPassInFlight(false);
       }
-    })();
-  }, [pickMsLeft, playersPicks, onTheClock, currentRound, overallPick, logsReady, timeLeft.total]);
+    };
+
+    // Only trigger auto-pass if draft has started and current pick is expired
+    if (hasDraftStarted && pickExpired()) {
+      checkAndAutoPass();
+    }
+  }, [pickMsLeft, playersPicks, onTheClock, currentRound, overallPick, logsReady, timeLeft.total, hasDraftStarted, passInFlight]);
 
   useEffect(() => {
     setPinError('');
