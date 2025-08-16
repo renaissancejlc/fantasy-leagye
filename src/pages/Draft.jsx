@@ -331,7 +331,28 @@ export default function DraftPage() {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-
+// --- Authoritative time (avoids client clock drift) ---
+// Poll a neutral time source; if it fails, fall back to local `now`.
+const [serverNow, setServerNow] = useState(null);
+useEffect(() => {
+  let stop = false;
+  const fetchNow = async () => {
+    try {
+      const r = await fetch('https://worldtimeapi.org/api/timezone/America/Los_Angeles', { cache: 'no-store' });
+      const j = await r.json();
+      const dt = j.datetime || j.utc_datetime;
+      const d = dt ? new Date(dt) : new Date();
+      if (!stop) setServerNow(d);
+    } catch (_) {
+      if (!stop) setServerNow(null); // fall back to local
+    }
+  };
+  fetchNow();
+  const i = setInterval(fetchNow, 60_000);
+  return () => { stop = true; clearInterval(i); };
+}, []);
+const effectiveNow = serverNow || now;
+const isoNow = () => (serverNow ? new Date(serverNow.getTime()).toISOString() : new Date().toISOString());
 
   // DraftLog tab readiness
   const [logsReady, setLogsReady] = useState(true);
@@ -439,14 +460,19 @@ export default function DraftPage() {
   }, [draftLogRows]);
 
   const draftStart = React.useMemo(() => new Date('2025-08-14T09:30:00-07:00'), []);
-  const clockStart = React.useMemo(() => {
-    return overallPick <= 1 ? draftStart : (lastSubmittedAt || draftStart);
-  }, [overallPick, lastSubmittedAt, draftStart]);
+const clockStart = React.useMemo(() => {
+  // For pick #1, start at the draft start time.
+  if (overallPick <= 1) return draftStart;
+  // If we have a timestamp for the *last* pick, use that.
+  if (lastSubmittedAt) return lastSubmittedAt;
+  // If DraftLog hasn’t arrived yet, avoid early expiry:
+  // temporarily anchor to "now" until the log appears.
+  return new Date(effectiveNow.getTime());
+}, [overallPick, lastSubmittedAt, draftStart, effectiveNow]);
 
   const pickWindowHours = getPickWindowHours(currentRound);
   const clockDeadline = React.useMemo(() => new Date(clockStart.getTime() + pickWindowHours * 3600 * 1000), [clockStart, pickWindowHours]);
-  const pickMsLeft = Math.max(0, clockDeadline.getTime() - now.getTime());
-  // --- Draft start time logic (fetch from Sheet.best if available) ---
+const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());  // --- Draft start time logic (fetch from Sheet.best if available) ---
   // If you want to fetch startTime from Sheet.best, do it here:
   // For now, fallback to static date as before.
   const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
@@ -470,10 +496,16 @@ export default function DraftPage() {
   const [passInFlight, setPassInFlight] = useState(false);
   // --- Auto-pass logic with updated checks ---
   // Helper: check if the current pick is expired
-  function pickExpired() {
-    // Defensive: if pickMsLeft is defined and <= 0, and after draft start
-    return hasDraftStarted && pickMsLeft <= 0;
-  }
+function pickExpired() {
+  if (!hasDraftStarted) return false;
+  // For picks after #1, don’t expire until we actually know when the previous pick happened.
+  if (overallPick > 1 && !lastSubmittedAt) return false;
+
+  // Small grace period to absorb latency/clock jitter.
+  const GRACE_MS = 2 * 60 * 1000; // 2 minutes
+
+  return (clockDeadline.getTime() - effectiveNow.getTime()) <= -GRACE_MS;
+}
   useEffect(() => {
     if (!AUTO_PASS_ENABLED) return; // <— hard-disable auto-pass
     // Helper function: check and auto-pass if needed
