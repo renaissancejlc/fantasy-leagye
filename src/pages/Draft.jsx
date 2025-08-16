@@ -415,6 +415,25 @@ const effectiveNow = new Date(now.getTime() + timeOffsetMs);
 const isoNow = () => new Date(Date.now() + timeOffsetMs).toISOString();
 // Local anchor for last submission time to avoid cascade passes if DraftLog polling lags
 const [localSubmitAt, setLocalSubmitAt] = useState(null);
+// Hydrate localSubmitAt from localStorage on mount (resilience fallback, does NOT affect cross-device or DraftLog-authoritative behavior)
+useEffect(() => {
+  try {
+    const saved = localStorage.getItem('fantasy:lastSubmitAt');
+    if (saved) {
+      const d = new Date(saved);
+      if (!isNaN(+d)) setLocalSubmitAt(d);
+    }
+  } catch {}
+}, []);
+
+// Persist localSubmitAt to localStorage when it changes
+useEffect(() => {
+  try {
+    if (localSubmitAt) {
+      localStorage.setItem('fantasy:lastSubmitAt', new Date(localSubmitAt).toISOString());
+    }
+  } catch {}
+}, [localSubmitAt]);
 
   // Helper: update offset using any axios response headers
 const updateOffsetFromHeaders = (headers) => {
@@ -658,7 +677,7 @@ const lastSubmittedAt = React.useMemo(() => {
   return max;
 }, [draftLogRows, localSubmitAt]);
 
-// Latch a stable start time per pick so the countdown actually ticks down.
+// Latch a stable, authoritative start time per pick so the countdown is always anchored by DraftLog (never resets on reload).
 // We only re-latch when the pick rotates to a new team/round.
 const pickId = `${currentRound}:${overallPick}:${normalize(onTheClock)}`;
 const clockStartRef = useRef(null);
@@ -666,14 +685,13 @@ const lastPickIdRef = useRef(null);
 useEffect(() => {
   if (lastPickIdRef.current === pickId) return;
   lastPickIdRef.current = pickId;
-  const freshCutoffMs = 2 * 60 * 1000; // trust logs only if <2m old
-  if (overallPick <= 1) {
-    clockStartRef.current = draftStart;
-  } else if (lastSubmittedAt && (effectiveNow.getTime() - lastSubmittedAt.getTime() < freshCutoffMs)) {
-    clockStartRef.current = lastSubmittedAt;
-  } else {
-    clockStartRef.current = new Date(effectiveNow.getTime());
-  }
+  // Authoritative start: first pick uses the configured draftStart; otherwise
+  // use the timestamp of the prior pick from DraftLog (or local fallback).
+  // This ensures the timer is always anchored by DraftLog and will not reset on reload.
+  const authoritativeStart = (overallPick <= 1)
+    ? draftStart
+    : (lastSubmittedAt || draftStart);
+  clockStartRef.current = authoritativeStart;
 }, [pickId, overallPick, lastSubmittedAt, draftStart]);
 
 const clockStart = clockStartRef.current || draftStart;
@@ -685,8 +703,8 @@ const clockDeadline = React.useMemo(
 );
 const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
 
-  // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
-  const hasDraftStarted = effectiveNow >= new Date(startTime);
+  // Use draftStart (already a Date) for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
+  const hasDraftStarted = effectiveNow >= draftStart;
   const draftNotStarted = !hasDraftStarted;
   const draftStarted = hasDraftStarted;
 
