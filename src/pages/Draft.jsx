@@ -216,7 +216,7 @@ export default function DraftPage() {
         team: voterName || onTheClock || 'Test Team',
         pick: pendingPickLabel || pickInput || 'Test Player',
         status: 'TEST',
-        submittedAt: new Date().toISOString(),
+        submittedAt: isoNow(),
       };
       await notifyDiscord(payload);
       setTestMessage('✅ Test notification sent. Check Discord.');
@@ -289,7 +289,7 @@ export default function DraftPage() {
           team: voterName,
           pick: pickLabel,
           status: 'PICKED',
-          submittedAt: new Date().toISOString(),
+          submittedAt: isoNow(),
           windowHours: getPickWindowHours(currentRound),
         });
       } catch (e) {
@@ -303,7 +303,7 @@ export default function DraftPage() {
         team: voterName,
         pick: pickLabel,
         status: 'PICKED',
-        submittedAt: new Date().toISOString(),
+        submittedAt: isoNow(),
       });
       if (!sent) console.warn('[notifyDiscord] pick notification failed');
 
@@ -379,10 +379,10 @@ const isoNow = () => (serverNow ? new Date(serverNow.getTime()).toISOString() : 
   }, [logsReady]);
 
   useEffect(() => {
-    const draftDate = new Date('2025-08-14T09:30:00-07:00');
-    const updateCountdown = () => {
-      const now = new Date();
-      const diff = draftDate - now;
+    const update = () => {
+      const draftDate = new Date(startTime);
+      const current = (serverNow || now);
+      const diff = draftDate.getTime() - current.getTime();
 
       if (diff <= 0) {
         setTimeLeft({ total: 0 });
@@ -398,10 +398,10 @@ const isoNow = () => (serverNow ? new Date(serverNow.getTime()).toISOString() : 
       setTimeLeft({ total, days, hours, minutes, seconds });
     };
 
-    const timer = setInterval(updateCountdown, 1000);
-    updateCountdown();
-    return () => clearInterval(timer);
-  }, []);
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [startTime, serverNow, now]);
 
   useEffect(() => {
     const fetchDraftData = () => {
@@ -459,7 +459,20 @@ const isoNow = () => (serverNow ? new Date(serverNow.getTime()).toISOString() : 
     return max;
   }, [draftLogRows]);
 
-  const draftStart = React.useMemo(() => new Date('2025-08-14T09:30:00-07:00'), []);
+  // --- Draft start time (configurable; fallback static) ---
+  const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
+  useEffect(() => {
+    // Optionally fetch from a Config tab in Sheet.best:
+    // axios.get(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Config`)
+    //   .then(res => {
+    //     const row = Array.isArray(res.data) ? res.data[0] : null;
+    //     if (row?.startTime) setStartTime(row.startTime);
+    //   })
+    //   .catch(() => {});
+    // Keep static fallback for now.
+    setStartTime('2025-08-14T09:30:00-07:00');
+  }, []);
+  const draftStart = React.useMemo(() => new Date(startTime), [startTime]);
 const clockStart = React.useMemo(() => {
   // For pick #1, start at the draft start time.
   if (overallPick <= 1) return draftStart;
@@ -472,25 +485,10 @@ const clockStart = React.useMemo(() => {
 
   const pickWindowHours = getPickWindowHours(currentRound);
   const clockDeadline = React.useMemo(() => new Date(clockStart.getTime() + pickWindowHours * 3600 * 1000), [clockStart, pickWindowHours]);
-const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());  // --- Draft start time logic (fetch from Sheet.best if available) ---
-  // If you want to fetch startTime from Sheet.best, do it here:
-  // For now, fallback to static date as before.
-  const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
-  useEffect(() => {
-    // Example: fetch from Sheet.best if you have a config tab/row with startTime
-    // axios.get('https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e/tabs/Config')
-    //   .then(res => {
-    //     const row = Array.isArray(res.data) ? res.data[0] : null;
-    //     if (row && row.startTime) setStartTime(row.startTime);
-    //   })
-    //   .catch(() => {});
-    // For now, keep static fallback.
-    setStartTime('2025-08-14T09:30:00-07:00');
-  }, []);
+const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
 
   // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
-  const hasDraftStarted = new Date() >= new Date(startTime);
-  const draftNotStarted = !hasDraftStarted;
+const hasDraftStarted = effectiveNow >= new Date(startTime);  const draftNotStarted = !hasDraftStarted;
   const draftStarted = hasDraftStarted;
 
   const [passInFlight, setPassInFlight] = useState(false);
@@ -542,7 +540,7 @@ function pickExpired() {
             team: onTheClock,
             pick: 'PASS',
             status: 'PASSED',
-            submittedAt: new Date().toISOString(),
+            submittedAt: isoNow(),
             windowHours: pickWindowHours,
           });
         } catch (e) {
@@ -556,7 +554,7 @@ function pickExpired() {
           team: onTheClock,
           pick: 'PASS',
           status: 'PASSED',
-          submittedAt: new Date().toISOString(),
+          submittedAt: isoNow(),
         });
         if (!passSent) console.warn('[notifyDiscord] pass notification failed');
 
@@ -609,7 +607,7 @@ function pickExpired() {
     const salt = makeSalt(8);
     const pinHash = await saltedHash(pin, salt);
     try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
-    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: new Date().toISOString() });
+    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: isoNow()});
     setPinRecord({ voter, salt, pinHash });
     setPinMode('verify');
   };
