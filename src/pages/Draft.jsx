@@ -104,7 +104,7 @@ const fmtDuration = (ms) => {
 
 
 // ---- Feature flags ----
-const AUTO_PASS_ENABLED = true; // Enable auto-pass: the ONLY way a team is passed is when time expires
+const AUTO_PASS_ENABLED = false; // Enable auto-pass: the ONLY way a team is passed is when time expires
 
 // Base: 30 minutes per pick; Exception: Dustin gets 60 minutes
 const BASE_PICK_MINUTES = 30;
