@@ -34,6 +34,25 @@ async function notifyDiscord(payload) {
     }
   }
 }
+// --- SMS Notification helpers (non-blocking) ---
+const getAppUrl = () => (typeof window !== 'undefined' ? window.location.origin : '');
+const formatTurnSMS = (p) => {
+  const base = `You're on the clock: Round ${p.round}, Pick ${p.pickNumber} — ${p.team}`;
+  const link = getAppUrl();
+  return link ? `${base}. Submit: ${link}` : base;
+};
+// async function notifyTurnSMS(to, payload) {
+//   try {
+//     if (!to) return { ok: false, error: 'Missing destination number' };
+//     const isLocal = (typeof window !== 'undefined') && (/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname));
+//     const API_BASE = isLocal ? 'http://localhost:3001' : '';
+//     const resp = await axios.post(`${API_BASE}/api/notifyTurn`, { to, message: formatTurnSMS(payload) });
+//     const data = resp?.data || {};
+//     return { ok: !!data.ok && !data.dryRun, dryRun: !!data.dryRun, sid: data.sid, error: data.error, raw: data };
+//   } catch (e) {
+//     return { ok: false, error: e?.message || 'Network error' };
+//   }
+// }
 
 
 const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e';
@@ -59,6 +78,21 @@ const RAW_DRAFT_ORDER = [
 const getDraftLogUrl = (suffix = '') => `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/DraftLog${suffix}`;
 
 const normalize = str => str?.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim();
+// Static phone book (normalized keys). Kept in code so SMS works without SheetBest.
+const STATIC_PHONE_BOOK = Object.freeze({
+  callie: '+16194033562',
+  christian: '+19193256775',
+  cisco: '+16193070620',
+  dad: '+16193069767',
+  daisy: '+19713367265',
+  dustin: '+16193020433',
+  angelo: '+16195049092',
+  raphy: '+16194049740',
+  david: '+16196728028',
+  simon: '+16196164790',
+  tariq: '+12096237026',
+  utsav: '+16196469110',
+});
 
 const fmtDuration = (ms) => {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -70,9 +104,12 @@ const fmtDuration = (ms) => {
 
 
 // ---- Feature flags ----
-const AUTO_PASS_ENABLED = false; // hard-disable auto-pass per commissioner request
+const AUTO_PASS_ENABLED = true; // Enable auto-pass: the ONLY way a team is passed is when time expires
 
-const getPickWindowHours = (round) => (round <= 3 ? 24 : 12);
+// Base: 30 minutes per pick; Exception: Dustin gets 60 minutes
+const BASE_PICK_MINUTES = 30;
+const EXCEPTION_MINUTES = Object.freeze({ dustin: 60 });
+const getPickWindowMinutes = (teamName, round) => EXCEPTION_MINUTES[normalize(teamName || '')] || BASE_PICK_MINUTES;
 
 // --- PIN (draft code) helpers -------------------------------------------------
 const getPinsUrl = (suffix = '') => `${VOTES_API.replace(/\/$/, '')}/tabs/Pins${suffix}`;
@@ -140,6 +177,8 @@ export default function DraftPage() {
   const pickInputRef = useRef(null);
   // Map normalized player name -> position (from Players tab)
   const [playerPosIndex, setPlayerPosIndex] = useState({});
+// Phone book seeded in code; failures in SMS are non-blocking
+const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
 
   useEffect(() => {
     // Expect a sheet with a tab named "Players" and a column named Name or Player
@@ -209,20 +248,22 @@ export default function DraftPage() {
   // --- Test Notification state + helper ---
   const [testSending, setTestSending] = useState(false);
   const [testMessage, setTestMessage] = useState('');
+  const [testSmsSending, setTestSmsSending] = useState(false);
+  const [testSmsMessage, setTestSmsMessage] = useState('');
 
   const sendTestNotification = async () => {
     try {
       setTestMessage('');
       setTestSending(true);
       const payload = {
-  pickNumber: overallPick,
-  round: currentRound,
-  team: voterName || onTheClock || 'Test Team',
-  pick: pendingPickLabel || pickInput || 'Test Player',
-  status: 'TEST',
-  nextUp: computeNextUp(),
-  submittedAt: isoNow(),
-};
+        pickNumber: overallPick,
+        round: currentRound,
+        team: voterName || onTheClock || 'Test Team',
+        pick: pendingPickLabel || pickInput || 'Test Player',
+        status: 'TEST',
+        nextUp: computeNextUp(),
+        submittedAt: isoNow(),
+      };
       await notifyDiscord(payload);
       setTestMessage('✅ Test notification sent. Check Discord.');
     } catch (e) {
@@ -232,6 +273,31 @@ export default function DraftPage() {
       setTimeout(() => setTestMessage(''), 5000);
     }
   };
+  // const sendTestSMS = async () => {
+  //   try {
+  //     setTestSmsMessage('');
+  //     setTestSmsSending(true);
+  //     const payload = {
+  //       pickNumber: overallPick,
+  //       round: currentRound,
+  //       team: voterName || onTheClock || 'Test Team',
+  //     };
+  //     const result = await notifyTurnSMS('+16198858867', payload);
+  //     if (result?.ok) {
+  //       setTestSmsMessage(`✅ Test SMS accepted by Twilio. SID: ${result.sid || 'n/a'}`);
+  //     } else if (result?.dryRun) {
+  //       setTestSmsMessage('ℹ️ Test ran in DRY RUN. Set TWILIO_SID, TWILIO_TOKEN, TWILIO_FROM in .env.local and restart the SMS server.');
+  //     } else {
+  //       const detail = result?.error || result?.raw?.twilio?.message || 'Unknown error';
+  //       setTestSmsMessage(`⚠️ Could not send test SMS. ${detail}`);
+  //     }
+  //   } catch (e) {
+  //     setTestSmsMessage('⚠️ Could not send test SMS. Check /api/notifyTurn.');
+  //   } finally {
+  //     setTestSmsSending(false);
+  //     setTimeout(() => setTestSmsMessage(''), 7000);
+  //   }
+  // };
   const completeSubmit = async (pickLabel) => {
     try {
       setIsSubmitting(true);
@@ -296,23 +362,26 @@ export default function DraftPage() {
           pick: pickLabel,
           status: 'PICKED',
           submittedAt: isoNow(),
-          windowHours: getPickWindowHours(currentRound),
-        });
+windowHours: getPickWindowMinutes(voterName, currentRound) / 60,        });
       } catch (e) {
         console.warn('DraftLog write failed (non-blocking). Proceeding without log.');
       }
 
       // Notify Discord (await so we don't accidentally lose the call on fast state changes)
-const sent = await notifyDiscord({
-  pickNumber: overallPick,
-  round: currentRound,
-  team: voterName,
-  pick: pickLabel,
-  status: 'PICKED',
-  nextUp: computeNextUp(),
-  submittedAt: isoNow(),
-});
+      const sent = await notifyDiscord({
+        pickNumber: overallPick,
+        round: currentRound,
+        team: voterName,
+        pick: pickLabel,
+        status: 'PICKED',
+        nextUp: computeNextUp(),
+        submittedAt: isoNow(),
+      });
+      // Fire-and-forget SMS; do not block submission if it fails
+      // void notifyNextUpSMS(computeNextUp());
       if (!sent) console.warn('[notifyDiscord] pick notification failed');
+      // Anchor locally so the next pick's timer starts now even if logs lag a bit
+setLocalSubmitAt(new Date(effectiveNow.getTime()));
 
       // Optimistic UI update
       setPlayersPicks(prev => prev.map(p => (
@@ -344,8 +413,10 @@ const sent = await notifyDiscord({
 const [timeOffsetMs, setTimeOffsetMs] = useState(0);
 const effectiveNow = new Date(now.getTime() + timeOffsetMs);
 const isoNow = () => new Date(Date.now() + timeOffsetMs).toISOString();
+// Local anchor for last submission time to avoid cascade passes if DraftLog polling lags
+const [localSubmitAt, setLocalSubmitAt] = useState(null);
 
-// Helper: update offset using any axios response headers
+  // Helper: update offset using any axios response headers
 const updateOffsetFromHeaders = (headers) => {
   try {
     const serverDate = headers?.date || headers?.Date;
@@ -360,6 +431,87 @@ const updateOffsetFromHeaders = (headers) => {
     // ignore
   }
 };
+
+// --- Business-hours draft clock (Pacific Time) ---------------------------------
+const ACTIVE_TZ = 'America/Los_Angeles';
+const ACTIVE_START_HOUR = 9;  // 9:00 AM PT
+const ACTIVE_END_HOUR = 19;  // 7:00 PM PT
+
+// Parse a Date into Pacific local parts using Intl (works regardless of viewer's time zone)
+function getTZParts(d, tz = ACTIVE_TZ) {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+  const parts = fmt.formatToParts(d).reduce((acc, p) => {
+    if (p.type === 'year') acc.y = parseInt(p.value, 10);
+    if (p.type === 'month') acc.m = parseInt(p.value, 10);
+    if (p.type === 'day') acc.d = parseInt(p.value, 10);
+    if (p.type === 'hour') acc.H = parseInt(p.value, 10);
+    if (p.type === 'minute') acc.M = parseInt(p.value, 10);
+    if (p.type === 'second') acc.S = parseInt(p.value, 10);
+    return acc;
+  }, {});
+  return parts;
+}
+
+// Convert Pacific local date parts back to a real UTC Date
+function localPartsToDate(p, tz = ACTIVE_TZ) {
+  // Initial guess treats parts as if they were UTC
+  let utcMs = Date.UTC(p.y, (p.m || 1) - 1, p.d, p.H || 0, p.M || 0, p.S || 0);
+  let date = new Date(utcMs);
+  // Align minutes difference between shown local time and target local time
+  let shown = getTZParts(date, tz);
+  const targetMin = (p.H || 0) * 60 + (p.M || 0);
+  const shownMin = (shown.H || 0) * 60 + (shown.M || 0);
+  date = new Date(date.getTime() + (targetMin - shownMin) * 60000);
+  // Align any day difference (handles DST offsets cleanly)
+  shown = getTZParts(date, tz);
+  const baseTarget = Date.UTC(p.y, p.m - 1, p.d);
+  const baseShown = Date.UTC(shown.y, shown.m - 1, shown.d);
+  const dayDelta = Math.round((baseTarget - baseShown) / (24 * 3600 * 1000));
+  if (dayDelta !== 0) {
+    date = new Date(date.getTime() + dayDelta * 24 * 3600 * 1000);
+  }
+  return date;
+}
+
+// Given a start time, add N active minutes counting only 9am–7pm PT windows.
+function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
+  const ONE_MIN = 60000;
+  let cursor = new Date(startDate instanceof Date ? startDate.getTime() : new Date(startDate).getTime());
+  let left = Math.max(0, Math.floor(minutesNeeded));
+  let guard = 0;
+  while (left > 0 && guard++ < 1000) {
+    const p = getTZParts(cursor, tz);
+    const windowStart = localPartsToDate({ y: p.y, m: p.m, d: p.d, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
+    const windowEnd   = localPartsToDate({ y: p.y, m: p.m, d: p.d, H: ACTIVE_END_HOUR,   M: 0, S: 0 }, tz);
+
+    // If we're before the window, jump to 9am. If after, jump to next day 9am.
+    if (cursor < windowStart) {
+      cursor = windowStart; // day hasn't started; start at 9:00
+      continue;
+    }
+    if (cursor >= windowEnd) {
+      // move to next day 9:00
+      const nextDayStart = localPartsToDate({ y: p.y, m: p.m, d: p.d + 1, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
+      cursor = nextDayStart;
+      continue;
+    }
+
+    const availableMin = Math.floor((windowEnd.getTime() - cursor.getTime()) / ONE_MIN);
+    if (left <= availableMin) {
+      return new Date(cursor.getTime() + left * ONE_MIN);
+    }
+    // Consume today's remaining window and move to next day's window start
+    left -= availableMin;
+    const nextDayStart = localPartsToDate({ y: p.y, m: p.m, d: p.d + 1, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
+    cursor = nextDayStart;
+  }
+  return cursor; // fallback
+}
 
   // --- Draft start time (configurable; fallback static) ---
   const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
@@ -483,32 +635,55 @@ const computeNextUp = React.useCallback(() => {
   return nextOrder[nextIdx] || '';
 }, [currentRound, idxInRound, teamOrder, totalTeams]);
 
-  const lastSubmittedAt = React.useMemo(() => {
-    let max = null;
-    for (const r of draftLogRows) {
-      const t = r?.submittedAt || r?.submitted_at || r?.timestamp;
-      if (t) {
-        const d = new Date(t);
-        if (!isNaN(+d) && (!max || d > max)) max = d;
-      }
+// const notifyNextUpSMS = (name) => {
+//   try {
+//     const to = phoneBook[normalize(name || '')];
+//     if (!to) return Promise.resolve(false);
+//     const payload = { round: currentRound, pickNumber: overallPick + 1, team: name };
+//     return notifyTurnSMS(to, payload);
+//   } catch (_) {
+//     return Promise.resolve(false);
+//   }
+// };
+
+const lastSubmittedAt = React.useMemo(() => {
+  let max = localSubmitAt ? new Date(localSubmitAt) : null;
+  for (const r of draftLogRows) {
+    const t = r?.submittedAt || r?.submitted_at || r?.timestamp;
+    if (t) {
+      const d = new Date(t);
+      if (!isNaN(+d) && (!max || d > max)) max = d;
     }
-    return max;
-  }, [draftLogRows]);
+  }
+  return max;
+}, [draftLogRows, localSubmitAt]);
 
-const clockStart = React.useMemo(() => {
-  // For pick #1, start at the draft start time.
-  if (overallPick <= 1) return draftStart;
-  // If we have a timestamp for the *last* pick, use that.
-  if (lastSubmittedAt) return lastSubmittedAt;
-  // If DraftLog hasn’t arrived yet, avoid early expiry:
-  // temporarily anchor to "now" until the log appears.
-  return new Date(effectiveNow.getTime());
-}, [overallPick, lastSubmittedAt, draftStart, effectiveNow]);
+// Latch a stable start time per pick so the countdown actually ticks down.
+// We only re-latch when the pick rotates to a new team/round.
+const pickId = `${currentRound}:${overallPick}:${normalize(onTheClock)}`;
+const clockStartRef = useRef(null);
+const lastPickIdRef = useRef(null);
+useEffect(() => {
+  if (lastPickIdRef.current === pickId) return;
+  lastPickIdRef.current = pickId;
+  const freshCutoffMs = 2 * 60 * 1000; // trust logs only if <2m old
+  if (overallPick <= 1) {
+    clockStartRef.current = draftStart;
+  } else if (lastSubmittedAt && (effectiveNow.getTime() - lastSubmittedAt.getTime() < freshCutoffMs)) {
+    clockStartRef.current = lastSubmittedAt;
+  } else {
+    clockStartRef.current = new Date(effectiveNow.getTime());
+  }
+}, [pickId, overallPick, lastSubmittedAt, draftStart]);
 
-  const pickWindowHours = getPickWindowHours(currentRound);
-  const clockDeadline = React.useMemo(() => new Date(clockStart.getTime() + pickWindowHours * 3600 * 1000), [clockStart, pickWindowHours]);
+const clockStart = clockStartRef.current || draftStart;
+
+const windowMinutes = getPickWindowMinutes(onTheClock, currentRound);
+const clockDeadline = React.useMemo(
+  () => computeActiveDeadline(clockStart, windowMinutes, ACTIVE_TZ),
+  [clockStart, windowMinutes]
+);
 const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
-
 
   // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
   const hasDraftStarted = effectiveNow >= new Date(startTime);
@@ -560,7 +735,8 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
             pick: 'PASS',
             status: 'PASSED',
             submittedAt: isoNow(),
-            windowHours: pickWindowHours,
+            // Use windowMinutes / 60 for windowHours
+            windowHours: windowMinutes / 60,
           });
         } catch (e) {
           console.warn('DraftLog pass log failed (non-blocking).');
@@ -568,16 +744,19 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
 
         // Notify Discord of PASS (await)
         const passSent = await notifyDiscord({
-  pickNumber: overallPick,
-  round: currentRound,
-  team: onTheClock,
-  pick: 'PASS',
-  status: 'PASSED',
-  nextUp: computeNextUp(),
-  submittedAt: isoNow(),
-});
+          pickNumber: overallPick,
+          round: currentRound,
+          team: onTheClock,
+          pick: 'PASS',
+          status: 'PASSED',
+          nextUp: computeNextUp(),
+          submittedAt: isoNow(),
+        });
         if (!passSent) console.warn('[notifyDiscord] pass notification failed');
-
+        // Fire-and-forget SMS; do not block if it fails
+        // void notifyNextUpSMS(computeNextUp());
+        // Prevent cascade by locally anchoring the next pick's start time to now
+        setLocalSubmitAt(new Date(effectiveNow.getTime()));
         // Optimistic UI update
         setPlayersPicks((prev) => prev.map((p) => (
           normalize(p.name) === normalize(onTheClock)
@@ -637,6 +816,11 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
     setSubmitError('');
     if (!voterName) { setSubmitError('Select your name.'); return; }
     if (!pickInput.trim()) { setSubmitError('Enter your pick.'); return; }
+    // Disallow manual PASS. Only auto-pass on expiry.
+    if (normalize(pickInput) === 'pass') {
+      setSubmitError('Manual PASS is not allowed. A PASS only happens automatically when time expires.');
+      return;
+    }
 
     // Draft must have started
     if (draftNotStarted) {
@@ -729,8 +913,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
                   <span className="mx-2">•</span>
                   <span className="text-gray-300 normal-case">Time Left:</span>
                   <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'Expired'}</span>
-                  <span className="ml-2 text-gray-400 normal-case">({getPickWindowHours(currentRound)}h window)</span>
-                </>
+<span className="ml-2 text-gray-400 normal-case">({windowMinutes === 60 ? '1h' : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>                </>
               )}
             </div>
           </div>
@@ -1000,9 +1183,21 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
                 </svg>
                 Get notified through Discord
               </a>
+              {/* <button
+                type="button"
+                onClick={sendTestSMS}
+                disabled={testSmsSending}
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
+                title="Send a test SMS to 619-885-8867"
+              >
+                {testSmsSending ? 'Sending SMS…' : 'Send Test SMS'}
+              </button> */}
             </div>
             {testMessage && (
               <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testMessage}</div>
+            )}
+            {testSmsMessage && (
+              <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testSmsMessage}</div>
             )}
           </div>
         </div>
