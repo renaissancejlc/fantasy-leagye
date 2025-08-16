@@ -677,22 +677,59 @@ const lastSubmittedAt = React.useMemo(() => {
   return max;
 }, [draftLogRows, localSubmitAt]);
 
+// --- Local per-pick start fallback (used ONLY if DraftLog is unavailable) ---
+const PICK_START_KEY = (pid) => `fantasy:pickStart:${pid}`;
+function loadPickStart(pid) {
+  try {
+    const v = localStorage.getItem(PICK_START_KEY(pid));
+    if (!v) return null;
+    const d = new Date(v);
+    return isNaN(+d) ? null : d;
+  } catch { return null; }
+}
+function savePickStart(pid, date) {
+  try {
+    if (!date) return;
+    localStorage.setItem(PICK_START_KEY(pid), new Date(date).toISOString());
+  } catch {}
+}
+
 // Latch a stable, authoritative start time per pick so the countdown is always anchored by DraftLog (never resets on reload).
 // We only re-latch when the pick rotates to a new team/round.
 const pickId = `${currentRound}:${overallPick}:${normalize(onTheClock)}`;
 const clockStartRef = useRef(null);
 const lastPickIdRef = useRef(null);
 useEffect(() => {
-  if (lastPickIdRef.current === pickId) return;
-  lastPickIdRef.current = pickId;
-  // Authoritative start: first pick uses the configured draftStart; otherwise
-  // use the timestamp of the prior pick from DraftLog (or local fallback).
-  // This ensures the timer is always anchored by DraftLog and will not reset on reload.
-  const authoritativeStart = (overallPick <= 1)
-    ? draftStart
-    : (lastSubmittedAt || draftStart);
-  clockStartRef.current = authoritativeStart;
-}, [pickId, overallPick, lastSubmittedAt, draftStart]);
+  // Compute the best available start for this pick
+  const computeStart = () => {
+    if (overallPick <= 1) return draftStart; // first pick anchors to configured start
+    if (lastSubmittedAt) return lastSubmittedAt; // authoritative: DraftLog timestamp
+    const stored = loadPickStart(pickId); // local, per-device fallback
+    if (stored) return stored;
+    // As a last resort, anchor to the calibrated now and persist locally.
+    // NOTE: This fallback is only used when DraftLog is unreachable, so it won't be cross-device authoritative,
+    // but it prevents a permanent "Expired" state on deploy.
+    savePickStart(pickId, effectiveNow);
+    return effectiveNow;
+  };
+
+  const nextStart = computeStart();
+
+  if (lastPickIdRef.current !== pickId) {
+    // New pick: latch start
+    lastPickIdRef.current = pickId;
+    clockStartRef.current = nextStart;
+    // If we ended up using DraftLog, also persist locally for resiliency
+    if (lastSubmittedAt) savePickStart(pickId, lastSubmittedAt);
+  } else {
+    // Same pick: if we previously latched a local fallback and DraftLog later arrives, upgrade anchor
+    if (lastSubmittedAt && clockStartRef.current && lastSubmittedAt > clockStartRef.current) {
+      clockStartRef.current = lastSubmittedAt;
+      savePickStart(pickId, lastSubmittedAt);
+    }
+  }
+  // deps include effectiveNow so that first-view fallback can store immediately; this won't cause loops
+}, [pickId, overallPick, lastSubmittedAt, draftStart, effectiveNow]);
 
 const clockStart = clockStartRef.current || draftStart;
 
