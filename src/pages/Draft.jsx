@@ -256,7 +256,9 @@ export default function DraftPage() {
       }
 
       // Refresh sheet before we write (prevent race)
-if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);      const formatted = latest.data.map(row => ({
+      const latest = await axios.get(DRAFT_SHEET_URL);
+      if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
+      const formatted = latest.data.map(row => ({
         name: row.Player,
         picks: Object.entries(row)
           .filter(([key]) => key !== 'Player')
@@ -293,7 +295,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);      cons
           team: voterName,
           pick: pickLabel,
           status: 'PICKED',
-          submittedAt: new Date().toISOString(),
+          submittedAt: isoNow(),
           windowHours: getPickWindowHours(currentRound),
         });
       } catch (e) {
@@ -380,7 +382,9 @@ const updateOffsetFromHeaders = (headers) => {
   useEffect(() => {
     axios
       .get(getDraftLogUrl(''))
-.then((res) => { setDraftLogRows(Array.isArray(res.data) ? res.data : []); if (res && res.headers) updateOffsetFromHeaders(res.headers); })  }, []);
+      .then((res) => { setLogsReady(true); if (res && res.headers) updateOffsetFromHeaders(res.headers); })
+      .catch(() => setLogsReady(false));
+  }, []);
 
   // Poll DraftLog for last submitted time
   const [draftLogRows, setDraftLogRows] = useState([]);
@@ -389,7 +393,7 @@ const updateOffsetFromHeaders = (headers) => {
     const fetchLog = () => {
       axios
         .get(getDraftLogUrl(''))
-        .then((res) => setDraftLogRows(Array.isArray(res.data) ? res.data : []))
+        .then((res) => { setDraftLogRows(Array.isArray(res.data) ? res.data : []); if (res && res.headers) updateOffsetFromHeaders(res.headers); })
         .catch(() => {});
     };
     fetchLog();
@@ -400,8 +404,8 @@ const updateOffsetFromHeaders = (headers) => {
   useEffect(() => {
     const update = () => {
       const draftDate = new Date(startTime);
-const current = effectiveNow;      const diff = draftDate.getTime() - current.getTime();
-
+      const current = effectiveNow;
+      const diff = draftDate.getTime() - current.getTime();
 
       if (diff <= 0) {
         setTimeLeft({ total: 0 });
@@ -440,7 +444,9 @@ const current = effectiveNow;      const diff = draftDate.getTime() - current.ge
             .map(normalize);
 
           const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
-if (response && response.headers) updateOffsetFromHeaders(response.headers);        })
+          setDuplicatePicks(new Set(duplicates));
+          if (response && response.headers) updateOffsetFromHeaders(response.headers);
+        })
         .catch(error => console.error("Error fetching draft data:", error));
     };
 
@@ -505,7 +511,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
 
 
   // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
-  const hasDraftStarted = new Date() >= new Date(startTime);
+  const hasDraftStarted = effectiveNow >= new Date(startTime);
   const draftNotStarted = !hasDraftStarted;
   const draftStarted = hasDraftStarted;
 
@@ -537,7 +543,9 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
         setPassInFlight(true);
         const roundCol = `Round ${currentRound}`;
         // Re-validate emptiness against latest sheet
-if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        const sheetTeamIdx = latest.data.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
+        const latest = await axios.get(DRAFT_SHEET_URL);
+        if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
+        const sheetTeamIdx = latest.data.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
         const latestRow = latest.data[sheetTeamIdx] || {};
         if (latestRow[roundCol] && latestRow[roundCol] !== '—') { setPassInFlight(false); return; }
 
@@ -551,7 +559,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        co
             team: onTheClock,
             pick: 'PASS',
             status: 'PASSED',
-            submittedAt: new Date().toISOString(),
+            submittedAt: isoNow(),
             windowHours: pickWindowHours,
           });
         } catch (e) {
@@ -619,7 +627,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        co
     const salt = makeSalt(8);
     const pinHash = await saltedHash(pin, salt);
     try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
-    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: new Date().toISOString() });
+    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: isoNow() });
     setPinRecord({ voter, salt, pinHash });
     setPinMode('verify');
   };
