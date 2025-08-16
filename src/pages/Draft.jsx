@@ -217,7 +217,7 @@ export default function DraftPage() {
         team: voterName || onTheClock || 'Test Team',
         pick: pendingPickLabel || pickInput || 'Test Player',
         status: 'TEST',
-        submittedAt: isoNow(),
+        submittedAt: new Date().toISOString(),
       };
       await notifyDiscord(payload);
       setTestMessage('✅ Test notification sent. Check Discord.');
@@ -289,7 +289,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);      cons
           team: voterName,
           pick: pickLabel,
           status: 'PICKED',
-          submittedAt: isoNow(),
+          submittedAt: new Date().toISOString(),
           windowHours: getPickWindowHours(currentRound),
         });
       } catch (e) {
@@ -303,7 +303,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);      cons
         team: voterName,
         pick: pickLabel,
         status: 'PICKED',
-        submittedAt: isoNow(),
+        submittedAt: new Date().toISOString(),
       });
       if (!sent) console.warn('[notifyDiscord] pick notification failed');
 
@@ -369,6 +369,7 @@ const updateOffsetFromHeaders = (headers) => {
   }, []);
   const draftStart = React.useMemo(() => new Date(startTime), [startTime]);
 
+
   // DraftLog tab readiness
   const [logsReady, setLogsReady] = useState(true);
   useEffect(() => {
@@ -396,6 +397,7 @@ const updateOffsetFromHeaders = (headers) => {
       const draftDate = new Date(startTime);
 const current = effectiveNow;      const diff = draftDate.getTime() - current.getTime();
 
+
       if (diff <= 0) {
         setTimeLeft({ total: 0 });
         return;
@@ -414,6 +416,7 @@ const current = effectiveNow;      const diff = draftDate.getTime() - current.ge
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
 }, [startTime, now, timeOffsetMs]);
+
   useEffect(() => {
     const fetchDraftData = () => {
       axios.get(DRAFT_SHEET_URL)
@@ -483,23 +486,19 @@ const clockStart = React.useMemo(() => {
   const clockDeadline = React.useMemo(() => new Date(clockStart.getTime() + pickWindowHours * 3600 * 1000), [clockStart, pickWindowHours]);
 const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
 
+
   // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
-const hasDraftStarted = effectiveNow >= new Date(startTime);  const draftNotStarted = !hasDraftStarted;
+  const hasDraftStarted = new Date() >= new Date(startTime);
+  const draftNotStarted = !hasDraftStarted;
   const draftStarted = hasDraftStarted;
 
   const [passInFlight, setPassInFlight] = useState(false);
   // --- Auto-pass logic with updated checks ---
   // Helper: check if the current pick is expired
-function pickExpired() {
-  if (!hasDraftStarted) return false;
-  // For picks after #1, don’t expire until we actually know when the previous pick happened.
-  if (overallPick > 1 && !lastSubmittedAt) return false;
-
-  // Small grace period to absorb latency/clock jitter.
-  const GRACE_MS = 2 * 60 * 1000; // 2 minutes
-
-  return (clockDeadline.getTime() - effectiveNow.getTime()) <= -GRACE_MS;
-}
+  function pickExpired() {
+    // Defensive: if pickMsLeft is defined and <= 0, and after draft start
+    return hasDraftStarted && pickMsLeft <= 0;
+  }
   useEffect(() => {
     if (!AUTO_PASS_ENABLED) return; // <— hard-disable auto-pass
     // Helper function: check and auto-pass if needed
@@ -535,7 +534,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        co
             team: onTheClock,
             pick: 'PASS',
             status: 'PASSED',
-            submittedAt: isoNow(),
+            submittedAt: new Date().toISOString(),
             windowHours: pickWindowHours,
           });
         } catch (e) {
@@ -549,7 +548,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        co
           team: onTheClock,
           pick: 'PASS',
           status: 'PASSED',
-          submittedAt: isoNow(),
+          submittedAt: new Date().toISOString(),
         });
         if (!passSent) console.warn('[notifyDiscord] pass notification failed');
 
@@ -602,7 +601,7 @@ if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        co
     const salt = makeSalt(8);
     const pinHash = await saltedHash(pin, salt);
     try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
-    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: isoNow()});
+    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: new Date().toISOString() });
     setPinRecord({ voter, salt, pinHash });
     setPinMode('verify');
   };
