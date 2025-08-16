@@ -168,6 +168,7 @@ export default function DraftPage() {
           }
         }
         setPlayerPosIndex(index);
+        if (res && res.headers) updateOffsetFromHeaders(res.headers);
       })
       .catch(() => {
         setPlayerNames([]); // graceful: no suggestions if tab missing
@@ -255,8 +256,7 @@ export default function DraftPage() {
       }
 
       // Refresh sheet before we write (prevent race)
-      const latest = await axios.get(DRAFT_SHEET_URL);
-      const formatted = latest.data.map(row => ({
+if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);      const formatted = latest.data.map(row => ({
         name: row.Player,
         picks: Object.entries(row)
           .filter(([key]) => key !== 'Player')
@@ -336,6 +336,43 @@ const sent = await notifyDiscord({
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+// --- Authoritative time via HTTP Date calibration (no external API) ---
+// We calibrate against the HTTP Date header from SheetBest/other calls,
+// then apply that offset to the local clock.
+const [timeOffsetMs, setTimeOffsetMs] = useState(0);
+const effectiveNow = new Date(now.getTime() + timeOffsetMs);
+const isoNow = () => new Date(Date.now() + timeOffsetMs).toISOString();
+
+// Helper: update offset using any axios response headers
+const updateOffsetFromHeaders = (headers) => {
+  try {
+    const serverDate = headers?.date || headers?.Date;
+    if (!serverDate) return;
+    const serverMs = new Date(serverDate).getTime();
+    if (!isNaN(serverMs)) {
+      const offset = serverMs - Date.now();
+      // Smooth changes to avoid jumpy UI
+      setTimeOffsetMs((prev) => (Number.isFinite(prev) ? Math.round(prev * 0.7 + offset * 0.3) : offset));
+    }
+  } catch {
+    // ignore
+  }
+};
+
+  // --- Draft start time (configurable; fallback static) ---
+  const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
+  useEffect(() => {
+    // Optionally fetch from a Config tab in Sheet.best:
+    // axios.get(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Config`)
+    //   .then(res => {
+    //     const row = Array.isArray(res.data) ? res.data[0] : null;
+    //     if (row?.startTime) setStartTime(row.startTime);
+    //   })
+    //   .catch(() => {});
+    // Keep static fallback for now.
+    setStartTime('2025-08-14T09:30:00-07:00');
+  }, []);
+  const draftStart = React.useMemo(() => new Date(startTime), [startTime]);
 
 
   // DraftLog tab readiness
@@ -343,9 +380,7 @@ const sent = await notifyDiscord({
   useEffect(() => {
     axios
       .get(getDraftLogUrl(''))
-      .then(() => setLogsReady(true))
-      .catch(() => setLogsReady(false));
-  }, []);
+.then((res) => { setDraftLogRows(Array.isArray(res.data) ? res.data : []); if (res && res.headers) updateOffsetFromHeaders(res.headers); })  }, []);
 
   // Poll DraftLog for last submitted time
   const [draftLogRows, setDraftLogRows] = useState([]);
@@ -363,10 +398,10 @@ const sent = await notifyDiscord({
   }, [logsReady]);
 
   useEffect(() => {
-    const draftDate = new Date('2025-08-14T09:30:00-07:00');
-    const updateCountdown = () => {
-      const now = new Date();
-      const diff = draftDate - now;
+    const update = () => {
+      const draftDate = new Date(startTime);
+const current = effectiveNow;      const diff = draftDate.getTime() - current.getTime();
+
 
       if (diff <= 0) {
         setTimeLeft({ total: 0 });
@@ -382,10 +417,10 @@ const sent = await notifyDiscord({
       setTimeLeft({ total, days, hours, minutes, seconds });
     };
 
-    const timer = setInterval(updateCountdown, 1000);
-    updateCountdown();
-    return () => clearInterval(timer);
-  }, []);
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+}, [startTime, now, timeOffsetMs]);
 
   useEffect(() => {
     const fetchDraftData = () => {
@@ -405,8 +440,7 @@ const sent = await notifyDiscord({
             .map(normalize);
 
           const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
-          setDuplicatePicks(new Set(duplicates));
-        })
+if (response && response.headers) updateOffsetFromHeaders(response.headers);        })
         .catch(error => console.error("Error fetching draft data:", error));
     };
 
@@ -455,29 +489,20 @@ const computeNextUp = React.useCallback(() => {
     return max;
   }, [draftLogRows]);
 
-  const draftStart = React.useMemo(() => new Date('2025-08-14T09:30:00-07:00'), []);
-  const clockStart = React.useMemo(() => {
-    return overallPick <= 1 ? draftStart : (lastSubmittedAt || draftStart);
-  }, [overallPick, lastSubmittedAt, draftStart]);
+const clockStart = React.useMemo(() => {
+  // For pick #1, start at the draft start time.
+  if (overallPick <= 1) return draftStart;
+  // If we have a timestamp for the *last* pick, use that.
+  if (lastSubmittedAt) return lastSubmittedAt;
+  // If DraftLog hasn’t arrived yet, avoid early expiry:
+  // temporarily anchor to "now" until the log appears.
+  return new Date(effectiveNow.getTime());
+}, [overallPick, lastSubmittedAt, draftStart, effectiveNow]);
 
   const pickWindowHours = getPickWindowHours(currentRound);
   const clockDeadline = React.useMemo(() => new Date(clockStart.getTime() + pickWindowHours * 3600 * 1000), [clockStart, pickWindowHours]);
-  const pickMsLeft = Math.max(0, clockDeadline.getTime() - now.getTime());
-  // --- Draft start time logic (fetch from Sheet.best if available) ---
-  // If you want to fetch startTime from Sheet.best, do it here:
-  // For now, fallback to static date as before.
-  const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
-  useEffect(() => {
-    // Example: fetch from Sheet.best if you have a config tab/row with startTime
-    // axios.get('https://api.sheetbest.com/sheets/a472779a-3b0e-4c78-8379-4f470c15c00e/tabs/Config')
-    //   .then(res => {
-    //     const row = Array.isArray(res.data) ? res.data[0] : null;
-    //     if (row && row.startTime) setStartTime(row.startTime);
-    //   })
-    //   .catch(() => {});
-    // For now, keep static fallback.
-    setStartTime('2025-08-14T09:30:00-07:00');
-  }, []);
+const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
+
 
   // Use startTime for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
   const hasDraftStarted = new Date() >= new Date(startTime);
@@ -512,8 +537,7 @@ const computeNextUp = React.useCallback(() => {
         setPassInFlight(true);
         const roundCol = `Round ${currentRound}`;
         // Re-validate emptiness against latest sheet
-        const latest = await axios.get(DRAFT_SHEET_URL);
-        const sheetTeamIdx = latest.data.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
+if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);        const sheetTeamIdx = latest.data.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
         const latestRow = latest.data[sheetTeamIdx] || {};
         if (latestRow[roundCol] && latestRow[roundCol] !== '—') { setPassInFlight(false); return; }
 
