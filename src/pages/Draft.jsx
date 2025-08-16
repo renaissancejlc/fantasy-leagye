@@ -9,9 +9,12 @@ const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1405602854244188182/ZI
 
 const formatDiscordMessage = (p) => {
   const head = `🏈 Round ${p.round}, Pick ${p.pickNumber}`;
-  if (p.status === 'PASSED') return `${head} — **${p.team}** passes.`;
-  if (p.status === 'TEST') return `${head} — **${p.team}** selects **${p.pick}** (test).`;
-  return `${head} — **${p.team}** selects **${p.pick}**.`;
+  let base;
+  if (p.status === 'PASSED') base = `${head} — **${p.team}** passes.`;
+  else if (p.status === 'TEST') base = `${head} — **${p.team}** selects **${p.pick}** (test).`;
+  else base = `${head} — **${p.team}** selects **${p.pick}**.`;
+  const next = p.nextUp ? `\n➡️ Up next: **${p.nextUp}**` : '';
+  return base + next;
 };
 
 async function notifyDiscord(payload) {
@@ -211,13 +214,14 @@ export default function DraftPage() {
       setTestMessage('');
       setTestSending(true);
       const payload = {
-        pickNumber: overallPick,
-        round: currentRound,
-        team: voterName || onTheClock || 'Test Team',
-        pick: pendingPickLabel || pickInput || 'Test Player',
-        status: 'TEST',
-        submittedAt: new Date().toISOString(),
-      };
+  pickNumber: overallPick,
+  round: currentRound,
+  team: voterName || onTheClock || 'Test Team',
+  pick: pendingPickLabel || pickInput || 'Test Player',
+  status: 'TEST',
+  nextUp: computeNextUp(),
+  submittedAt: isoNow(),
+};
       await notifyDiscord(payload);
       setTestMessage('✅ Test notification sent. Check Discord.');
     } catch (e) {
@@ -297,14 +301,15 @@ export default function DraftPage() {
       }
 
       // Notify Discord (await so we don't accidentally lose the call on fast state changes)
-      const sent = await notifyDiscord({
-        pickNumber: overallPick,
-        round: currentRound,
-        team: voterName,
-        pick: pickLabel,
-        status: 'PICKED',
-        submittedAt: new Date().toISOString(),
-      });
+const sent = await notifyDiscord({
+  pickNumber: overallPick,
+  round: currentRound,
+  team: voterName,
+  pick: pickLabel,
+  status: 'PICKED',
+  nextUp: computeNextUp(),
+  submittedAt: isoNow(),
+});
       if (!sent) console.warn('[notifyDiscord] pick notification failed');
 
       // Optimistic UI update
@@ -425,6 +430,18 @@ export default function DraftPage() {
   const idxInRound = (overallPick - 1) % Math.max(totalTeams, 1);
   const orderThisRound = currentRound % 2 === 1 ? teamOrder : [...teamOrder].reverse();
   const onTheClock = orderThisRound[idxInRound] || '';
+  // Compute the next team on the clock based on current state
+const computeNextUp = React.useCallback(() => {
+  if (!totalTeams) return '';
+  let nextRound = currentRound;
+  let nextIdx = idxInRound + 1;
+  if (nextIdx >= totalTeams) {
+    nextRound = currentRound + 1;
+    nextIdx = 0;
+  }
+  const nextOrder = nextRound % 2 === 1 ? teamOrder : [...teamOrder].reverse();
+  return nextOrder[nextIdx] || '';
+}, [currentRound, idxInRound, teamOrder, totalTeams]);
 
   const lastSubmittedAt = React.useMemo(() => {
     let max = null;
@@ -519,13 +536,14 @@ export default function DraftPage() {
 
         // Notify Discord of PASS (await)
         const passSent = await notifyDiscord({
-          pickNumber: overallPick,
-          round: currentRound,
-          team: onTheClock,
-          pick: 'PASS',
-          status: 'PASSED',
-          submittedAt: new Date().toISOString(),
-        });
+  pickNumber: overallPick,
+  round: currentRound,
+  team: onTheClock,
+  pick: 'PASS',
+  status: 'PASSED',
+  nextUp: computeNextUp(),
+  submittedAt: isoNow(),
+});
         if (!passSent) console.warn('[notifyDiscord] pass notification failed');
 
         // Optimistic UI update
