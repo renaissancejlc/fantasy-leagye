@@ -12,7 +12,19 @@ const PINS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours - pins cache TTL
 const MIN_REFRESH_INTERVAL_MS = 15 * 1000; // throttle manual refresh calls
 
 const VOTES_CACHE_KEY = 'fantasy:votesCache';
+
 const PINS_CACHE_KEY = 'fantasy:pinsCache';
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1406471095556771841/KJveqiYeOk-0z1u9PO9jCx9Z8PX2585JkO4tak_L7CH_SEF7RzR_C4A7go4Hcz3_xPSH';
+const DISCORD_INVITE_URL = 'https://discord.gg/9hfHVJ58';
+const NOTIFIED_KEY = 'fantasy:discordNotified';
+
+function readNotifiedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function writeNotifiedSet(set) {
+  try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify(Array.from(set))); } catch {}
+}
 
 function readVotesCache() {
   try {
@@ -104,6 +116,32 @@ const fmtDate = (d) =>
     month: 'short',
     day: 'numeric',
   });
+
+function formatDiscordMessage(r) {
+  const lines = [];
+  lines.push(`**League Vote Result**`);
+  lines.push(`Motion: **${r.motionTitle || r.motionId}**`);
+  lines.push(`Season: ${r.seasonBucket}`);
+  lines.push(`Outcome: **${r.outcome}**`);
+  lines.push(`Yes: ${r.yes} • No: ${r.no} • Abstain: ${r.abstain} • Total: ${r.total}`);
+  if (r.deadline) lines.push(`Closed: ${fmt(r.deadline)}`);
+  if (r.lastTimestamp) lines.push(`Last Activity: ${fmt(r.lastTimestamp)}`);
+  return lines.join('\n');
+}
+
+async function notifyDiscord(r) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  const payload = {
+    username: 'Fantasy League Bot',
+    content: formatDiscordMessage(r),
+  };
+  try {
+    await axios.post(DISCORD_WEBHOOK_URL, payload, { headers: { 'Content-Type': 'application/json' } });
+  } catch (err) {
+    // Most likely CORS when calling from the browser. Intentionally swallow to avoid breaking UI.
+    console.warn('Discord notification failed (likely CORS in browser). Consider proxying via your backend.', err?.message || err);
+  }
+}
 
 
 // Treat YYYY-MM-DD as local midnight instead of UTC
@@ -435,6 +473,28 @@ export default function Votes() {
     return arr;
   }, [allVotes, now]);
 
+  // Notify Discord when a vote is definitively decided (threshold hit or window closed)
+  useEffect(() => {
+    const notified = readNotifiedSet();
+    const decided = groupedResults.filter((r) => {
+      const isDecided = (r.outcome === 'Passed' || r.outcome === 'Failed');
+      const thresholdHit = r.yes >= AUTO_DECISIVE_VOTES || r.no >= AUTO_DECISIVE_VOTES;
+      const windowClosed = r.deadline ? (new Date() >= new Date(r.deadline)) : false;
+      return isDecided && (thresholdHit || windowClosed);
+    });
+
+    decided.forEach((r) => {
+      const key = `${r.motionId}-${r.seasonBucket}-${r.outcome}`;
+      if (!notified.has(key)) {
+        notifyDiscord(r).finally(() => {
+          const next = readNotifiedSet();
+          next.add(key);
+          writeNotifiedSet(next);
+        });
+      }
+    });
+  }, [groupedResults]);
+
   const [pendingChoice, setPendingChoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   // PIN state
@@ -664,6 +724,22 @@ export default function Votes() {
           <div className="text-xs text-gray-400 mt-2">
             Season start: {new Date(SEASON_START_ISO).toLocaleString()}
           </div>
+          {DISCORD_INVITE_URL && (
+            <div className="mt-4">
+              <a
+                href={DISCORD_INVITE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black transition"
+                title="Join Discord to get vote result notifications"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" className="opacity-90">
+                  <path d="M20.317 4.369A19.791 19.791 0 0016.558 3c-.197.35-.42.82-.574 1.2a18.4 18.4 0 00-7.968 0c-.154-.38-.377-.85-.574-1.2A19.789 19.789 0 003.683 4.37C1.803 7.216 1.156 9.96 1.33 12.662c2.1 1.567 4.137 2.52 6.106 3.145.47-.646.892-1.338 1.257-2.067a11.71 11.71 0 01-1.905-.902c.16-.118.315-.242.464-.37 3.692 1.74 7.69 1.74 11.383 0 .149.129.304.252.464.37-.611.345-1.253.64-1.905.902.365.729.787 1.421 1.257 2.067 1.97-.625 4.006-1.578 6.106-3.145.252-3.958-.68-6.67-2.74-8.293zM9.5 12.5c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2zm5 0c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2z" fill="currentColor"/>
+                </svg>
+                Get notified of results thru Discord
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Current Motion */}
@@ -1054,6 +1130,7 @@ export default function Votes() {
         </div>
       </section>
 
+      
       <Footer />
     </div>
   );
