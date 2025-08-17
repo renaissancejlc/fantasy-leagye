@@ -104,11 +104,11 @@ const getSeasonBucket = (now = new Date()) =>
 // Current Motion (first vote)
 // ---------------------------------------------------------------------------
 const CURRENT_MOTION = {
-  id: 'add-second-wr',
-  title: 'Add a 2nd WR to Starting Rosters',
+  id: 'remove-total-tackle-points',
+  title: 'Remove "total tackle" points',
   question:
-    "Should we add a second wide receiver (WR2) slot to each team's weekly starting lineup?",
-  createdAt: '2025-08-13',
+    "Right now we are counting for both \"total\" and \"solo\" or \"assisted\", essentially doubling tackle points; should we remove the point category \"total tackles\"? ?",
+  createdAt: '2025-08-16',
   proposedBy: 'Raphy',
   expedited: false, // allow if opened within 3 days of kickoff
 };
