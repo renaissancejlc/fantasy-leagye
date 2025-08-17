@@ -57,7 +57,7 @@ const formatTurnSMS = (p) => {
 
 const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
 const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
-const PLAYERS_URL = `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Players`;
+const PLAYERS_URL = '/players.json';
 // Explicit snake-draft order (display + turn control)
 // Note: uses provided spellings; mapped to actual sheet names via normalization
 const RAW_DRAFT_ORDER = [
@@ -104,7 +104,13 @@ const fmtDuration = (ms) => {
 
 
 // ---- Feature flags ----
-const AUTO_PASS_ENABLED = false; // Enable auto-pass: the ONLY way a team is passed is when time expires
+const AUTO_PASS_ENABLED = true; // Enable auto-pass: the ONLY way a team is passed is when time expires
+
+// Add a small grace window and a per-pick guard so one pick can only be auto-passed once
+const AUTO_PASS_GRACE_MS = 15000; // 15s grace to avoid false passes from clock jitter
+const PASSED_GUARD_KEY = (pid) => `fantasy:autoPassed:${pid}`;
+function wasAutoPassDone(pid) { try { return localStorage.getItem(PASSED_GUARD_KEY(pid)) === '1'; } catch { return false; } }
+function markAutoPassDone(pid) { try { localStorage.setItem(PASSED_GUARD_KEY(pid), '1'); } catch {} }
 
 // Base: 30 minutes per pick; Exception: Dustin gets 60 minutes
 const BASE_PICK_MINUTES = 30;
@@ -169,7 +175,7 @@ export default function DraftPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingPickLabel, setPendingPickLabel] = useState('');
 
-  // --- Player autocomplete (pulls from SheetBest: /tabs/Players) ---
+  // --- Player autocomplete (pulls from /players.json) ---
   const [playerNames, setPlayerNames] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -200,7 +206,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
         for (const r of rows) {
           const nm = (r.Name || r.Player || r.name || r.player || '').toString().trim();
           if (!nm) continue;
-          const pos = (r.Pos || r.POS || r.position || r.Position || '').toString().trim();
+          const pos = (r.Pos || r.POS || r.position || r.Position || r.pos || '').toString().trim();
           const key = normalize(nm);
           if (pos && index[key] == null) {
             index[key] = pos; // keep the first-seen position only
@@ -697,6 +703,11 @@ function savePickStart(pid, date) {
 // Latch a stable, authoritative start time per pick so the countdown is always anchored by DraftLog (never resets on reload).
 // We only re-latch when the pick rotates to a new team/round.
 const pickId = `${currentRound}:${overallPick}:${normalize(onTheClock)}`;
+
+useEffect(() => {
+  // New pick -> clear any previous auto-pass guard
+  try { localStorage.removeItem(PASSED_GUARD_KEY(pickId)); } catch {}
+}, [pickId]);
 const clockStartRef = useRef(null);
 const lastPickIdRef = useRef(null);
 useEffect(() => {
@@ -749,11 +760,13 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
   // --- Auto-pass logic with updated checks ---
   // Helper: check if the current pick is expired
   function pickExpired() {
-    // Defensive: if pickMsLeft is defined and <= 0, and after draft start
-    return hasDraftStarted && pickMsLeft <= 0;
+    // Only treat as expired once we're past the deadline by the grace period
+    return hasDraftStarted && (pickMsLeft <= -AUTO_PASS_GRACE_MS);
   }
   useEffect(() => {
     if (!AUTO_PASS_ENABLED) return; // <— hard-disable auto-pass
+    if (!onTheClock) return;              // must have a valid team on the clock
+    if (wasAutoPassDone(pickId)) return;  // ensure we only auto-pass once per pick id
     // Helper function: check and auto-pass if needed
     const checkAndAutoPass = async () => {
       // Only run if draft has started or if current pick is truly expired
@@ -812,6 +825,8 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
         // void notifyNextUpSMS(computeNextUp());
         // Prevent cascade by locally anchoring the next pick's start time to now
         setLocalSubmitAt(new Date(effectiveNow.getTime()));
+        // Mark this pick as handled so we never auto-pass it again
+        markAutoPassDone(pickId);
         // Optimistic UI update
         setPlayersPicks((prev) => prev.map((p) => (
           normalize(p.name) === normalize(onTheClock)
