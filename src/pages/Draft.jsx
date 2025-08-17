@@ -1,8 +1,123 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
+// ---- HTTP + caching helpers --------------------------------------------------
+const API_TIMEOUT_MS = 10_000; // 10s network timeout for GETs
+const http = axios.create({ timeout: API_TIMEOUT_MS });
+
+// E2E online guard
+const isOnline = () => (typeof navigator === 'undefined' ? true : navigator.onLine !== false);
+
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
+// --- Lightweight client cache (memory + localStorage) ---
+// Reduces GET spam while keeping correctness via forceNetwork in critical paths.
+const MEMORY_CACHE = new Map();
+const PENDING = new Map();
+const CACHE_PREFIX = 'fantasy:cache:';
+const encodeKey = (url) => `${CACHE_PREFIX}${encodeURIComponent(url)}`;
+
+function readLS(url) {
+  try {
+    const raw = localStorage.getItem(encodeKey(url));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed.ts !== 'number') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+function writeLS(url, payload) {
+  try {
+    // payload may include { ts, data, headers, etag }
+    localStorage.setItem(encodeKey(url), JSON.stringify(payload));
+  } catch {}
+}
+
+/**
+ * cachedGet(url, { ttlMs, forceNetwork })
+ * - ttlMs: how long a cached record is fresh
+ * - forceNetwork: always revalidate (sends If-None-Match when possible)
+ * Returns: { data, headers }
+ */
+async function cachedGet(url, { ttlMs = 15000, forceNetwork = false } = {}) {
+  if (PENDING.has(url)) return PENDING.get(url); // de-dupe concurrent callers
+
+  const now = Date.now();
+  const mem = MEMORY_CACHE.get(url);
+  const ls = !forceNetwork ? readLS(url) : readLS(url); // we may still want its ETag when forcing
+
+  // Fresh memory
+  if (!forceNetwork && mem && now - mem.ts < ttlMs) {
+    return { data: mem.data, headers: mem.headers || {} };
+  }
+  // Fresh localStorage
+  if (!forceNetwork && ls && now - ls.ts < ttlMs) {
+    MEMORY_CACHE.set(url, ls);
+    return { data: ls.data, headers: ls.headers || {} };
+  }
+
+  // Prepare network revalidation
+  const previous = mem || ls || null;
+  const prevEtag = previous?.etag || null;
+
+  const p = (async () => {
+    if (!isOnline() && previous) {
+      // Offline + stale: serve last copy
+      return { data: previous.data, headers: previous.headers || {} };
+    }
+    try {
+      const headers = {};
+      if (prevEtag) headers['If-None-Match'] = prevEtag;
+
+      const resp = await http.get(url, {
+        headers,
+        validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
+      });
+
+      // 304 => not modified, extend cache freshness if we had previous
+      if (resp.status === 304 && previous) {
+        const headersOut = { date: resp.headers?.date || resp.headers?.Date || null };
+        const packed = { ts: Date.now(), data: previous.data, headers: headersOut, etag: prevEtag || null };
+        MEMORY_CACHE.set(url, packed);
+        writeLS(url, packed);
+        return { data: previous.data, headers: headersOut };
+      }
+
+      // 200 => new data, persist with ETag if present
+      const headersOut = { date: resp.headers?.date || resp.headers?.Date || null };
+      const newEtag = resp.headers?.etag || resp.headers?.ETag || null;
+      const packed = { ts: Date.now(), data: resp.data, headers: headersOut, etag: newEtag };
+      MEMORY_CACHE.set(url, packed);
+      writeLS(url, packed);
+      return { data: resp.data, headers: headersOut };
+    } catch (e) {
+      // Network error: serve last known if possible
+      if (previous) return { data: previous.data, headers: previous.headers || {} };
+      throw e;
+    }
+  })().finally(() => { PENDING.delete(url); });
+
+  PENDING.set(url, p);
+  return p;
+}
+
+// Clear all caches (for debugging / manual reset)
+function clearAllCaches() {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k && k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+    }
+  } catch {}
+  MEMORY_CACHE.clear();
+}
+
+// Cache TTLs (tune as needed)
+const PLAYERS_TTL_MS = 12 * 60 * 60 * 1000; // 12h - players list changes rarely
+const SHEET_TTL_MS   = 30 * 1000;           // 30s - picks change often
+const LOG_TTL_MS     = 20 * 1000;           // 20s - recap log
+const REFRESH_THROTTLE_MS = 15 * 1000;    // 15s - throttle manual refresh requests
 
 // --- Discord Notification (client-side fallback) ---
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1405602854244188182/ZI4aYoCLTTqPgY0qJP-x6bxB4L0cCeiLQeu0OsxtyUpQ-rFU9vxvi8_2VJyLxLvO_0Bn";
@@ -186,8 +301,9 @@ export default function DraftPage() {
   const [playerPosIndex, setPlayerPosIndex] = useState({});
 // Phone book seeded in code; failures in SMS are non-blocking
 const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
-const [refreshing, setRefreshing] = useState(false);
-const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
+  const [nextAllowedRefreshAt, setNextAllowedRefreshAt] = useState(0);
 
   useEffect(() => {
     // Expect a sheet with a tab named "Players" and a column named Name or Player
@@ -331,7 +447,7 @@ const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
       }
 
       // Refresh sheet before we write (prevent race)
-      const latest = await axios.get(DRAFT_SHEET_URL);
+            const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
       if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
       const formatted = latest.data.map(row => ({
         name: row.Player,
@@ -461,9 +577,9 @@ const updateOffsetFromHeaders = (headers) => {
 };
 
 // --- Manual refresh helpers (no auto reload) ---
-async function refreshDraftOnce() {
+async function refreshDraftOnce(forceNetwork = false) {
   try {
-    const response = await axios.get(DRAFT_SHEET_URL);
+    const response = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork });
     if (response && response.headers) updateOffsetFromHeaders(response.headers);
     const formatted = response.data.map(row => ({
       name: row.Player,
@@ -483,10 +599,10 @@ async function refreshDraftOnce() {
   }
 }
 
-async function refreshLogOnce() {
+async function refreshLogOnce(forceNetwork = false) {
   if (!logsReady) return;
   try {
-    const res = await axios.get(getDraftLogUrl(''));
+    const res = await cachedGet(getDraftLogUrl(''), { ttlMs: LOG_TTL_MS, forceNetwork });
     if (res && res.headers) updateOffsetFromHeaders(res.headers);
     setDraftLogRows(Array.isArray(res.data) ? res.data : []);
   } catch (_) {}
@@ -494,8 +610,15 @@ async function refreshLogOnce() {
 
 async function refreshAll() {
   try {
+    const now = Date.now();
+    if (now < nextAllowedRefreshAt) {
+      // Within throttle window; skip network and keep UI as-is
+      return;
+    }
+    setNextAllowedRefreshAt(now + REFRESH_THROTTLE_MS);
     setRefreshing(true);
-    await Promise.all([refreshDraftOnce(), refreshLogOnce()]);
+    // Revalidate both with If-None-Match; 304s won't download bodies
+    await Promise.all([refreshDraftOnce(true), refreshLogOnce(true)]);
     setLastUpdatedAt(new Date());
   } finally {
     setRefreshing(false);
@@ -602,10 +725,15 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
   // DraftLog tab readiness
   const [logsReady, setLogsReady] = useState(true);
   useEffect(() => {
-    axios
-      .get(getDraftLogUrl(''))
-      .then((res) => { setLogsReady(true); if (res && res.headers) updateOffsetFromHeaders(res.headers); })
-      .catch(() => setLogsReady(false));
+    (async () => {
+      try {
+        const res = await cachedGet(getDraftLogUrl(''), { ttlMs: LOG_TTL_MS, forceNetwork: true });
+        setLogsReady(true);
+        if (res && res.headers) updateOffsetFromHeaders(res.headers);
+      } catch {
+        setLogsReady(false);
+      }
+    })();
   }, []);
 
   // Poll DraftLog for last submitted time (manual refresh only)
@@ -797,7 +925,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
         setPassInFlight(true);
         const roundCol = `Round ${currentRound}`;
         // Re-validate emptiness against latest sheet
-        const latest = await axios.get(DRAFT_SHEET_URL);
+        const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
         if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
         const sheetTeamIdx = latest.data.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
         const latestRow = latest.data[sheetTeamIdx] || {};
@@ -863,7 +991,11 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
     setNewPin('');
     setNewPinConfirm('');
     if (!voterName) { setPinRecord(null); setPinMode('verify'); return; }
-    axios.get(getPinsUrl('/search'), { params: { voter: voterName } })
+
+    // Cache by full query URL so each voter lookup is independently cached
+    const pinsQueryUrl = `${getPinsUrl('/search')}?voter=${encodeURIComponent(voterName)}`;
+
+    cachedGet(pinsQueryUrl, { ttlMs: 24 * 60 * 60 * 1000, forceNetwork: false })
       .then((res) => {
         const rec = Array.isArray(res.data) && res.data[0] ? res.data[0] : null;
         setPinRecord(rec);
@@ -890,6 +1022,13 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
     await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: isoNow() });
     setPinRecord({ voter, salt, pinHash });
     setPinMode('verify');
+    // Seed the cached search result for this voter
+    try {
+      const pinsQueryUrl = `${getPinsUrl('/search')}?voter=${encodeURIComponent(voter)}`;
+      const packed = { ts: Date.now(), data: [{ voter, salt, pinHash, updatedAt: isoNow() }], headers: {}, etag: null };
+      MEMORY_CACHE.set(pinsQueryUrl, packed);
+      writeLS(pinsQueryUrl, packed);
+    } catch {}
   };
 
   const submitPick = async (e) => {
@@ -1259,14 +1398,17 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
               onClick={refreshAll}
               disabled={refreshing}
               className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-              title="Fetch the latest picks and log"
+              title={`Fetch latest (throttled ${Math.round(REFRESH_THROTTLE_MS/1000)}s) • Uses ETag cache`}
             >
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
             {lastUpdatedAt && (
-              <span className="ml-3 text-xs text-gray-400">
-                Updated {new Date(lastUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
+              <>
+                <span className="ml-3 text-xs text-gray-400">
+                  Updated {new Date(lastUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className="ml-2 text-[11px] text-gray-500">cached ≤ {Math.round(SHEET_TTL_MS/1000)}s</span>
+              </>
             )}
               <a
                 href="https://discord.gg/7Ud9D2XA"

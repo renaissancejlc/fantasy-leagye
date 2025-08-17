@@ -4,6 +4,48 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 // ---------------------------------------------------------------------------
+// Caching + rate limit config
+// ---------------------------------------------------------------------------
+const API_TIMEOUT_MS = 10_000; // axios timeout
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes - votes cache freshness window
+const PINS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours - pins cache TTL
+const MIN_REFRESH_INTERVAL_MS = 15 * 1000; // throttle manual refresh calls
+
+const VOTES_CACHE_KEY = 'fantasy:votesCache';
+const PINS_CACHE_KEY = 'fantasy:pinsCache';
+
+function readVotesCache() {
+  try {
+    const raw = localStorage.getItem(VOTES_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+function writeVotesCache(data, etag) {
+  try {
+    const payload = { data, etag: etag || null, ts: Date.now() };
+    localStorage.setItem(VOTES_CACHE_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+function readPinsCache() {
+  try {
+    const raw = localStorage.getItem(PINS_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function writePinsCache(map) {
+  try {
+    localStorage.setItem(PINS_CACHE_KEY, JSON.stringify(map));
+  } catch {}
+}
+function upsertPinInCache(voter, rec) {
+  const map = readPinsCache();
+  map[voter] = { rec, ts: Date.now() };
+  writePinsCache(map);
+}
+
+// ---------------------------------------------------------------------------
 // Configuration — no Vite env needed
 // ---------------------------------------------------------------------------
 
@@ -11,9 +53,14 @@ import Footer from '../components/Footer';
 // Leave empty to use localStorage for development.
 const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
 
+// Axios instance with sane defaults
+const http = axios.create({ timeout: API_TIMEOUT_MS });
+
 // Fixed season start (kickoff). Before this date = applies to THIS season.
 // After this date = queued decision for NEXT season (but voting is locked in-season).
 const SEASON_START_ISO = '2025-09-04T17:20:00-07:00';
+
+const isOnline = () => (typeof navigator === 'undefined' ? true : navigator.onLine !== false);
 
 // League members (one person, one vote per motion)
 const members = [
@@ -181,41 +228,109 @@ export default function Votes() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const votesEtagRef = useRef(null);
+  const votesInFlightRef = useRef(false);
+  const [nextAllowedFetchAt, setNextAllowedFetchAt] = useState(0);
 
-  const fetchVotes = async () => {
+  const fetchVotes = async ({ force = false } = {}) => {
+    if (votesInFlightRef.current) return; // coalesce duplicate calls
+
+    // Try cache first
+    const cache = readVotesCache();
+    const cacheFresh = cache && (Date.now() - cache.ts) <= CACHE_TTL_MS;
+
+    if (!force && cacheFresh) {
+      // Use fresh cache and skip network entirely
+      setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+      setLastUpdated(new Date(cache.ts));
+      return;
+    }
+
+    // Rate-limit refreshes unless forced
+    if (!force && Date.now() < nextAllowedFetchAt) {
+      // Within throttle window, prefer cached data if we have it
+      if (cache) {
+        setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+        setLastUpdated(new Date(cache.ts));
+      }
+      return;
+    }
+
+    // If offline, fall back to cache gracefully
+    if (!isOnline()) {
+      if (cache) {
+        setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+        setLastUpdated(new Date(cache.ts));
+      } else {
+        setError('Offline and no cached votes available.');
+      }
+      return;
+    }
+
+    votesInFlightRef.current = true;
     setError('');
     try {
-      const headers = votesEtagRef.current ? { 'If-None-Match': votesEtagRef.current } : {};
-      const res = await axios.get(VOTES_API, {
+      const headers = {};
+      // Prefer persisted ETag from cache if present
+      const etag = (cache && cache.etag) || votesEtagRef.current;
+      if (etag) headers['If-None-Match'] = etag;
+
+      const res = await http.get(VOTES_API, {
         headers,
         validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
       });
-      if (res.status === 304) {
+
+      if (res.status === 304 && cache) {
+        // Not modified — extend cache freshness
+        writeVotesCache(cache.data, etag);
+        setAllVotes(Array.isArray(cache.data) ? cache.data : []);
         setLastUpdated(new Date());
         return;
       }
-      const etag = res.headers?.etag || res.headers?.ETag;
-      if (etag) votesEtagRef.current = etag;
-      setAllVotes(Array.isArray(res.data) ? res.data : []);
+
+      const newEtag = res.headers?.etag || res.headers?.ETag || null;
+      if (newEtag) votesEtagRef.current = newEtag;
+
+      const data = Array.isArray(res.data) ? res.data : [];
+      setAllVotes(data);
       setLastUpdated(new Date());
-    } catch (_) {
-      setError('Could not load votes.');
+      writeVotesCache(data, newEtag);
+      setNextAllowedFetchAt(Date.now() + MIN_REFRESH_INTERVAL_MS);
+    } catch {
+      // On failure, try cache to avoid blank UI
+      const cache2 = readVotesCache();
+      if (cache2) {
+        setAllVotes(Array.isArray(cache2.data) ? cache2.data : []);
+        setLastUpdated(new Date(cache2.ts));
+      } else {
+        setError('Could not load votes.');
+      }
     } finally {
       setLoading(false);
+      votesInFlightRef.current = false;
     }
   };
 
   const refreshAll = async () => {
     try {
       setRefreshing(true);
-      await fetchVotes();
+      await fetchVotes({ force: false }); // respect TTL + throttle
     } finally {
       setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchVotes(); // load once on mount
+    // Seed UI from cache immediately (no network)
+    const cache = readVotesCache();
+    if (cache && Array.isArray(cache.data)) {
+      setAllVotes(cache.data);
+      setLastUpdated(new Date(cache.ts));
+      setLoading(false);
+    }
+    // Revalidate only if cache is stale or missing
+    const needsNetwork = !cache || (Date.now() - cache.ts) > CACHE_TTL_MS;
+    fetchVotes({ force: needsNetwork });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Derived
@@ -330,27 +445,66 @@ export default function Votes() {
   const [newPinConfirm, setNewPinConfirm] = useState('');
   const [pinError, setPinError] = useState('');
 
+  // Ref to hold per-voter ETags for PINs
+  const pinsEtagMapRef = useRef({}); // { [voterName]: etag }
+
   // Fetch PIN record for selected voter
   useEffect(() => {
     setPinError('');
     setPinInput('');
     setNewPin('');
     setNewPinConfirm('');
+
     if (!voterName) {
       setPinRecord(null);
       setPinMode('verify');
       return;
     }
-    axios
-      .get(getPinsUrl('/search'), { params: { voter: voterName } })
+
+    // Try cached PIN first
+    const cacheMap = readPinsCache();
+    const cached = cacheMap[voterName];
+    const cacheFresh = cached && (Date.now() - cached.ts) <= PINS_TTL_MS;
+
+    if (cacheFresh) {
+      setPinRecord(cached.rec);
+      setPinMode(cached.rec ? 'verify' : 'set');
+      return; // avoid network call
+    }
+
+    // Otherwise, fetch with conditional ETag if available
+    const headers = {};
+    const etag = pinsEtagMapRef.current[voterName];
+    if (etag) headers['If-None-Match'] = etag;
+
+    http
+      .get(getPinsUrl('/search'), {
+        params: { voter: voterName },
+        headers,
+        validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
+      })
       .then((res) => {
+        if (res.status === 304 && cached) {
+          setPinRecord(cached.rec);
+          setPinMode(cached.rec ? 'verify' : 'set');
+          return;
+        }
         const rec = Array.isArray(res.data) && res.data[0] ? res.data[0] : null;
+        const newEtag = res.headers?.etag || res.headers?.ETag || null;
+        if (newEtag) pinsEtagMapRef.current[voterName] = newEtag;
         setPinRecord(rec);
         setPinMode(rec ? 'verify' : 'set');
+        upsertPinInCache(voterName, rec);
       })
       .catch(() => {
-        setPinRecord(null);
-        setPinMode('set');
+        // On error, prefer cached (even if stale) and default to set mode
+        if (cached) {
+          setPinRecord(cached.rec);
+          setPinMode(cached.rec ? 'verify' : 'set');
+        } else {
+          setPinRecord(null);
+          setPinMode('set');
+        }
       });
   }, [voterName]);
 
@@ -372,6 +526,7 @@ export default function Votes() {
     try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
     await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: new Date().toISOString() });
     setPinRecord({ voter, salt, pinHash });
+    upsertPinInCache(voter, { voter, salt, pinHash, updatedAt: new Date().toISOString() });
     setPinMode('verify');
   };
 
@@ -417,6 +572,10 @@ export default function Votes() {
 
       await axios.post(VOTES_API, payload);
       setAllVotes((prev) => [...prev, payload]);
+      // Update local votes cache to avoid extra refetch
+      const updated = (readVotesCache()?.data || []).concat([payload]);
+      writeVotesCache(updated, votesEtagRef.current);
+      setLastUpdated(new Date());
       setPendingChoice('');
     } catch {
       setError('Could not submit your vote. Please try again.');
@@ -452,6 +611,8 @@ export default function Votes() {
           )
       );
       setAllVotes(updated);
+      writeVotesCache(updated, votesEtagRef.current);
+      setLastUpdated(new Date());
     } finally {
       setIsSubmitting(false);
     }
@@ -800,13 +961,13 @@ export default function Votes() {
                 onClick={refreshAll}
                 disabled={refreshing}
                 className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title="Fetch latest votes"
+                title={`Fetch latest votes (throttled ${Math.round(MIN_REFRESH_INTERVAL_MS/1000)}s)`}
               >
                 {refreshing ? 'Refreshing…' : 'Refresh'}
               </button>
             </div>
             <div className="text-xs text-gray-400 mb-4">
-              Click Refresh to update{lastUpdated ? ` • Updated ${fmt(lastUpdated)}` : ''}
+              Click Refresh to update{lastUpdated ? ` • Updated ${fmt(lastUpdated)}` : ''} (cached for up to {Math.round(CACHE_TTL_MS/60000)}m)
             </div>
 
             <div className="mb-6">
