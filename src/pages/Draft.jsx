@@ -105,6 +105,7 @@ const fmtDuration = (ms) => {
 
 // ---- Feature flags ----
 const AUTO_PASS_ENABLED = true; // Enable auto-pass: the ONLY way a team is passed is when time expires
+const AUTO_REFRESH_ENABLED = false; // Disable auto polling; use manual Refresh button
 
 // Add a small grace window and a per-pick guard so one pick can only be auto-passed once
 const AUTO_PASS_GRACE_MS = 15000; // 15s grace to avoid false passes from clock jitter
@@ -185,6 +186,8 @@ export default function DraftPage() {
   const [playerPosIndex, setPlayerPosIndex] = useState({});
 // Phone book seeded in code; failures in SMS are non-blocking
 const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
+const [refreshing, setRefreshing] = useState(false);
+const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
 
   useEffect(() => {
     // Expect a sheet with a tab named "Players" and a column named Name or Player
@@ -441,7 +444,7 @@ useEffect(() => {
   } catch {}
 }, [localSubmitAt]);
 
-  // Helper: update offset using any axios response headers
+// Helper: update offset using any axios response headers
 const updateOffsetFromHeaders = (headers) => {
   try {
     const serverDate = headers?.date || headers?.Date;
@@ -456,6 +459,48 @@ const updateOffsetFromHeaders = (headers) => {
     // ignore
   }
 };
+
+// --- Manual refresh helpers (no auto reload) ---
+async function refreshDraftOnce() {
+  try {
+    const response = await axios.get(DRAFT_SHEET_URL);
+    if (response && response.headers) updateOffsetFromHeaders(response.headers);
+    const formatted = response.data.map(row => ({
+      name: row.Player,
+      picks: Object.entries(row)
+        .filter(([key]) => key !== 'Player')
+        .map(([, value]) => value || '—')
+    }));
+    setPlayersPicks(formatted);
+    const allPicks = formatted
+      .flatMap(player => player.picks)
+      .filter(pick => pick && pick !== '—')
+      .map(normalize);
+    const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
+    setDuplicatePicks(new Set(duplicates));
+  } catch (error) {
+    console.error('Error fetching draft data:', error);
+  }
+}
+
+async function refreshLogOnce() {
+  if (!logsReady) return;
+  try {
+    const res = await axios.get(getDraftLogUrl(''));
+    if (res && res.headers) updateOffsetFromHeaders(res.headers);
+    setDraftLogRows(Array.isArray(res.data) ? res.data : []);
+  } catch (_) {}
+}
+
+async function refreshAll() {
+  try {
+    setRefreshing(true);
+    await Promise.all([refreshDraftOnce(), refreshLogOnce()]);
+    setLastUpdatedAt(new Date());
+  } finally {
+    setRefreshing(false);
+  }
+}
 
 // --- Business-hours draft clock (Pacific Time) ---------------------------------
 const ACTIVE_TZ = 'America/Los_Angeles';
@@ -563,19 +608,11 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
       .catch(() => setLogsReady(false));
   }, []);
 
-  // Poll DraftLog for last submitted time
+  // Poll DraftLog for last submitted time (manual refresh only)
   const [draftLogRows, setDraftLogRows] = useState([]);
   useEffect(() => {
     if (!logsReady) return;
-    const fetchLog = () => {
-      axios
-        .get(getDraftLogUrl(''))
-        .then((res) => { setDraftLogRows(Array.isArray(res.data) ? res.data : []); if (res && res.headers) updateOffsetFromHeaders(res.headers); })
-        .catch(() => {});
-    };
-    fetchLog();
-    const i = setInterval(fetchLog, 10000);
-    return () => clearInterval(i);
+    refreshLogOnce();
   }, [logsReady]);
 
   useEffect(() => {
@@ -604,33 +641,7 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
 }, [startTime, now, timeOffsetMs]);
 
   useEffect(() => {
-    const fetchDraftData = () => {
-      axios.get(DRAFT_SHEET_URL)
-        .then(response => {
-          const formatted = response.data.map(row => ({
-            name: row.Player,
-            picks: Object.entries(row)
-              .filter(([key]) => key !== 'Player')
-              .map(([, value]) => value || '—')
-          }));
-          setPlayersPicks(formatted);
-
-          const allPicks = formatted
-            .flatMap(player => player.picks)
-            .filter(pick => pick && pick !== '—')
-            .map(normalize);
-
-          const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
-          setDuplicatePicks(new Set(duplicates));
-          if (response && response.headers) updateOffsetFromHeaders(response.headers);
-        })
-        .catch(error => console.error("Error fetching draft data:", error));
-    };
-
-    fetchDraftData(); // initial fetch
-    const interval = setInterval(fetchDraftData, 10000); // poll every 10 seconds
-
-    return () => clearInterval(interval);
+    refreshDraftOnce(); // initial fetch only
   }, []);
 
   const teamOrder = React.useMemo(() => {
@@ -988,6 +999,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
             </div>
           </div>
 
+          
           {/* Submit Pick Card */}
           <form onSubmit={submitPick} className="bg-black/60 border border-lime-400/40 rounded-xl p-6 shadow-lg space-y-4">
             <div>
@@ -1241,6 +1253,21 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
               >
                 {testSending ? 'Sending…' : 'Send Test Notification'}
               </button> */}
+              {/* Manual refresh (no auto reload) */}
+            <button
+              type="button"
+              onClick={refreshAll}
+              disabled={refreshing}
+              className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
+              title="Fetch the latest picks and log"
+            >
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+            {lastUpdatedAt && (
+              <span className="ml-3 text-xs text-gray-400">
+                Updated {new Date(lastUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
               <a
                 href="https://discord.gg/7Ud9D2XA"
                 target="_blank"
@@ -1253,6 +1280,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
                 </svg>
                 Get notified through Discord
               </a>
+              
               {/* <button
                 type="button"
                 onClick={sendTestSMS}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -107,7 +107,7 @@ const CURRENT_MOTION = {
   id: 'remove-total-tackle-points',
   title: 'Remove "total tackle" points',
   question:
-    "Right now we are counting for both \"total\" and \"solo\" or \"assisted\", essentially doubling tackle points; should we remove the point category \"total tackles\"? ?",
+    "Right now we are counting for both \"total\" and \"solo\" or \"assisted\", essentially doubling tackle points; should we remove the point category \"total tackles\"?",
   createdAt: '2025-08-16',
   proposedBy: 'Raphy',
   expedited: false, // allow if opened within 3 days of kickoff
@@ -179,23 +179,43 @@ export default function Votes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const votesEtagRef = useRef(null);
 
-  const fetchVotes = () => {
+  const fetchVotes = async () => {
     setError('');
-    axios
-      .get(VOTES_API)
-      .then((res) => {
-        setAllVotes(Array.isArray(res.data) ? res.data : []);
+    try {
+      const headers = votesEtagRef.current ? { 'If-None-Match': votesEtagRef.current } : {};
+      const res = await axios.get(VOTES_API, {
+        headers,
+        validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
+      });
+      if (res.status === 304) {
         setLastUpdated(new Date());
-      })
-      .catch(() => setError('Could not load votes.'))
-      .finally(() => setLoading(false));
+        return;
+      }
+      const etag = res.headers?.etag || res.headers?.ETag;
+      if (etag) votesEtagRef.current = etag;
+      setAllVotes(Array.isArray(res.data) ? res.data : []);
+      setLastUpdated(new Date());
+    } catch (_) {
+      setError('Could not load votes.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshAll = async () => {
+    try {
+      setRefreshing(true);
+      await fetchVotes();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    fetchVotes();
-    const interval = setInterval(fetchVotes, 10000); // live refresh every 10s
-    return () => clearInterval(interval);
+    fetchVotes(); // load once on mount
   }, []);
 
   // Derived
@@ -774,8 +794,19 @@ export default function Votes() {
             <h3 className="text-xl md:text-2xl font-black uppercase tracking-wide mb-2">
               Live Tally
             </h3>
+            <div className="mb-3">
+              <button
+                type="button"
+                onClick={refreshAll}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
+                title="Fetch latest votes"
+              >
+                {refreshing ? 'Refreshing…' : 'Refresh'}
+              </button>
+            </div>
             <div className="text-xs text-gray-400 mb-4">
-              Auto-refreshes every 10s{lastUpdated ? ` • Updated ${fmt(lastUpdated)}` : ''}
+              Click Refresh to update{lastUpdated ? ` • Updated ${fmt(lastUpdated)}` : ''}
             </div>
 
             <div className="mb-6">
