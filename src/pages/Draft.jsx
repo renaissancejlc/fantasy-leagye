@@ -910,7 +910,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
     const checkAndAutoPass = async () => {
       // Only run if draft has started or if current pick is truly expired
       if (!hasDraftStarted) return;
-      if (!logsReady) return;
+      // Do NOT depend on DraftLog being available; still auto-pass and fall back to local clock.
       if (!pickExpired()) return;
       if (passInFlight) return;
 
