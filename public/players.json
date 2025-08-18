@@ -705,5 +705,18 @@
   {"name":"Brian Callahan","pos":"HC"},
   {"name":"Dave Canales","pos":"HC"},
   {"name":"Mike Macdonald","pos":"HC"},
-  {"name":"Jonathan Gannon","pos":"HC"}
+  {"name":"Jonathan Gannon","pos":"HC"},
+    {"name":"Kyren Williams","pos":"RB"},
+  {"name":"Ashton Jeanty","pos":"RB"},
+  {"name":"Omarion Hampton","pos":"RB"},
+    {"name":"Travis Hunter","pos":"WR"},
+      {"name":"Theo Johnson","pos":"TE"},
+        {"name":"Cam Little","pos":"K"},
+  {"name":"Jonathan Greenard","pos":"DL"},
+  {"name":"Jared Verse","pos":"DL"},
+    {"name":"Brian Branch","pos":"DB"},
+      {"name":"Reed Blankenship","pos":"DB"},
+        {"name":"DeShon Elliott","pos":"DB"},
+          {"name":"Alex Singleton","pos":"LB"},
+            {"name":"Jamien Sherwood","pos":"LB"}
 ]
