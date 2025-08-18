@@ -228,9 +228,9 @@ const PASSED_GUARD_KEY = (pid) => `fantasy:autoPassed:${pid}`;
 function wasAutoPassDone(pid) { try { return localStorage.getItem(PASSED_GUARD_KEY(pid)) === '1'; } catch { return false; } }
 function markAutoPassDone(pid) { try { localStorage.setItem(PASSED_GUARD_KEY(pid), '1'); } catch {} }
 
-// Base: 30 minutes per pick; Exception: Dustin gets 60 minutes
-const BASE_PICK_MINUTES = 30;
-const EXCEPTION_MINUTES = Object.freeze({ dustin: 60 });
+// Base: 4 hours per pick for everyone
+const BASE_PICK_MINUTES = 240;
+const EXCEPTION_MINUTES = Object.freeze({});
 const getPickWindowMinutes = (teamName, round) => EXCEPTION_MINUTES[normalize(teamName || '')] || BASE_PICK_MINUTES;
 
 // --- PIN (draft code) helpers -------------------------------------------------
@@ -1133,7 +1133,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
                   <span className="mx-2">•</span>
                   <span className="text-gray-300 normal-case">Time Left:</span>
               <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
-<span className="ml-2 text-gray-400 normal-case">({windowMinutes === 60 ? '1h' : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>                </>
+<span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes/60}h` : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>                </>
               )}
             </div>
           </div>
