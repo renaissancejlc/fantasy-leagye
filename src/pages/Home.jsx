@@ -101,7 +101,7 @@ export default function Home() {
                 Offseason is <span className="font-semibold text-white">change season</span>. <span className="font-semibold text-white">3 days</span> per motion. <span className="font-semibold text-white">One vote</span> per motion. Pick your name. Enter your PIN. <span className="font-semibold text-white">Make it count.</span>
               </p>
               <ul className="list-disc list-inside text-gray-400 text-sm mt-2 space-y-1">
-                <li>Offseason only — locks at kickoff.</li>
+                <li>Offseason only, locks at kickoff.</li>
                 <li>Edit or remove until the clock hits zero.</li>
               </ul>
             </div>
