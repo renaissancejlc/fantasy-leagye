@@ -1125,7 +1125,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
           )}
           {/* On the Clock banner */}
           <div className="mb-4 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold uppercase tracking-wide bg-lime-500/10 border-lime-400 text-lime-300">
+            <div className="mx-auto w-full sm:w-auto inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl sm:rounded-full border text-xs sm:text-sm font-semibold uppercase tracking-normal sm:tracking-wide bg-lime-500/10 border-lime-400 text-lime-300 max-w-full whitespace-normal break-words">
               <span className="w-2 h-2 rounded-full bg-current inline-block" />
               On the Clock: <span className="ml-1 text-white">{onTheClock || '—'}</span> · Round {currentRound} · Pick {overallPick}
               {!draftNotStarted && (
