@@ -1132,7 +1132,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
                 <>
                   <span className="mx-2">•</span>
                   <span className="text-gray-300 normal-case">Time Left:</span>
-                  <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'Expired'}</span>
+              <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
 <span className="ml-2 text-gray-400 normal-case">({windowMinutes === 60 ? '1h' : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>                </>
               )}
             </div>
@@ -1347,7 +1347,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
                 <p className="text-xs text-red-400 mb-4">This pick is <span className="font-semibold">FINAL</span> once submitted.</p>
                 {!draftNotStarted && (
                   <p className="text-xs text-gray-400 mb-4">
-                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'Expired'}</span>
+                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
                   </p>
                 )}
                 {submitError && <div className="text-red-400 text-xs mb-3">{submitError}</div>}
