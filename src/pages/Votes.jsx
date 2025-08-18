@@ -16,14 +16,16 @@ const VOTES_CACHE_KEY = 'fantasy:votesCache';
 const PINS_CACHE_KEY = 'fantasy:pinsCache';
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1406471095556771841/KJveqiYeOk-0z1u9PO9jCx9Z8PX2585JkO4tak_L7CH_SEF7RzR_C4A7go4Hcz3_xPSH';
 const DISCORD_INVITE_URL = 'https://discord.gg/9hfHVJ58';
+const RESULTS_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744/tabs/Results';
 const NOTIFIED_KEY = 'fantasy:discordNotified';
+const NOTIFIED_RESULT_KEY = 'fantasy:resultNotified';
 
-function readNotifiedSet() {
-  try { return new Set(JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '[]')); }
+function readNotifiedSet(key = NOTIFIED_KEY) {
+  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
   catch { return new Set(); }
 }
-function writeNotifiedSet(set) {
-  try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify(Array.from(set))); } catch {}
+function writeNotifiedSet(set, key = NOTIFIED_KEY) {
+  try { localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch {}
 }
 
 function readVotesCache() {
@@ -473,27 +475,29 @@ export default function Votes() {
     return arr;
   }, [allVotes, now]);
 
-  // Notify Discord when a vote is definitively decided (threshold hit or window closed)
+  // Notify Discord when a vote is definitively decided
+  const sentRef = useRef(new Set());
   useEffect(() => {
-    const notified = readNotifiedSet();
-    const decided = groupedResults.filter((r) => {
-      const isDecided = (r.outcome === 'Passed' || r.outcome === 'Failed');
-      const thresholdHit = r.yes >= AUTO_DECISIVE_VOTES || r.no >= AUTO_DECISIVE_VOTES;
-      const windowClosed = r.deadline ? (new Date() >= new Date(r.deadline)) : false;
-      return isDecided && (thresholdHit || windowClosed);
-    });
-
-    decided.forEach((r) => {
-      const key = `${r.motionId}-${r.seasonBucket}-${r.outcome}`;
-      if (!notified.has(key)) {
-        notifyDiscord(r).finally(() => {
-          const next = readNotifiedSet();
-          next.add(key);
-          writeNotifiedSet(next);
+    (async () => {
+      try {
+        const res = await axios.get(RESULTS_API);
+        const existing = new Set(res.data.map(r => r.notifiedKey));
+        const newDecisions = groupedResults.filter((r) => {
+          const isDecided = (r.outcome === 'Passed' || r.outcome === 'Failed');
+          const thresholdHit = r.yes >= AUTO_DECISIVE_VOTES || r.no >= AUTO_DECISIVE_VOTES;
+          const windowClosed = r.deadline ? (new Date() >= new Date(r.deadline)) : false;
+          const key = `${r.motionId}-${r.seasonBucket}-${r.outcome.toLowerCase()}`;
+          return isDecided && (thresholdHit || windowClosed) && !existing.has(key) && !sentRef.current.has(key);
         });
-      }
-    });
-  }, [groupedResults]);
+        for (const r of newDecisions) {
+          const key = `${r.motionId}-${r.seasonBucket}-${r.outcome.toLowerCase()}`;
+          sentRef.current.add(key);
+          await notifyDiscord(r);
+          await axios.post(RESULTS_API, { motionId:r.motionId, seasonBucket:r.seasonBucket, notifiedKey:key });
+        }
+      } catch(e){ console.warn('notify read/write failed',e);}
+    })();
+  },[groupedResults]);
 
   const [pendingChoice, setPendingChoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
