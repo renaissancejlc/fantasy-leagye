@@ -1151,7 +1151,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                 className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-emerald-400 hover:bg-emerald-400 hover:text-black transition"
                 title="View ESPN rosters to input picks"
               >
-                View ESPN Rosters to Input Picks
+                View ESPN Rosters
               </a>
               {/* Commissioner handoff animation — upgraded */}
               <div className="w-full max-w-2xl mt-2">
