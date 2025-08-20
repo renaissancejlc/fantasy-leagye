@@ -1104,9 +1104,9 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
        
 
         <div className="mt-14 mb-20 text-center">
-          <h2 className="text-4xl md:text-5xl uppercase font-extrabold text-lime-300 tracking-tight mb-4">
+          {/* <h2 className="text-4xl md:text-5xl uppercase font-extrabold text-lime-300 tracking-tight mb-4">
             Draft Countdown
-          </h2>
+          </h2> */}
           {timeLeft.total > 0 ? (
             <div className="flex justify-center gap-8 md:gap-14 text-4xl md:text-5xl font-mono text-white">
               <div className="text-center">
@@ -1128,7 +1128,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
             </div>
           ) : (
             isDraftComplete ? (
-              <div className="text-5xl font-black text-emerald-400">Draft Completed!</div>
+              <div className="text-5xl font-black text-emerald-400"></div>
             ) : (
               <div className="text-5xl font-black text-red-500">The Draft Has Begun!</div>
             )
