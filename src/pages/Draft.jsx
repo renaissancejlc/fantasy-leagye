@@ -786,9 +786,12 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
   const idxInRound = (overallPick - 1) % Math.max(totalTeams, 1);
   const orderThisRound = currentRound % 2 === 1 ? teamOrder : [...teamOrder].reverse();
   const onTheClock = orderThisRound[idxInRound] || '';
-  // Compute the next team on the clock based on current state
+  // ---- Draft completion state ----
+  const totalCells = Math.max(totalTeams, 1) * rounds;
+  const isDraftComplete = filledCount >= totalCells;
+// Compute the next team on the clock based on current state
 const computeNextUp = React.useCallback(() => {
-  if (!totalTeams) return '';
+  if (!totalTeams || isDraftComplete) return '';
   let nextRound = currentRound;
   let nextIdx = idxInRound + 1;
   if (nextIdx >= totalTeams) {
@@ -797,7 +800,7 @@ const computeNextUp = React.useCallback(() => {
   }
   const nextOrder = nextRound % 2 === 1 ? teamOrder : [...teamOrder].reverse();
   return nextOrder[nextIdx] || '';
-}, [currentRound, idxInRound, teamOrder, totalTeams]);
+}, [currentRound, idxInRound, teamOrder, totalTeams, isDraftComplete]);
 
 // const notifyNextUpSMS = (name) => {
 //   try {
@@ -903,6 +906,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
     return hasDraftStarted && (pickMsLeft <= -AUTO_PASS_GRACE_MS);
   }
   useEffect(() => {
+    if (isDraftComplete) return; // stop auto-pass once draft is finished
     if (!AUTO_PASS_ENABLED) return; // <— hard-disable auto-pass
     if (!onTheClock) return;              // must have a valid team on the clock
     if (wasAutoPassDone(pickId)) return;  // ensure we only auto-pass once per pick id
@@ -983,7 +987,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
     if (hasDraftStarted && pickExpired()) {
       checkAndAutoPass();
     }
-  }, [pickMsLeft, playersPicks, onTheClock, currentRound, overallPick, logsReady, timeLeft.total, hasDraftStarted, passInFlight]);
+  }, [pickMsLeft, playersPicks, onTheClock, currentRound, overallPick, logsReady, timeLeft.total, hasDraftStarted, passInFlight, isDraftComplete]);
 
   useEffect(() => {
     setPinError('');
@@ -1034,6 +1038,7 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
   const submitPick = async (e) => {
     e.preventDefault();
     setSubmitError('');
+    if (isDraftComplete) { setSubmitError('Draft is complete — no further picks.'); return; }
     if (!voterName) { setSubmitError('Select your name.'); return; }
     if (!pickInput.trim()) { setSubmitError('Enter your pick.'); return; }
     // Disallow manual PASS. Only auto-pass on expiry.
@@ -1068,6 +1073,12 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
   return (
     <div className="bg-black text-white min-h-screen font-sans">
       <NavBar />
+      <style>{`
+        @keyframes nprogress { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+        .animate-nprogress { animation: nprogress 2s linear infinite; }
+        @keyframes pulseGlow { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+        .animate-pulseGlow { animation: pulseGlow 1.8s ease-in-out infinite; }
+      `}</style>
 
       <section className="px-6 py-20 text-center max-w-7xl mx-auto bg-gradient-to-br from-black via-gray-900 to-black rounded-2xl shadow-2xl border border-lime-500">
         <h1 className="text-6xl md:text-7xl font-extrabold uppercase tracking-wider mb-6 text-white drop-shadow-[0_0_20px_rgba(0,255,0,0.5)]">
@@ -1099,9 +1110,53 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
               </div>
             </div>
           ) : (
-            <div className="text-5xl font-black text-red-500">The Draft Has Begun!</div>
+            isDraftComplete ? (
+              <div className="text-5xl font-black text-emerald-400">Draft Completed!</div>
+            ) : (
+              <div className="text-5xl font-black text-red-500">The Draft Has Begun!</div>
+            )
           )}
         </div>
+
+        {isDraftComplete && (
+          <div className="mb-6 text-center">
+            <div className="inline-flex flex-col items-center gap-3 bg-emerald-600/15 border border-emerald-400 text-emerald-200 px-5 py-4 rounded-xl">
+              <div className="text-2xl md:text-3xl font-extrabold uppercase tracking-wide">Draft Complete</div>
+              <div className="text-sm text-emerald-200/90">
+                {lastSubmittedAt
+                  ? `Completed on ${new Date(lastSubmittedAt).toLocaleString('en-US', { timeZone: ACTIVE_TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} PT`
+                  : 'All rounds are filled.'}
+              </div>
+              <a
+                href="https://fantasy.espn.com/football/league/rosters?leagueId=135143"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-emerald-400 hover:bg-emerald-400 hover:text-black transition"
+                title="View ESPN rosters to input picks"
+              >
+                View ESPN Rosters to Input Picks
+              </a>
+              <div className="mt-2 inline-flex items-center gap-2 bg-amber-500/15 border border-amber-400 text-amber-200 px-3 py-2 rounded-lg">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" className="opacity-90"><path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+                <span className="text-sm font-semibold uppercase tracking-wide">Free agency begins Monday 8/25/2025, 9am PST</span>
+              </div>
+              {/* Commissioner handoff animation */}
+              <div className="w-full max-w-xl">
+                <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-800/60 border border-gray-700 mt-3">
+                  <div className="absolute inset-y-0 left-0 w-1/3 animate-nprogress bg-gradient-to-r from-lime-400 via-white to-lime-400" />
+                </div>
+                <div className="mt-3 text-xs md:text-sm text-emerald-100/90 leading-relaxed text-center">
+                  <span className="uppercase font-semibold">Please wait</span> while the commissioner inputs picks. <span className="animate-pulseGlow">Prepare for free agency.</span>
+                  <span className="ml-2 inline-flex align-middle">
+                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-300 animate-bounce" />
+                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-300 animate-bounce ml-1" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-300 animate-bounce ml-1" style={{ animationDelay: '300ms' }} />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="max-w-2xl mx-auto">
           {/* DraftLog readiness banner */}
@@ -1124,212 +1179,216 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
             </div>
           )}
           {/* On the Clock banner */}
-          <div className="mb-4 text-center">
-            <div className="mx-auto w-full sm:w-auto inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl sm:rounded-full border text-xs sm:text-sm font-semibold uppercase tracking-normal sm:tracking-wide bg-lime-500/10 border-lime-400 text-lime-300 max-w-full whitespace-normal break-words">
-              <span className="w-2 h-2 rounded-full bg-current inline-block" />
-              On the Clock: <span className="ml-1 text-white">{onTheClock || '—'}</span> · Round {currentRound} · Pick {overallPick}
-              {!draftNotStarted && (
-                <>
-                  <span className="mx-2">•</span>
-                  <span className="text-gray-300 normal-case">Time Left:</span>
-              <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
-<span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes/60}h` : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>                </>
-              )}
+          {!isDraftComplete && (
+            <div className="mb-4 text-center">
+              <div className="mx-auto w-full sm:w-auto inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl sm:rounded-full border text-xs sm:text-sm font-semibold uppercase tracking-normal sm:tracking-wide bg-lime-500/10 border-lime-400 text-lime-300 max-w-full whitespace-normal break-words">
+                <span className="w-2 h-2 rounded-full bg-current inline-block" />
+                On the Clock: <span className="ml-1 text-white">{onTheClock || '—'}</span> · Round {currentRound} · Pick {overallPick}
+                {!draftNotStarted && (
+                  <>
+                    <span className="mx-2">•</span>
+                    <span className="text-gray-300 normal-case">Time Left:</span>
+                    <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
+                    <span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes/60}h` : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           
           {/* Submit Pick Card */}
-          <form onSubmit={submitPick} className="bg-black/60 border border-lime-400/40 rounded-xl p-6 shadow-lg space-y-4">
-            <div>
-              <label className="block text-xs uppercase text-gray-400 mb-1">Your Name</label>
-              <select
-                value={voterName}
-                onChange={(e) => setVoterName(e.target.value)}
-                className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                required
-              >
-                <option value="" disabled>-- Select your team --</option>
-                {teamOrder.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase text-gray-400 mb-1">Your Pick</label>
-              <div className="relative">
-                <input
-                  ref={pickInputRef}
-                  value={pickInput}
-                  onChange={(e) => { setPickInput(e.target.value); buildSuggestions(e.target.value); }}
-                  onFocus={() => buildSuggestions(pickInput)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
-                  onKeyDown={(e) => {
-                    if (!showSuggestions || suggestions.length === 0) return;
-                    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightIdx((i) => (i + 1) % suggestions.length); }
-                    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightIdx((i) => (i - 1 + suggestions.length) % suggestions.length); }
-                    else if (e.key === 'Enter') { e.preventDefault(); chooseSuggestion(suggestions[highlightIdx]); }
-                    else if (e.key === 'Escape') { setShowSuggestions(false); }
-                  }}
-                  placeholder="Type the player name"
-                  autoComplete="off"
-                  spellCheck={false}
+          {!isDraftComplete && (
+            <form onSubmit={submitPick} className="bg-black/60 border border-lime-400/40 rounded-xl p-6 shadow-lg space-y-4">
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-1">Your Name</label>
+                <select
+                  value={voterName}
+                  onChange={(e) => setVoterName(e.target.value)}
                   className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
                   required
-                />
-
-                {/* Suggestions dropdown */}
-                {showSuggestions && (
-                  suggestions.length > 0 ? (
-                    <ul className="absolute z-20 mt-1 w-full max-h-72 overflow-auto bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left">
-                      {suggestions.map((name, i) => (
-                        <li
-                          key={`${name}-${i}`}
-                          onMouseDown={(e) => { e.preventDefault(); chooseSuggestion(name); }}
-                          className={`px-3 py-2 cursor-pointer ${i === highlightIdx ? 'bg-lime-500/20 text-lime-200' : 'hover:bg-gray-800'}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-white">{name}</span>
-                            {playerPosIndex[normalize(name)] && (
-                              <span className="ml-3 text-[11px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-300">
-                                {playerPosIndex[normalize(name)]}
-                              </span>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    pickInput && pickInput.length >= 2 && (
-                      <div className="absolute z-20 mt-1 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left px-3 py-2 text-gray-400">
-                        No matches
-                      </div>
-                    )
-                  )
-                )}
+                >
+                  <option value="" disabled>-- Select your team --</option>
+                  {teamOrder.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
-              <p className="text-[11px] text-red-400 mt-1">Heads up: Picks are <span className="font-semibold">FINAL</span> once submitted.</p>
-            </div>
 
-            {/* PIN Security */}
-            <div>
-              <label className="block text-xs uppercase text-gray-400 mb-1">PIN</label>
-              {pinMode === 'verify' && (
-                <div className="space-y-2">
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-1">Your Pick</label>
+                <div className="relative">
                   <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Enter your PIN"
-                    value={pinInput}
-                    onChange={(e) => setPinInput(e.target.value)}
+                    ref={pickInputRef}
+                    value={pickInput}
+                    onChange={(e) => { setPickInput(e.target.value); buildSuggestions(e.target.value); }}
+                    onFocus={() => buildSuggestions(pickInput)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                    onKeyDown={(e) => {
+                      if (!showSuggestions || suggestions.length === 0) return;
+                      if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightIdx((i) => (i + 1) % suggestions.length); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightIdx((i) => (i - 1 + suggestions.length) % suggestions.length); }
+                      else if (e.key === 'Enter') { e.preventDefault(); chooseSuggestion(suggestions[highlightIdx]); }
+                      else if (e.key === 'Escape') { setShowSuggestions(false); }
+                    }}
+                    placeholder="Type the player name"
+                    autoComplete="off"
+                    spellCheck={false}
                     className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    required
                   />
-                  <button type="button" className="text-xs text-lime-300 underline" onClick={() => { setPinMode('change'); setPinError(''); setPinInput(''); }}>Change PIN</button>
+
+                  {showSuggestions && (
+                    suggestions.length > 0 ? (
+                      <ul className="absolute z-20 mt-1 w-full max-h-72 overflow-auto bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left">
+                        {suggestions.map((name, i) => (
+                          <li
+                            key={`${name}-${i}`}
+                            onMouseDown={(e) => { e.preventDefault(); chooseSuggestion(name); }}
+                            className={`px-3 py-2 cursor-pointer ${i === highlightIdx ? 'bg-lime-500/20 text-lime-200' : 'hover:bg-gray-800'}`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-white">{name}</span>
+                              {playerPosIndex[normalize(name)] && (
+                                <span className="ml-3 text-[11px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-300">
+                                  {playerPosIndex[normalize(name)]}
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      pickInput && pickInput.length >= 2 && (
+                        <div className="absolute z-20 mt-1 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left px-3 py-2 text-gray-400">
+                          No matches
+                        </div>
+                      )
+                    )
+                  )}
                 </div>
-              )}
-              {pinMode === 'set' && (
-                <div className="space-y-2">
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Create a 4+ digit PIN"
-                    value={newPin}
-                    onChange={(e) => setNewPin(e.target.value)}
-                    className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  />
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Confirm PIN"
-                    value={newPinConfirm}
-                    onChange={(e) => setNewPinConfirm(e.target.value)}
-                    className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  />
-                  <p className="text-[11px] text-gray-500">You’ll set your PIN on first pick.</p>
-                </div>
-              )}
-              {pinMode === 'change' && (
-                <div className="space-y-2">
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Current PIN"
-                    value={pinInput}
-                    onChange={(e) => setPinInput(e.target.value)}
-                    className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  />
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="New PIN (4+ digits)"
-                    value={newPin}
-                    onChange={(e) => setNewPin(e.target.value)}
-                    className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  />
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Confirm new PIN"
-                    value={newPinConfirm}
-                    onChange={(e) => setNewPinConfirm(e.target.value)}
-                    className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
-                  />
-                  <div>
-                    <button
-                      type="button"
-                      disabled={isSubmitting}
-                      onClick={async () => {
-                        try {
-                          setIsSubmitting(true);
-                          setPinError('');
-                          if (newPin.length < 4 || newPin !== newPinConfirm) {
-                            setPinError('Enter matching new PINs (min 4).');
-                          } else {
-                            await createOrUpdatePin(voterName, newPin);
-                            setPinMode('verify');
-                            setPinInput('');
-                            setNewPin('');
-                            setNewPinConfirm('');
-                          }
-                        } catch (e) {
-                          setPinError(e.message || 'Could not change PIN.');
-                        } finally {
-                          setIsSubmitting(false);
-                        }
-                      }}
-                      className="text-xs px-3 py-2 border border-lime-400 rounded-lg"
-                    >
-                      Update PIN
-                    </button>
-                    <button type="button" className="text-xs ml-3 underline text-gray-400" onClick={() => { setPinMode('verify'); setPinError(''); setPinInput(''); setNewPin(''); setNewPinConfirm(''); }}>Cancel</button>
+                <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
+                <p className="text-[11px] text-red-400 mt-1">Heads up: Picks are <span className="font-semibold">FINAL</span> once submitted.</p>
+              </div>
+
+              {/* PIN Security */}
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-1">PIN</label>
+                {pinMode === 'verify' && (
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Enter your PIN"
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <button type="button" className="text-xs text-lime-300 underline" onClick={() => { setPinMode('change'); setPinError(''); setPinInput(''); }}>Change PIN</button>
                   </div>
-                </div>
-              )}
-              {pinError && <div className="text-red-400 text-xs mt-2">{pinError}</div>}
-            </div>
+                )}
+                {pinMode === 'set' && (
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Create a 4+ digit PIN"
+                      value={newPin}
+                      onChange={(e) => setNewPin(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Confirm PIN"
+                      value={newPinConfirm}
+                      onChange={(e) => setNewPinConfirm(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <p className="text-[11px] text-gray-500">You’ll set your PIN on first pick.</p>
+                  </div>
+                )}
+                {pinMode === 'change' && (
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Current PIN"
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="New PIN (4+ digits)"
+                      value={newPin}
+                      onChange={(e) => setNewPin(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Confirm new PIN"
+                      value={newPinConfirm}
+                      onChange={(e) => setNewPinConfirm(e.target.value)}
+                      className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    />
+                    <div>
+                      <button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={async () => {
+                          try {
+                            setIsSubmitting(true);
+                            setPinError('');
+                            if (newPin.length < 4 || newPin !== newPinConfirm) {
+                              setPinError('Enter matching new PINs (min 4).');
+                            } else {
+                              await createOrUpdatePin(voterName, newPin);
+                              setPinMode('verify');
+                              setPinInput('');
+                              setNewPin('');
+                              setNewPinConfirm('');
+                            }
+                          } catch (e) {
+                            setPinError(e.message || 'Could not change PIN.');
+                          } finally {
+                            setIsSubmitting(false);
+                          }
+                        }}
+                        className="text-xs px-3 py-2 border border-lime-400 rounded-lg"
+                      >
+                        Update PIN
+                      </button>
+                      <button type="button" className="text-xs ml-3 underline text-gray-400" onClick={() => { setPinMode('verify'); setPinError(''); setPinInput(''); setNewPin(''); setNewPinConfirm(''); }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+                {pinError && <div className="text-red-400 text-xs mt-2">{pinError}</div>}
+              </div>
 
-            {submitError && <div className="text-red-400 text-sm">{submitError}</div>}
+              {submitError && <div className="text-red-400 text-sm">{submitError}</div>}
 
-            <button
-              type="submit"
-              disabled={isSubmitting || !voterName || !pickInput || draftNotStarted}
-              className={`w-full uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
-                isSubmitting || !voterName || !pickInput || draftNotStarted
-                  ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
-                  : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
-              }`}
-            >
-              Submit Pick
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={isSubmitting || !voterName || !pickInput || draftNotStarted}
+                className={`w-full uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
+                  isSubmitting || !voterName || !pickInput || draftNotStarted
+                    ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
+                    : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
+                }`}
+              >
+                Submit Pick
+              </button>
+            </form>
+          )}
 
           {confirmOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -1481,6 +1540,11 @@ const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime())
            <div className="text-center text-sm text-gray-400 italic mb-6">
         Note: This is a <span className="text-lime-400 font-semibold">snake order</span> draft.
       </div>
+      {isDraftComplete && (
+        <div className="text-center text-sm text-emerald-300 font-semibold mb-6">
+          All picks are final and locked. Commissioner is inputting rosters in ESPN.
+        </div>
+      )}
         </div>
 
       </section>
