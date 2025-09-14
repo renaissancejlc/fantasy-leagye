@@ -1149,74 +1149,10 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-emerald-400 hover:bg-emerald-400 hover:text-black transition"
-                title="View ESPN rosters to input picks"
+                title="View ESPN rosters"
               >
                 View ESPN Rosters
               </a>
-              {/* Commissioner handoff animation — upgraded */}
-              <div className="w-full max-w-2xl mt-2">
-                <div className="relative rounded-2xl border border-emerald-400/40 bg-gradient-to-br from-emerald-900/20 via-gray-900/60 to-black p-5 shadow-[0_0_40px_rgba(16,185,129,0.15)] overflow-hidden">
-                  {/* subtle top glow line */}
-                  <div className="absolute -inset-x-40 -top-1 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
-                  {/* soft radial glow */}
-                  <div className="absolute inset-0 pointer-events-none opacity-30" style={{ background: 'radial-gradient(600px 200px at 50% -10%, rgba(16,185,129,.18), transparent)' }} />
-
-                  {/* status pill */}
-                  <div className="flex items-center justify-center gap-2 text-emerald-200">
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/40">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulseGlow" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Commissioner Updating ESPN</span>
-                    </span>
-                  </div>
-
-                  {/* progress */}
-                  <div className="mt-4 relative h-2 w-full overflow-hidden rounded-full bg-gray-800/60 border border-gray-700">
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0,rgba(255,255,255,.06)_40%,transparent_80%)] bg-[length:200%_100%] animate-shimmer" />
-                    <div className="absolute inset-y-0 left-0 w-1/3 animate-nprogress bg-gradient-to-r from-lime-400 via-white to-lime-400 opacity-80" />
-                  </div>
-
-                  {/* steps */}
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-                    <div className="rounded-lg border border-gray-700/60 bg-black/40 p-3">
-                      <div className="text-[10px] uppercase text-gray-400">Step 1</div>
-                      <div className="text-sm font-semibold text-white">Draft Completed</div>
-                    </div>
-                    <div className="rounded-lg border border-gray-700/60 bg-black/40 p-3">
-                      <div className="text-[10px] uppercase text-gray-400">Step 2</div>
-                      <div className="text-sm font-semibold text-white">Inputting Rosters</div>
-                    </div>
-                    <div className="rounded-lg border border-gray-700/60 bg-black/40 p-3">
-                      <div className="text-[10px] uppercase text-gray-400">Step 3</div>
-                      <div className="text-sm font-semibold text-white">Free Agency</div>
-                    </div>
-                  </div>
-
-                  {/* free agency info */}
-                  <div className="mt-4 text-center text-sm text-gray-200">
-                    <div className="inline-flex items-center gap-2 px-2 py-1 rounded-lg border border-amber-400/40 bg-amber-500/10">
-                      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" className="opacity-90"><path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-                      <span className="uppercase font-semibold">Free agency begins Mon 8/25/2025 · 9:00 AM PT</span>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-400">
-                      {freeAgencyMsLeft > 0 ? (
-                        <>Opens in <span className="text-emerald-200 font-semibold">{fmtShort(freeAgencyMsLeft)}</span>. Get your watchlist ready.</>
-                      ) : (
-                        <>Free agency is <span className="text-emerald-300 font-semibold">OPEN</span>.</>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* readable status with dot wave */}
-                  <div className="mt-3 text-center" role="status" aria-live="polite">
-                    <span className="text-xs md:text-sm text-emerald-100/90">Please wait while the commissioner finalizes picks</span>
-                    <span className="ml-2 inline-flex">
-                      <span className="w-2 h-2 rounded-full bg-amber-300 animate-dotwave" />
-                      <span className="w-2 h-2 rounded-full bg-amber-300 animate-dotwave ml-1" style={{ animationDelay: '140ms' }} />
-                      <span className="w-2 h-2 rounded-full bg-amber-300 animate-dotwave ml-1" style={{ animationDelay: '280ms' }} />
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
