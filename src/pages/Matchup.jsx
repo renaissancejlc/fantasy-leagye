@@ -6,12 +6,12 @@ export default function Matchup() {
   // 2025 Regular Season Schedule (Weeks 1–14)
   const schedule2025 = [
     { week: 1, games: [
-      { awayTeam: 'Love thy Nabers', awayMgr: 'Raphael Carr', homeTeam: 'No Punt Intended', homeMgr: 'Callie Everson' },
-      { awayTeam: 'The Replacements', awayMgr: 'david carr, David Carr', homeTeam: 'Santee Eagles', homeMgr: 'Thomas Carr' },
-      { awayTeam: 'Team Ustav', awayMgr: 'Utsav Pandey', homeTeam: 'Team Simon', homeMgr: 'Simon Carr' },
-      { awayTeam: 'Building Dynasties', awayMgr: 'Christian Carr', homeTeam: 'Cryo Me a River', homeMgr: 'Daisy Carr' },
-      { awayTeam: 'Team 9', awayMgr: '—', homeTeam: "Patty's Pub", homeMgr: 'Angelo Carr' },
-      { awayTeam: 'The Happy Accidents', awayMgr: 'Dustin Carr', homeTeam: 'Tyreek it Till you Make it', homeMgr: 'Tariq Muhummad' },
+      { awayTeam: 'Love thy Nabers', awayMgr: 'Raphael Carr', awayScore: 144.22, homeTeam: 'No Punt Intended', homeMgr: 'Callie Carr', homeScore: 119.68 },
+      { awayTeam: 'The Replacements', awayMgr: 'david carr, David Carr', awayScore: 126.34, homeTeam: 'Santee Eagles', homeMgr: 'Thomas Carr', homeScore: 132.58 },
+      { awayTeam: 'Team Ustav', awayMgr: 'Utsav Pandey', awayScore: 127.02, homeTeam: 'Team Simon', homeMgr: 'Simon Carr', homeScore: 142.82 },
+      { awayTeam: 'Building Dynasties', awayMgr: 'Christian Carr', awayScore: 140.76, homeTeam: "Breece's Pieces", homeMgr: 'Daisy Carr', homeScore: 112.02 },
+      { awayTeam: "francisco's Fantastic Team", awayMgr: 'francisco chavez', awayScore: 162.96, homeTeam: "King Henry's Court", homeMgr: 'Angelo Carr', homeScore: 116.08 },
+      { awayTeam: 'The Happy Accidents', awayMgr: 'Dustin Carr', awayScore: 80.62, homeTeam: 'Sutton things never change', homeMgr: 'Tariq Muhummad', homeScore: 160.02 },
     ]},
     { week: 2, games: [
       { awayTeam: 'The Replacements', awayMgr: 'david carr, David Carr', homeTeam: 'Love thy Nabers', homeMgr: 'Raphael Carr' },
@@ -119,7 +119,7 @@ export default function Matchup() {
     ]},
   ];
 
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [selectedWeek, setSelectedWeek] = useState(2);
   const current = useMemo(() => schedule2025.find(w => w.week === selectedWeek) || schedule2025[0], [selectedWeek]);
 
   return (
@@ -167,9 +167,9 @@ export default function Matchup() {
                     <div className="text-xs font-semibold opacity-70">{g.awayMgr}</div>
                   </div>
                   <div className="col-span-1 text-center">
-                    <div className="text-2xl font-black">0.0</div>
+                    <div className="text-2xl font-black">{g.awayScore != null ? g.awayScore.toFixed(2) : '0.0'}</div>
                     <div className="text-[10px] uppercase tracking-widest">vs</div>
-                    <div className="text-2xl font-black">0.0</div>
+                    <div className="text-2xl font-black">{g.homeScore != null ? g.homeScore.toFixed(2) : '0.0'}</div>
                   </div>
                   <div className="col-span-2 text-right">
                     <div className="text-xl font-extrabold leading-tight">{g.homeTeam}</div>
