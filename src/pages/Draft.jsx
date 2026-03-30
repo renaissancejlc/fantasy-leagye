@@ -271,8 +271,12 @@ async function saltedHash(pin, salt) {
 }
 
 export default function DraftPage() {
+
+  const DRAFT_YEAR = 2026;
+  const DRAFT_START_ISO = '2026-08-14T09:30:00-07:00';
+  const [previewMode, setPreviewMode] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
-    total: 0,
+        total: 0,
     days: 0,
     hours: 0,
     minutes: 0,
@@ -388,6 +392,10 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
 
   const sendTestNotification = async () => {
     try {
+      if (isOffseason) {
+        setTestMessage(`Preview only — live draft pop-ups are disabled until August 14, ${DRAFT_YEAR}.`);
+        return;
+      }
       setTestMessage('');
       setTestSending(true);
       const payload = {
@@ -497,8 +505,9 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
           pick: pickLabel,
           status: 'PICKED',
           submittedAt: isoNow(),
-windowHours: getPickWindowMinutes(voterName, currentRound) / 60,        });
-      } catch (e) {
+          windowHours: getPickWindowMinutes(voterName, currentRound) / 60,
+        });
+            } catch (e) {
         console.warn('DraftLog write failed (non-blocking). Proceeding without log.');
       }
 
@@ -516,8 +525,8 @@ windowHours: getPickWindowMinutes(voterName, currentRound) / 60,        });
       // void notifyNextUpSMS(computeNextUp());
       if (!sent) console.warn('[notifyDiscord] pick notification failed');
       // Anchor locally so the next pick's timer starts now even if logs lag a bit
-setLocalSubmitAt(new Date(effectiveNow.getTime()));
-
+      setLocalSubmitAt(new Date(effectiveNow.getTime()));
+      
       // Optimistic UI update
       setPlayersPicks(prev => prev.map(p => (
         normalize(p.name) === normalize(voterName)
@@ -717,7 +726,7 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
 }
 
   // --- Draft start time (configurable; fallback static) ---
-  const [startTime, setStartTime] = useState('2025-08-14T09:30:00-07:00');
+  const [startTime, setStartTime] = useState(DRAFT_START_ISO);
   useEffect(() => {
     // Optionally fetch from a Config tab in Sheet.best:
     // axios.get(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/Config`)
@@ -727,11 +736,9 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
     //   })
     //   .catch(() => {});
     // Keep static fallback for now.
-    setStartTime('2025-08-14T09:30:00-07:00');
-  }, []);
-  const draftStart = React.useMemo(() => new Date(startTime), [startTime]);
-
-
+    setStartTime(DRAFT_START_ISO);
+  }, [DRAFT_START_ISO]);
+   const draftStart = React.useMemo(() => new Date(startTime), [startTime]);
   // DraftLog tab readiness
   const [logsReady, setLogsReady] = useState(true);
   useEffect(() => {
@@ -776,8 +783,7 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-}, [startTime, now, timeOffsetMs]);
-
+  }, [startTime, now, timeOffsetMs]);
   useEffect(() => {
     refreshDraftOnce(); // initial fetch only
   }, []);
@@ -799,6 +805,9 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
   // ---- Draft completion state ----
   const totalCells = Math.max(totalTeams, 1) * rounds;
   const isDraftComplete = filledCount >= totalCells;
+  const isOffseason = effectiveNow < draftStart;
+  const liveDraftEnabled = !isOffseason && !isDraftComplete;
+  const showPreviewExperience = previewMode && isOffseason;
 // Compute the next team on the clock based on current state
 const computeNextUp = React.useCallback(() => {
   if (!totalTeams || isDraftComplete) return '';
@@ -902,14 +911,13 @@ const clockDeadline = React.useMemo(
   [clockStart, windowMinutes]
 );
 const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
-// Free Agency opens: Mon Aug 25, 2025 @ 9:00 AM PT
-const FREE_AGENCY_START = new Date('2025-08-25T09:00:00-07:00');
+// Free Agency opens: Tue Aug 25, 2026 @ 9:00 AM PT
+const FREE_AGENCY_START = new Date('2026-08-25T09:00:00-07:00');
 const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.getTime());
 
   // Use draftStart (already a Date) for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
   const hasDraftStarted = effectiveNow >= draftStart;
   const draftNotStarted = !hasDraftStarted;
-  const draftStarted = hasDraftStarted;
 
   const [passInFlight, setPassInFlight] = useState(false);
   // --- Auto-pass logic with updated checks ---
@@ -1065,6 +1073,10 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
       setSubmitError("Draft hasn't started yet.");
       return;
     }
+    if (showPreviewExperience) {
+      setSubmitError(`Preview mode is enabled. Live pick submissions open on August 14, ${DRAFT_YEAR}.`);
+      return;
+    }
     // Must be on the clock
     if (normalize(voterName) !== normalize(onTheClock)) {
       setSubmitError(`It's ${onTheClock || 'someone else'}'s turn.`);
@@ -1099,7 +1111,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
 
       <section className="px-6 py-20 text-center max-w-7xl mx-auto bg-gradient-to-br from-black via-gray-900 to-black rounded-2xl shadow-2xl border border-lime-500">
         <h1 className="text-6xl md:text-7xl font-extrabold uppercase tracking-wider mb-6 text-white drop-shadow-[0_0_20px_rgba(0,255,0,0.5)]">
-          2025 Draft Day
+          {DRAFT_YEAR} Draft Day
         </h1>
        
 
@@ -1108,30 +1120,48 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
             Draft Countdown
           </h2> */}
           {timeLeft.total > 0 ? (
-            <div className="flex justify-center gap-8 md:gap-14 text-4xl md:text-5xl font-mono text-white">
-              <div className="text-center">
-                <div className="text-lime-300">{timeLeft.days}</div>
-                <div className="text-xs md:text-sm uppercase text-gray-400">Days</div>
+            <div className="space-y-6">
+              <div className="flex justify-center gap-8 md:gap-14 text-4xl md:text-5xl font-mono text-white">
+                <div className="text-center">
+                  <div className="text-lime-300">{timeLeft.days}</div>
+                  <div className="text-xs md:text-sm uppercase text-gray-400">Days</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lime-300">{timeLeft.hours}</div>
+                  <div className="text-xs md:text-sm uppercase text-gray-400">Hours</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lime-300">{timeLeft.minutes}</div>
+                  <div className="text-xs md:text-sm uppercase text-gray-400">Minutes</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lime-300">{timeLeft.seconds}</div>
+                  <div className="text-xs md:text-sm uppercase text-gray-400">Seconds</div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-lime-300">{timeLeft.hours}</div>
-                <div className="text-xs md:text-sm uppercase text-gray-400">Hours</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lime-300">{timeLeft.minutes}</div>
-                <div className="text-xs md:text-sm uppercase text-gray-400">Minutes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lime-300">{timeLeft.seconds}</div>
-                <div className="text-xs md:text-sm uppercase text-gray-400">Seconds</div>
-              </div>
+
+              {isOffseason && (
+                <div className="max-w-3xl mx-auto space-y-4">
+                  <div className="text-2xl md:text-3xl font-black text-lime-300">{DRAFT_YEAR} Draft Day is August 14, {DRAFT_YEAR}</div>
+                  <div className="text-sm md:text-base text-gray-300">
+                    The {DRAFT_YEAR - 1} draft is over. Live draft controls, pick submissions, DraftLog warnings, and on-the-clock updates stay disabled until the new draft begins.
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode((v) => !v)}
+                      className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition"
+                    >
+                      {previewMode ? 'Hide Preview Mode' : 'Preview 2026 Draft Experience'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+          ) : isDraftComplete ? (
+            <div className="text-5xl font-black text-emerald-400"></div>
           ) : (
-            isDraftComplete ? (
-              <div className="text-5xl font-black text-emerald-400"></div>
-            ) : (
-              <div className="text-5xl font-black text-red-500">The Draft Has Begun!</div>
-            )
+            <div className="text-5xl font-black text-red-500">The Draft Has Begun!</div>
           )}
         </div>
 
@@ -1159,8 +1189,8 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
 
         <div className="max-w-2xl mx-auto">
           {/* DraftLog readiness banner */}
-          {!logsReady && showLogWarning && (
-            <div className="mb-4 text-center">
+          {!isOffseason && !logsReady && showLogWarning && (
+                        <div className="mb-4 text-center">
               <div className="inline-block bg-amber-600/20 border-l-4 border-amber-500 px-4 py-3 rounded-md shadow text-left text-sm max-w-xl mx-auto">
                 <strong className="text-amber-400 font-semibold block mb-1">DraftLog Not Detected</strong>
                 <span className="text-white block mb-2">
@@ -1178,7 +1208,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
             </div>
           )}
           {/* On the Clock banner */}
-          {!isDraftComplete && (
+                    {liveDraftEnabled && (
             <div className="mb-4 text-center">
               <div className="mx-auto w-full sm:w-auto inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl sm:rounded-full border text-xs sm:text-sm font-semibold uppercase tracking-normal sm:tracking-wide bg-lime-500/10 border-lime-400 text-lime-300 max-w-full whitespace-normal break-words">
                 <span className="w-2 h-2 rounded-full bg-current inline-block" />
@@ -1188,17 +1218,30 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                     <span className="mx-2">•</span>
                     <span className="text-gray-300 normal-case">Time Left:</span>
                     <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
-                    <span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes/60}h` : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>
+                    <span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes / 60}h` : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>
                   </>
                 )}
+              </div>
+            </div>
+          )}
+          {showPreviewExperience && (
+            <div className="mb-4 text-center">
+              <div className="mx-auto w-full sm:w-auto inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl sm:rounded-full border text-xs sm:text-sm font-semibold uppercase tracking-normal sm:tracking-wide bg-indigo-500/10 border-indigo-400 text-indigo-300 max-w-full whitespace-normal break-words">
+                <span className="w-2 h-2 rounded-full bg-current inline-block" />
+                Preview Mode · Live draft disabled until August 14, {DRAFT_YEAR}
               </div>
             </div>
           )}
 
           
           {/* Submit Pick Card */}
-          {!isDraftComplete && (
+          {(liveDraftEnabled || showPreviewExperience) && (
             <form onSubmit={submitPick} className="bg-black/60 border border-lime-400/40 rounded-xl p-6 shadow-lg space-y-4">
+              {showPreviewExperience && (
+                <div className="rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-200">
+                  Preview mode lets everyone see the draft UI early, but submissions, DraftLog activity, Discord alerts, and live draft pop-ups remain off until the real draft starts.
+                </div>
+              )}
               <div>
                 <label className="block text-xs uppercase text-gray-400 mb-1">Your Name</label>
                 <select
@@ -1377,14 +1420,14 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
 
               <button
                 type="submit"
-                disabled={isSubmitting || !voterName || !pickInput || draftNotStarted}
+                disabled={isSubmitting || !voterName || !pickInput || draftNotStarted || showPreviewExperience}
                 className={`w-full uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
-                  isSubmitting || !voterName || !pickInput || draftNotStarted
+                  isSubmitting || !voterName || !pickInput || draftNotStarted || showPreviewExperience
                     ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
                     : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
                 }`}
               >
-                Submit Pick
+                {showPreviewExperience ? 'Live Draft Opens August 14' : 'Submit Pick'}
               </button>
             </form>
           )}
@@ -1433,25 +1476,17 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
           {/* Backup link to edit sheet directly (commissioner use) + Test Notification */}
           <div className="text-center mt-4">
             <div className="inline-flex items-center gap-3 flex-wrap justify-center">
-              {/* <a
-                href="https://docs.google.com/spreadsheets/d/1NDVTuhiF8lpWKFLAvP83Llu8Owkq25bx3bHKvvC4bag/edit?usp=sharing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-lime-300 hover:text-lime-200 underline text-sm"
-              >
-                Raw Draft Picks Sheet
-              </a>
               <button
                 type="button"
                 onClick={sendTestNotification}
                 disabled={testSending}
                 className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title="Sends a test message to Discord via /api/notifyPick"
+                title={isOffseason ? `Preview only until August 14, ${DRAFT_YEAR}` : 'Sends a test message to Discord via /api/notifyPick'}
               >
-                {testSending ? 'Sending…' : 'Send Test Notification'}
-              </button> */}
+                {testSending ? 'Sending…' : 'Test Draft Notification'}
+              </button>
               {/* Manual refresh (no auto reload) */}
-            <button
+              <button
               type="button"
               onClick={refreshAll}
               disabled={refreshing}
@@ -1479,8 +1514,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                   <path d="M20.317 4.369A19.791 19.791 0 0016.558 3c-.197.35-.42.82-.574 1.2a18.4 18.4 0 00-7.968 0c-.154-.38-.377-.85-.574-1.2A19.789 19.789 0 003.683 4.37C1.803 7.216 1.156 9.96 1.33 12.662c2.1 1.567 4.137 2.52 6.106 3.145.47-.646.892-1.338 1.257-2.067a11.71 11.71 0 01-1.905-.902c.16-.118.315-.242.464-.37 3.692 1.74 7.69 1.74 11.383 0 .149.129.304.252.464.37-.611.345-1.253.64-1.905.902.365.729.787 1.421 1.257 2.067 1.97-.625 4.006-1.578 6.106-3.145.252-3.958-.68-6.67-2.74-8.293zM9.5 12.5c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2zm5 0c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2z" fill="currentColor"/>
                 </svg>
                 Get notified through Discord
-              </a>
-              
+              </a>              
               {/* <button
                 type="button"
                 onClick={sendTestSMS}
