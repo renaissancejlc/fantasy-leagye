@@ -3,6 +3,7 @@ import axios from 'axios';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
+
 // ---------------------------------------------------------------------------
 // Caching + rate limit config
 // ---------------------------------------------------------------------------
@@ -15,8 +16,20 @@ const VOTES_CACHE_KEY = 'fantasy:votesCache';
 
 const PINS_CACHE_KEY = 'fantasy:pinsCache';
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1406471095556771841/KJveqiYeOk-0z1u9PO9jCx9Z8PX2585JkO4tak_L7CH_SEF7RzR_C4A7go4Hcz3_xPSH';
-const DISCORD_INVITE_URL = 'https://discord.gg/9hfHVJ58';
-const RESULTS_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744/tabs/Results';
+const DISCORD_INVITE_URL = 'https://discord.gg/hfGzs4a7g6';
+const SHEETOPS_API_KEY = import.meta.env.VITE_SHEETOPS_API_KEY;
+const SHEETOPS_VOTES_CONNECTION_ID = 18;
+const SHEETOPS_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
+const SHEETOPS_DEFAULT_TAB = 'Votes';
+const sheetOpsHeaders = () => {
+  if (!SHEETOPS_API_KEY) return {};
+  return {
+    Authorization: `Bearer ${SHEETOPS_API_KEY}`,
+  };
+};
+const getSheetOpsRowsUrl = (tab = SHEETOPS_DEFAULT_TAB) => `${SHEETOPS_BASE_URL}/rows?tab=${encodeURIComponent(tab)}`;
+const VOTES_API = getSheetOpsRowsUrl('Votes');
+const RESULTS_API = getSheetOpsRowsUrl('Results');
 const NOTIFIED_KEY = 'fantasy:discordNotified';
 const NOTIFIED_RESULT_KEY = 'fantasy:resultNotified';
 
@@ -59,16 +72,31 @@ function upsertPinInCache(voter, rec) {
   writePinsCache(map);
 }
 
-// ---------------------------------------------------------------------------
-// Configuration — no Vite env needed
-// ---------------------------------------------------------------------------
-
-// Optional: set this to your SheetBest (or API) endpoint to persist votes.
-// Leave empty to use localStorage for development.
-const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
 
 // Axios instance with sane defaults
 const http = axios.create({ timeout: API_TIMEOUT_MS });
+
+const extractRows = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.rows)) return data.rows;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
+const sheetOpsAppend = (tab, row) => axios.post(
+  `${SHEETOPS_BASE_URL}/append`,
+  { tab, row },
+  { headers: sheetOpsHeaders() }
+);
+
+const sheetOpsDeleteRows = (tab, where) => axios.delete(
+  `${SHEETOPS_BASE_URL}/rows`,
+  {
+    headers: sheetOpsHeaders(),
+    data: { tab, where },
+  }
+);
 
 // Fixed season start (kickoff). Before this date = applies to THIS season.
 // After this date = queued decision for NEXT season (but voting is locked in-season).
@@ -156,7 +184,7 @@ const parseDateLocalIfDateOnly = (value) => {
 };
 
 // --- PIN (voting code) helpers -------------------------------------------------
-const getPinsUrl = (suffix = '') => `${VOTES_API.replace(/\/$/, '')}/tabs/Pins${suffix}`;
+const getPinsUrl = () => getSheetOpsRowsUrl('Pins');
 
 const toHex = (buffer) =>
   Array.prototype.map.call(new Uint8Array(buffer), (x) => x.toString(16).padStart(2, '0')).join('');
@@ -280,7 +308,7 @@ export default function Votes() {
 
     if (!force && cacheFresh) {
       // Use fresh cache and skip network entirely
-      setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+      setAllVotes(extractRows(cache.data));
       setLastUpdated(new Date(cache.ts));
       return;
     }
@@ -289,7 +317,7 @@ export default function Votes() {
     if (!force && Date.now() < nextAllowedFetchAt) {
       // Within throttle window, prefer cached data if we have it
       if (cache) {
-        setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+        setAllVotes(extractRows(cache.data));
         setLastUpdated(new Date(cache.ts));
       }
       return;
@@ -298,7 +326,7 @@ export default function Votes() {
     // If offline, fall back to cache gracefully
     if (!isOnline()) {
       if (cache) {
-        setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+        setAllVotes(extractRows(cache.data));
         setLastUpdated(new Date(cache.ts));
       } else {
         setError('Offline and no cached votes available.');
@@ -315,14 +343,14 @@ export default function Votes() {
       if (etag) headers['If-None-Match'] = etag;
 
       const res = await http.get(VOTES_API, {
-        headers,
+        headers: { ...headers, ...sheetOpsHeaders() },
         validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
       });
 
       if (res.status === 304 && cache) {
         // Not modified — extend cache freshness
         writeVotesCache(cache.data, etag);
-        setAllVotes(Array.isArray(cache.data) ? cache.data : []);
+        setAllVotes(extractRows(cache.data));
         setLastUpdated(new Date());
         return;
       }
@@ -330,16 +358,17 @@ export default function Votes() {
       const newEtag = res.headers?.etag || res.headers?.ETag || null;
       if (newEtag) votesEtagRef.current = newEtag;
 
-      const data = Array.isArray(res.data) ? res.data : [];
+      const data = extractRows(res.data);
       setAllVotes(data);
       setLastUpdated(new Date());
       writeVotesCache(data, newEtag);
       setNextAllowedFetchAt(Date.now() + MIN_REFRESH_INTERVAL_MS);
-    } catch {
+    } catch (err) {
+      console.warn('SheetOps vote fetch failed; falling back to cache', err?.message || err);
       // On failure, try cache to avoid blank UI
       const cache2 = readVotesCache();
       if (cache2) {
-        setAllVotes(Array.isArray(cache2.data) ? cache2.data : []);
+        setAllVotes(extractRows(cache2.data));
         setLastUpdated(new Date(cache2.ts));
       } else {
         setError('Could not load votes.');
@@ -362,10 +391,13 @@ export default function Votes() {
   useEffect(() => {
     // Seed UI from cache immediately (no network)
     const cache = readVotesCache();
-    if (cache && Array.isArray(cache.data)) {
-      setAllVotes(cache.data);
-      setLastUpdated(new Date(cache.ts));
-      setLoading(false);
+    if (cache) {
+      const cachedRows = extractRows(cache.data);
+      if (cachedRows.length) {
+        setAllVotes(cachedRows);
+        setLastUpdated(new Date(cache.ts));
+        setLoading(false);
+      }
     }
     // Revalidate only if cache is stale or missing
     const needsNetwork = !cache || (Date.now() - cache.ts) > CACHE_TTL_MS;
@@ -480,8 +512,8 @@ export default function Votes() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get(RESULTS_API);
-        const existing = new Set(res.data.map(r => r.notifiedKey));
+        const res = await axios.get(RESULTS_API, { headers: sheetOpsHeaders() });
+        const existing = new Set(extractRows(res.data).map(r => r.notifiedKey));
         const newDecisions = groupedResults.filter((r) => {
           const isDecided = (r.outcome === 'Passed' || r.outcome === 'Failed');
           const thresholdHit = r.yes >= AUTO_DECISIVE_VOTES || r.no >= AUTO_DECISIVE_VOTES;
@@ -493,9 +525,9 @@ export default function Votes() {
           const key = `${r.motionId}-${r.seasonBucket}-${r.outcome.toLowerCase()}`;
           sentRef.current.add(key);
           await notifyDiscord(r);
-          await axios.post(RESULTS_API, { motionId:r.motionId, seasonBucket:r.seasonBucket, notifiedKey:key });
+          await sheetOpsAppend('Results', { motionId:r.motionId, seasonBucket:r.seasonBucket, notifiedKey:key });
         }
-      } catch(e){ console.warn('notify read/write failed',e);}
+      } catch(e){ console.warn('notify read/write failed; continuing without persisted result notification', e?.message || e);}
     })();
   },[groupedResults]);
 
@@ -542,9 +574,8 @@ export default function Votes() {
     if (etag) headers['If-None-Match'] = etag;
 
     http
-      .get(getPinsUrl('/search'), {
-        params: { voter: voterName },
-        headers,
+      .get(`${getPinsUrl()}&voter=${encodeURIComponent(voterName)}`, {
+        headers: { ...headers, ...sheetOpsHeaders() },
         validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
       })
       .then((res) => {
@@ -553,14 +584,16 @@ export default function Votes() {
           setPinMode(cached.rec ? 'verify' : 'set');
           return;
         }
-        const rec = Array.isArray(res.data) && res.data[0] ? res.data[0] : null;
+        const pinRows = extractRows(res.data);
+        const rec = pinRows.find((row) => normalize(row.voter || '') === normalize(voterName)) || pinRows[0] || null;
         const newEtag = res.headers?.etag || res.headers?.ETag || null;
         if (newEtag) pinsEtagMapRef.current[voterName] = newEtag;
         setPinRecord(rec);
         setPinMode(rec ? 'verify' : 'set');
         upsertPinInCache(voterName, rec);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('SheetOps PIN fetch failed; falling back to cached PIN state', err?.message || err);
         // On error, prefer cached (even if stale) and default to set mode
         if (cached) {
           setPinRecord(cached.rec);
@@ -587,8 +620,8 @@ export default function Votes() {
     const salt = makeSalt(8);
     const pinHash = await saltedHash(pin, salt);
     // remove any existing row(s) for this voter, then create one
-    try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
-    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: new Date().toISOString() });
+    try { await sheetOpsDeleteRows('Pins', { voter }); } catch (_) {}
+    await sheetOpsAppend('Pins', { voter, salt, pinHash, updatedAt: new Date().toISOString() });
     setPinRecord({ voter, salt, pinHash });
     upsertPinInCache(voter, { voter, salt, pinHash, updatedAt: new Date().toISOString() });
     setPinMode('verify');
@@ -634,7 +667,7 @@ export default function Votes() {
         await createOrUpdatePin(voterName, newPin);
       }
 
-      await axios.post(VOTES_API, payload);
+      await sheetOpsAppend('Votes', payload);
       setAllVotes((prev) => [...prev, payload]);
       // Update local votes cache to avoid extra refetch
       const updated = (readVotesCache()?.data || []).concat([payload]);
@@ -660,11 +693,9 @@ export default function Votes() {
       const ok = await verifyPinAgainstRecord(pinInput, pinRecord);
       if (!ok) { setPinError('Incorrect PIN'); return; }
 
-      await axios.delete(`${VOTES_API.replace(/\/$/, '')}/search`, {
-        params: {
-          motionId: CURRENT_MOTION.id,
-          voter: voterName,
-        },
+      await sheetOpsDeleteRows('Votes', {
+        motionId: CURRENT_MOTION.id,
+        voter: voterName,
       });
       // Optimistically update UI
       const updated = allVotes.filter(

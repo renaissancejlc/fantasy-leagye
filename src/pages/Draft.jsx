@@ -5,6 +5,29 @@ import axios from 'axios';
 const API_TIMEOUT_MS = 10_000; // 10s network timeout for GETs
 const http = axios.create({ timeout: API_TIMEOUT_MS });
 
+const SHEETOPS_API_KEY = import.meta.env.VITE_SHEETOPS_API_KEY;
+const SHEETOPS_DRAFT_CONNECTION_ID = 17;
+const SHEETOPS_VOTES_CONNECTION_ID = 18;
+const SHEETOPS_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_DRAFT_CONNECTION_ID}`;
+const SHEETOPS_VOTES_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
+const SHEETOPS_DEFAULT_TAB = 'Draft';
+const sheetOpsHeaders = () => {
+  if (!SHEETOPS_API_KEY) return {};
+  return {
+    Authorization: `Bearer ${SHEETOPS_API_KEY}`,
+    'x-api-key': SHEETOPS_API_KEY,
+  };
+};
+const sheetOpsHeadersForUrl = (url) => (
+  typeof url === 'string' && url.startsWith('https://api.sheetops.app')
+    ? sheetOpsHeaders()
+    : {}
+);
+const getSheetOpsRowsUrl = (tab = SHEETOPS_DEFAULT_TAB) => `${SHEETOPS_BASE_URL}/rows?tab=${encodeURIComponent(tab)}`;
+const DRAFT_SHEET_URL = getSheetOpsRowsUrl('Draft');
+const VOTES_API = SHEETOPS_VOTES_BASE_URL;
+const PLAYERS_URL = '/players.json';
+
 // E2E online guard
 const isOnline = () => (typeof navigator === 'undefined' ? true : navigator.onLine !== false);
 
@@ -70,9 +93,8 @@ async function cachedGet(url, { ttlMs = 15000, forceNetwork = false } = {}) {
     try {
       const headers = {};
       if (prevEtag) headers['If-None-Match'] = prevEtag;
-
       const resp = await http.get(url, {
-        headers,
+        headers: { ...headers, ...sheetOpsHeadersForUrl(url) },
         validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
       });
 
@@ -102,6 +124,38 @@ async function cachedGet(url, { ttlMs = 15000, forceNetwork = false } = {}) {
   PENDING.set(url, p);
   return p;
 }
+
+
+const extractRows = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.rows)) return data.rows;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
+
+const sheetOpsAppend = (tab, row, baseUrl = SHEETOPS_BASE_URL) => axios.post(
+  `${baseUrl}/append`,
+  { tab, row },
+  { headers: sheetOpsHeaders() }
+);
+
+const sheetOpsPatchByPlayer = (tab, player, data) => axios.patch(
+  `${SHEETOPS_BASE_URL}/rows`,
+  {
+    tab,
+    where: { Player: player },
+    data,
+  },
+  { headers: sheetOpsHeaders() }
+);
+
+const sheetOpsDeleteRows = (tab, where, baseUrl = SHEETOPS_BASE_URL) => axios.delete(
+  `${baseUrl}/rows`,
+  {
+    headers: sheetOpsHeaders(),
+    data: { tab, where },
+  }
+);
 
 // Clear all caches (for debugging / manual reset)
 function clearAllCaches() {
@@ -170,9 +224,6 @@ const formatTurnSMS = (p) => {
 // }
 
 
-const DRAFT_SHEET_URL = 'https://api.sheetbest.com/sheets/49d88941-4ab8-46da-b620-d2dd972d300b';
-const VOTES_API = 'https://api.sheetbest.com/sheets/6ea852be-9b86-4b65-91ed-c0f6756f3744';
-const PLAYERS_URL = '/players.json';
 // Explicit snake-draft order (display + turn control)
 // Note: uses provided spellings; mapped to actual sheet names via normalization
 const RAW_DRAFT_ORDER = [
@@ -190,7 +241,10 @@ const RAW_DRAFT_ORDER = [
   'Raphy',
 ];
 
-const getDraftLogUrl = (suffix = '') => `${DRAFT_SHEET_URL.replace(/\/$/, '')}/tabs/DraftLog${suffix}`;
+const getDraftLogUrl = (suffix = '') => {
+  if (suffix === '/search') return `${SHEETOPS_BASE_URL}/rows?tab=DraftLog`;
+  return suffix ? `${SHEETOPS_BASE_URL}${suffix}` : getSheetOpsRowsUrl('DraftLog');
+};
 
 const normalize = str => str?.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim();
 // Static phone book (normalized keys). Kept in code so SMS works without SheetBest.
@@ -244,7 +298,12 @@ const EXCEPTION_MINUTES = Object.freeze({});
 const getPickWindowMinutes = (teamName, round) => EXCEPTION_MINUTES[normalize(teamName || '')] || BASE_PICK_MINUTES;
 
 // --- PIN (draft code) helpers -------------------------------------------------
-const getPinsUrl = (suffix = '') => `${VOTES_API.replace(/\/$/, '')}/tabs/Pins${suffix}`;
+const getVotesRowsUrl = (tab = 'Votes') => `${VOTES_API}/rows?tab=${encodeURIComponent(tab)}`;
+
+const getPinsUrl = (suffix = '') => {
+  if (suffix === '/search') return `${VOTES_API}/rows?tab=Pins`;
+  return suffix ? `${VOTES_API}${suffix}` : getVotesRowsUrl('Pins');
+};
 
 const toHex = (buffer) =>
   Array.prototype.map.call(new Uint8Array(buffer), (x) => x.toString(16).padStart(2, '0')).join('');
@@ -324,7 +383,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
     axios
       .get(PLAYERS_URL)
       .then((res) => {
-        const rows = Array.isArray(res.data) ? res.data : [];
+        const rows = extractRows(res.data);
         const names = Array.from(
           new Set(
             rows
@@ -465,9 +524,10 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       }
 
       // Refresh sheet before we write (prevent race)
-            const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
+      const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
       if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
-      const formatted = latest.data.map(row => ({
+      const latestRows = extractRows(latest.data);
+      const formatted = latestRows.map(row => ({
         name: row.Player,
         picks: Object.entries(row)
           .filter(([key]) => key !== 'Player')
@@ -487,18 +547,18 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       }
 
       // Ensure target cell is empty
-      const rowObj = latest.data[teamIdx] || {};
+      const rowObj = latestRows[teamIdx] || {};
       if (rowObj[roundCol] && rowObj[roundCol] !== '—') {
         setSubmitError('This pick was just taken. Refresh and try again.');
         return;
       }
 
       // Write the pick to the sheet (PATCH by search on Player)
-      await axios.patch(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/search`, { [roundCol]: pickLabel }, { params: { Player: voterName } });
+      await sheetOpsPatchByPlayer('Draft', voterName, { [roundCol]: pickLabel });
 
       // Log the pick in DraftLog (best-effort, non-blocking)
       try {
-        await axios.post(getDraftLogUrl(''), {
+        await sheetOpsAppend('DraftLog', {
           pickNumber: overallPick,
           round: currentRound,
           team: voterName,
@@ -507,7 +567,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
           submittedAt: isoNow(),
           windowHours: getPickWindowMinutes(voterName, currentRound) / 60,
         });
-            } catch (e) {
+      } catch (e) {
         console.warn('DraftLog write failed (non-blocking). Proceeding without log.');
       }
 
@@ -600,7 +660,8 @@ async function refreshDraftOnce(forceNetwork = false) {
   try {
     const response = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork });
     if (response && response.headers) updateOffsetFromHeaders(response.headers);
-    const formatted = response.data.map(row => ({
+    const rows = extractRows(response.data);
+    const formatted = rows.map(row => ({
       name: row.Player,
       picks: Object.entries(row)
         .filter(([key]) => key !== 'Player')
@@ -623,7 +684,7 @@ async function refreshLogOnce(forceNetwork = false) {
   try {
     const res = await cachedGet(getDraftLogUrl(''), { ttlMs: LOG_TTL_MS, forceNetwork });
     if (res && res.headers) updateOffsetFromHeaders(res.headers);
-    setDraftLogRows(Array.isArray(res.data) ? res.data : []);
+    setDraftLogRows(extractRows(res.data));
   } catch (_) {}
 }
 
@@ -745,7 +806,7 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
     (async () => {
       try {
         const res = await cachedGet(getDraftLogUrl(''), { ttlMs: LOG_TTL_MS, forceNetwork: true });
-        setLogsReady(true);
+        setLogsReady(extractRows(res.data).length >= 0);
         if (res && res.headers) updateOffsetFromHeaders(res.headers);
       } catch {
         setLogsReady(false);
@@ -952,15 +1013,16 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
         // Re-validate emptiness against latest sheet
         const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
         if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
-        const sheetTeamIdx = latest.data.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
-        const latestRow = latest.data[sheetTeamIdx] || {};
+        const latestRows = extractRows(latest.data);
+        const sheetTeamIdx = latestRows.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
+        const latestRow = latestRows[sheetTeamIdx] || {};
         if (latestRow[roundCol] && latestRow[roundCol] !== '—') { setPassInFlight(false); return; }
 
         // Mark PASS in sheet
-        await axios.patch(`${DRAFT_SHEET_URL.replace(/\/$/, '')}/search`, { [roundCol]: 'PASS' }, { params: { Player: onTheClock } });
+        await sheetOpsPatchByPlayer('Draft', onTheClock, { [roundCol]: 'PASS' });
         // Log the pass (best-effort)
         try {
-          await axios.post(getDraftLogUrl(''), {
+          await sheetOpsAppend('DraftLog', {
             pickNumber: overallPick,
             round: currentRound,
             team: onTheClock,
@@ -1018,11 +1080,12 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
     if (!voterName) { setPinRecord(null); setPinMode('verify'); return; }
 
     // Cache by full query URL so each voter lookup is independently cached
-    const pinsQueryUrl = `${getPinsUrl('/search')}?voter=${encodeURIComponent(voterName)}`;
+    const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(voterName)}`;
 
     cachedGet(pinsQueryUrl, { ttlMs: 24 * 60 * 60 * 1000, forceNetwork: false })
       .then((res) => {
-        const rec = Array.isArray(res.data) && res.data[0] ? res.data[0] : null;
+        const pinRows = extractRows(res.data);
+        const rec = pinRows.find((row) => normalize(row.voter || '') === normalize(voterName)) || pinRows[0] || null;
         setPinRecord(rec);
         setPinMode(rec ? 'verify' : 'set');
       })
@@ -1043,13 +1106,13 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
   const createOrUpdatePin = async (voter, pin) => {
     const salt = makeSalt(8);
     const pinHash = await saltedHash(pin, salt);
-    try { await axios.delete(getPinsUrl('/search'), { params: { voter } }); } catch (_) {}
-    await axios.post(getPinsUrl(''), { voter, salt, pinHash, updatedAt: isoNow() });
+    try { await sheetOpsDeleteRows('Pins', { voter }, VOTES_API); } catch (_) {}
+    await sheetOpsAppend('Pins', { voter, salt, pinHash, updatedAt: isoNow() }, VOTES_API);
     setPinRecord({ voter, salt, pinHash });
     setPinMode('verify');
     // Seed the cached search result for this voter
     try {
-      const pinsQueryUrl = `${getPinsUrl('/search')}?voter=${encodeURIComponent(voter)}`;
+      const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(voter)}`;
       const packed = { ts: Date.now(), data: [{ voter, salt, pinHash, updatedAt: isoNow() }], headers: {}, etag: null };
       MEMORY_CACHE.set(pinsQueryUrl, packed);
       writeLS(pinsQueryUrl, packed);
