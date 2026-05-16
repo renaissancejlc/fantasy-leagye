@@ -19,15 +19,17 @@ const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/140647109555677184
 const DISCORD_INVITE_URL = 'https://discord.gg/hfGzs4a7g6';
 const SHEETOPS_API_KEY = import.meta.env.VITE_SHEETOPS_API_KEY;
 const SHEETOPS_VOTES_CONNECTION_ID = 18;
-const SHEETOPS_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
+const SHEETOPS_DIRECT_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
+const SHEETOPS_PROXY_BASE_URL = import.meta.env.VITE_SHEETOPS_VOTES_PROXY_URL || SHEETOPS_DIRECT_BASE_URL;
 const SHEETOPS_DEFAULT_TAB = 'Votes';
+const USING_SHEETOPS_PROXY = !SHEETOPS_PROXY_BASE_URL.startsWith('https://api.sheetops.app');
 const sheetOpsHeaders = () => {
-  if (!SHEETOPS_API_KEY) return {};
+  if (USING_SHEETOPS_PROXY || !SHEETOPS_API_KEY) return {};
   return {
     Authorization: `Bearer ${SHEETOPS_API_KEY}`,
   };
 };
-const getSheetOpsRowsUrl = (tab = SHEETOPS_DEFAULT_TAB) => `${SHEETOPS_BASE_URL}/rows?tab=${encodeURIComponent(tab)}`;
+const getSheetOpsRowsUrl = (tab = SHEETOPS_DEFAULT_TAB) => `${SHEETOPS_PROXY_BASE_URL}/rows?tab=${encodeURIComponent(tab)}`;
 const VOTES_API = getSheetOpsRowsUrl('Votes');
 const RESULTS_API = getSheetOpsRowsUrl('Results');
 const NOTIFIED_KEY = 'fantasy:discordNotified';
@@ -85,13 +87,13 @@ const extractRows = (data) => {
 };
 
 const sheetOpsAppend = (tab, row) => axios.post(
-  `${SHEETOPS_BASE_URL}/append`,
+  `${SHEETOPS_PROXY_BASE_URL}/append`,
   { tab, row },
   { headers: sheetOpsHeaders() }
 );
 
 const sheetOpsDeleteRows = (tab, where) => axios.delete(
-  `${SHEETOPS_BASE_URL}/rows`,
+  `${SHEETOPS_PROXY_BASE_URL}/rows`,
   {
     headers: sheetOpsHeaders(),
     data: { tab, where },
@@ -507,9 +509,12 @@ export default function Votes() {
     return arr;
   }, [allVotes, now]);
 
-  // Notify Discord when a vote is definitively decided
+  // Notify Discord when a vote is definitively decided.
+  // Only run this when there are grouped results; otherwise React re-renders can repeatedly hit Results.
   const sentRef = useRef(new Set());
   useEffect(() => {
+    if (!groupedResults.length) return;
+
     (async () => {
       try {
         const res = await axios.get(RESULTS_API, { headers: sheetOpsHeaders() });

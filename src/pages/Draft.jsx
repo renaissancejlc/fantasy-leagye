@@ -15,7 +15,6 @@ const sheetOpsHeaders = () => {
   if (!SHEETOPS_API_KEY) return {};
   return {
     Authorization: `Bearer ${SHEETOPS_API_KEY}`,
-    'x-api-key': SHEETOPS_API_KEY,
   };
 };
 const sheetOpsHeadersForUrl = (url) => (
@@ -407,7 +406,8 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
         setPlayerPosIndex(index);
         if (res && res.headers) updateOffsetFromHeaders(res.headers);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('Player list fetch failed; continuing without suggestions', err?.message || err);
         setPlayerNames([]); // graceful: no suggestions if tab missing
       });
   }, []);
@@ -685,7 +685,9 @@ async function refreshLogOnce(forceNetwork = false) {
     const res = await cachedGet(getDraftLogUrl(''), { ttlMs: LOG_TTL_MS, forceNetwork });
     if (res && res.headers) updateOffsetFromHeaders(res.headers);
     setDraftLogRows(extractRows(res.data));
-  } catch (_) {}
+  } catch (err) {
+    console.warn('DraftLog fetch failed; continuing without log rows', err?.message || err);
+  }
 }
 
 async function refreshAll() {
@@ -808,7 +810,8 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
         const res = await cachedGet(getDraftLogUrl(''), { ttlMs: LOG_TTL_MS, forceNetwork: true });
         setLogsReady(extractRows(res.data).length >= 0);
         if (res && res.headers) updateOffsetFromHeaders(res.headers);
-      } catch {
+      } catch (err) {
+        console.warn('DraftLog readiness check failed', err?.message || err);
         setLogsReady(false);
       }
     })();
@@ -1089,7 +1092,11 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
         setPinRecord(rec);
         setPinMode(rec ? 'verify' : 'set');
       })
-      .catch(() => { setPinRecord(null); setPinMode('set'); });
+      .catch((err) => {
+        console.warn('SheetOps PIN fetch failed; falling back to set mode', err?.message || err);
+        setPinRecord(null);
+        setPinMode('set');
+      });
   }, [voterName]);
 
   const getPinHashFromRecord = (rec) => rec?.pinHash || rec?.pinhash || rec?.hash;
