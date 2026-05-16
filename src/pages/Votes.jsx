@@ -20,9 +20,9 @@ const DISCORD_INVITE_URL = 'https://discord.gg/hfGzs4a7g6';
 const SHEETOPS_API_KEY = import.meta.env.VITE_SHEETOPS_API_KEY;
 const SHEETOPS_VOTES_CONNECTION_ID = 18;
 const SHEETOPS_DIRECT_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
-const SHEETOPS_PROXY_BASE_URL = import.meta.env.VITE_SHEETOPS_VOTES_PROXY_URL || SHEETOPS_DIRECT_BASE_URL;
+const SHEETOPS_PROXY_BASE_URL = SHEETOPS_DIRECT_BASE_URL;
 const SHEETOPS_DEFAULT_TAB = 'Votes';
-const USING_SHEETOPS_PROXY = !SHEETOPS_PROXY_BASE_URL.startsWith('https://api.sheetops.app');
+const USING_SHEETOPS_PROXY = false;
 const sheetOpsHeaders = () => {
   if (USING_SHEETOPS_PROXY || !SHEETOPS_API_KEY) return {};
   return {
