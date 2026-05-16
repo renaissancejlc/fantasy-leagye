@@ -5,23 +5,24 @@ import axios from 'axios';
 const API_TIMEOUT_MS = 10_000; // 10s network timeout for GETs
 const http = axios.create({ timeout: API_TIMEOUT_MS });
 
-const SHEETOPS_API_KEY = import.meta.env.VITE_SHEETOPS_API_KEY;
+const SHEETOPS_DRAFT_API_KEY = 'sk_live_6204d2fecc944f79c331432e1f8b584287f2';
+const SHEETOPS_VOTES_API_KEY = 'sk_live_40bd24a37303db3ee9ac84bc1c04afb0fcde';
 const SHEETOPS_DRAFT_CONNECTION_ID = 17;
 const SHEETOPS_VOTES_CONNECTION_ID = 18;
 const SHEETOPS_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_DRAFT_CONNECTION_ID}`;
 const SHEETOPS_VOTES_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
 const SHEETOPS_DEFAULT_TAB = 'Draft';
-const sheetOpsHeaders = () => {
-  if (!SHEETOPS_API_KEY) return {};
+const sheetOpsHeaders = (baseUrl = SHEETOPS_BASE_URL) => {
+  const key = baseUrl === SHEETOPS_VOTES_BASE_URL ? SHEETOPS_VOTES_API_KEY : SHEETOPS_DRAFT_API_KEY;
+  if (!key) return {};
   return {
-    Authorization: `Bearer ${SHEETOPS_API_KEY}`,
+    Authorization: `Bearer ${key}`,
   };
 };
-const sheetOpsHeadersForUrl = (url) => (
-  typeof url === 'string' && url.startsWith('https://api.sheetops.app')
-    ? sheetOpsHeaders()
-    : {}
-);
+const sheetOpsHeadersForUrl = (url) => {
+  if (typeof url !== 'string' || !url.startsWith('https://api.sheetops.app')) return {};
+  return sheetOpsHeaders(url.includes(`/connections/${SHEETOPS_VOTES_CONNECTION_ID}/`) ? SHEETOPS_VOTES_BASE_URL : SHEETOPS_BASE_URL);
+};
 const getSheetOpsRowsUrl = (tab = SHEETOPS_DEFAULT_TAB) => `${SHEETOPS_BASE_URL}/rows?tab=${encodeURIComponent(tab)}`;
 const DRAFT_SHEET_URL = getSheetOpsRowsUrl('Draft');
 const VOTES_API = SHEETOPS_VOTES_BASE_URL;
@@ -135,7 +136,7 @@ const extractRows = (data) => {
 const sheetOpsAppend = (tab, row, baseUrl = SHEETOPS_BASE_URL) => axios.post(
   `${baseUrl}/append`,
   { tab, row },
-  { headers: sheetOpsHeaders() }
+  { headers: sheetOpsHeaders(baseUrl) }
 );
 
 const sheetOpsPatchByPlayer = (tab, player, data) => axios.patch(
@@ -145,13 +146,13 @@ const sheetOpsPatchByPlayer = (tab, player, data) => axios.patch(
     where: { Player: player },
     data,
   },
-  { headers: sheetOpsHeaders() }
+  { headers: sheetOpsHeaders(SHEETOPS_BASE_URL) }
 );
 
 const sheetOpsDeleteRows = (tab, where, baseUrl = SHEETOPS_BASE_URL) => axios.delete(
   `${baseUrl}/rows`,
   {
-    headers: sheetOpsHeaders(),
+    headers: sheetOpsHeaders(baseUrl),
     data: { tab, where },
   }
 );

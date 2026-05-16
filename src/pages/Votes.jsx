@@ -507,7 +507,14 @@ export default function Votes() {
     });
     arr.sort((a, b) => (b.lastTimestamp?.getTime() || 0) - (a.lastTimestamp?.getTime() || 0));
     return arr;
-  }, [allVotes, now]);
+  }, [allVotes]);
+
+  const groupedResultNotificationKey = useMemo(
+    () => groupedResults
+      .map((r) => `${r.motionId}-${r.seasonBucket}-${r.outcome}-${r.yes}-${r.no}-${r.abstain}-${r.total}`)
+      .join('|'),
+    [groupedResults]
+  );
 
   // Notify Discord when a vote is definitively decided.
   // Only run this when there are grouped results; otherwise React re-renders can repeatedly hit Results.
@@ -534,7 +541,7 @@ export default function Votes() {
         }
       } catch(e){ console.warn('notify read/write failed; continuing without persisted result notification', e?.message || e);}
     })();
-  },[groupedResults]);
+  }, [groupedResultNotificationKey]);
 
   const [pendingChoice, setPendingChoice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
