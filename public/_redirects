@@ -1,1 +1,3 @@
-/*    /index.html   200
+/api/notifyPick  /.netlify/functions/notify-pick  200
+/api/notifyVote  /.netlify/functions/notify-vote  200
+/*               /index.html                       200

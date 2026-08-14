@@ -173,16 +173,6 @@ const SHEET_TTL_MS   = 30 * 1000;           // 30s - picks change often
 const LOG_TTL_MS     = 20 * 1000;           // 20s - recap log
 const REFRESH_THROTTLE_MS = 15 * 1000;    // 15s - throttle manual refresh requests
 
-const formatDiscordMessage = (p) => {
-  const head = `🏈 Round ${p.round}, Pick ${p.pickNumber}`;
-  let base;
-  if (p.status === 'PASSED') base = `${head} — **${p.team}** passes.`;
-  else if (p.status === 'TEST') base = `${head} — **${p.team}** selects **${p.pick}** (test).`;
-  else base = `${head} — **${p.team}** selects **${p.pick}**.`;
-  const next = p.nextUp ? `\n➡️ Up next: **${p.nextUp}**` : '';
-  return base + next;
-};
-
 async function notifyDiscord(payload) {
   try {
     await axios.post('/api/notifyPick', payload);
@@ -432,38 +422,9 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
     if (pickInputRef.current) pickInputRef.current.focus();
   };
 
-  // --- Test Notification state + helper ---
-  const [testSending, setTestSending] = useState(false);
-  const [testMessage, setTestMessage] = useState('');
+  // --- Test SMS state (currently hidden) ---
   const [testSmsSending, setTestSmsSending] = useState(false);
   const [testSmsMessage, setTestSmsMessage] = useState('');
-
-  const sendTestNotification = async () => {
-    try {
-      if (isOffseason) {
-        setTestMessage(`Preview only — live draft pop-ups are disabled until August 15, ${DRAFT_YEAR} at 9:30 AM PT.`);
-        return;
-      }
-      setTestMessage('');
-      setTestSending(true);
-      const payload = {
-        pickNumber: overallPick,
-        round: currentRound,
-        team: voterName || onTheClock || 'Test Team',
-        pick: pendingPickLabel || pickInput || 'Test Player',
-        status: 'TEST',
-        nextUp: computeNextUp(),
-        submittedAt: isoNow(),
-      };
-      await notifyDiscord(payload);
-      setTestMessage('✅ Test notification sent. Check Discord.');
-    } catch (e) {
-      setTestMessage('⚠️ Could not send test. Check network or /api/notifyPick.');
-    } finally {
-      setTestSending(false);
-      setTimeout(() => setTestMessage(''), 5000);
-    }
-  };
   // const sendTestSMS = async () => {
   //   try {
   //     setTestSmsMessage('');
@@ -1537,15 +1498,6 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
           {/* Backup link to edit sheet directly (commissioner use) + Test Notification */}
           <div className="text-center mt-4">
             <div className="inline-flex items-center gap-3 flex-wrap justify-center">
-              <button
-                type="button"
-                onClick={sendTestNotification}
-                disabled={testSending}
-                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title={isOffseason ? `Preview only until August 15, ${DRAFT_YEAR} at 9:30 AM PT` : 'Sends a test message to Discord via /api/notifyPick'}
-              >
-                {testSending ? 'Sending…' : 'Test Draft Notification'}
-              </button>
               {/* Manual refresh (no auto reload) */}
               <button
               type="button"
@@ -1586,9 +1538,6 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                 {testSmsSending ? 'Sending SMS…' : 'Send Test SMS'}
               </button> */}
             </div>
-            {testMessage && (
-              <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testMessage}</div>
-            )}
             {testSmsMessage && (
               <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testSmsMessage}</div>
             )}

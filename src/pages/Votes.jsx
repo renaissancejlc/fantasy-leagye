@@ -532,7 +532,6 @@ export default function Votes() {
           const key = `${r.motionId}-${r.seasonBucket}-${r.outcome.toLowerCase()}`;
           sentRef.current.add(key);
           await notifyDiscord(r);
-          await sheetOpsAppend('Results', { motionId:r.motionId, seasonBucket:r.seasonBucket, notifiedKey:key });
         }
       } catch(e){ console.warn('notify read/write failed; continuing without persisted result notification', e?.message || e);}
     })();

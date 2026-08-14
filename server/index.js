@@ -79,22 +79,34 @@ const normalize = (value) => String(value || '').toLowerCase().replace(/[^\w\s]/
 async function authenticateDraftPick(body) {
   const draftKey = process.env.SHEETOPS_DRAFT_API_KEY;
   const votesKey = process.env.SHEETOPS_VOTES_API_KEY;
-  if (!draftKey || !votesKey || !body.pin) return false;
+  if (!draftKey || !votesKey) return false;
 
-  const [draftRows, pinRows] = await Promise.all([
+  const [draftRows, pinRows, logRows] = await Promise.all([
     sheetOpsRows(17, 'Draft', draftKey),
     sheetOpsRows(18, 'Pins', votesKey),
+    sheetOpsRows(17, 'DraftLog', draftKey),
   ]);
   const draftRow = draftRows.find((row) => normalize(row.Player) === normalize(body.team));
-  const pinRow = pinRows.find((row) => normalize(row.voter) === normalize(body.team));
-  if (!draftRow || !pinRow) return false;
+  const sheetPick = String(draftRow?.[`Round ${body.round}`] || '').trim();
+  if (!draftRow || normalize(sheetPick) !== normalize(body.pick)) return false;
 
+  if (String(body.status || '').toUpperCase() === 'PASSED') {
+    return normalize(body.pick) === 'pass' && logRows.some((row) =>
+      Number(row.pickNumber) === Number(body.pickNumber) &&
+      Number(row.round) === Number(body.round) &&
+      normalize(row.team) === normalize(body.team) &&
+      normalize(row.pick) === 'pass' &&
+      normalize(row.status) === 'passed'
+    );
+  }
+
+  const pinRow = pinRows.find((row) => normalize(row.voter) === normalize(body.team));
+  if (!body.pin || !pinRow) return false;
   const expectedHash = pinRow.pinHash || pinRow.pinhash || pinRow.hash;
   const computedHash = crypto.createHash('sha256').update(`${pinRow.salt || ''}:${body.pin}`).digest('hex');
   const hashesMatch = expectedHash && expectedHash.length === computedHash.length &&
     crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(computedHash));
-  const sheetPick = String(draftRow[`Round ${body.round}`] || '').trim();
-  return hashesMatch && normalize(sheetPick) === normalize(body.pick);
+  return hashesMatch;
 }
 
 async function postDiscord(webhookUrl, content) {
