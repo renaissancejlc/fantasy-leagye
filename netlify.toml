@@ -2,3 +2,6 @@
   command = "npm run build"
   publish = "dist"
   functions = "netlify/functions"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SHEETOPS_DRAFT_API_KEY,SHEETOPS_VOTES_API_KEY"
