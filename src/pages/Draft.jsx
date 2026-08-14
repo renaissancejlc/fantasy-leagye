@@ -1352,9 +1352,13 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 <button
                   type="button"
                   onClick={() => { setPickInput('PASS'); setSelectedPick('PASS'); setShowSuggestions(false); }}
-                  className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl border border-amber-400/40 bg-amber-400/5 text-amber-300 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition-all"
+                  className={`mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl border transition-all ${
+                    normalize(selectedPick) === 'pass'
+                      ? 'border-amber-300 bg-amber-400 text-black shadow-[0_8px_20px_rgba(251,191,36,0.16)]'
+                      : 'border-amber-400/40 bg-amber-400/5 text-amber-300 hover:bg-amber-400 hover:text-black hover:border-amber-400'
+                  }`}
                 >
-                  Pass This Pick
+                  {normalize(selectedPick) === 'pass' ? 'Pass Selected' : 'Pass This Pick'}
                 </button>
                 <p className="text-[11px] text-gray-500 mt-2">Search by name, then select a rookie from the list. Manual entries are blocked.</p>
                 <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
@@ -1472,10 +1476,16 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 className={`w-full uppercase font-extrabold tracking-wider px-6 py-4 rounded-xl shadow-lg transition-all border ${
                   isSubmitting || !voterName || !pickInput || draftNotStarted || showPreviewExperience
                     ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
-                    : 'bg-lime-400 text-black border-lime-300 hover:bg-lime-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(163,230,53,0.18)] active:translate-y-0'
+                    : normalize(selectedPick) === 'pass'
+                      ? 'bg-amber-400 text-black border-amber-300 hover:bg-amber-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(251,191,36,0.2)] active:translate-y-0'
+                      : 'bg-lime-400 text-black border-lime-300 hover:bg-lime-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(163,230,53,0.18)] active:translate-y-0'
                 }`}
               >
-                {showPreviewExperience ? 'Live Draft Opens August 15 at 9:30 AM PT' : 'Submit Pick'}
+                {showPreviewExperience
+                  ? 'Live Draft Opens August 15 at 9:30 AM PT'
+                  : normalize(selectedPick) === 'pass'
+                    ? 'Submit Pass'
+                    : 'Submit Pick'}
               </button>
             </form>
           )}
