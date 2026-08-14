@@ -5,18 +5,18 @@ import { Trophy } from 'lucide-react';
 
 export default function History() {
   const standings2025 = [
-    { rk: 1, team: 'Team Simon', manager: 'Simon Carr', rec: '10-4-0', pf: 1992.52, pa: 1594.42, pfg: 142.3, pag: 113.9, div: '5-0-0', home: '6-1-0', away: '4-3-0', strk: 'L1', moves: 16 },
-    { rk: 2, team: 'Team Ustav', manager: 'Utsav Pandey', rec: '10-4-0', pf: 1859.76, pa: 1675.38, pfg: 132.8, pag: 119.7, div: '3-2-0', home: '7-0-0', away: '3-4-0', strk: 'L1', moves: 24 },
-    { rk: 3, team: 'Santee Eagles', manager: 'Thomas Carr', rec: '10-4-0', pf: 1860.24, pa: 1642.84, pfg: 132.9, pag: 117.3, div: '4-1-0', home: '6-1-0', away: '4-3-0', strk: 'L2', moves: 28 },
-    { rk: 4, team: 'Building Dynasties', manager: 'Christian Carr', rec: '12-2-0', pf: 2063.00, pa: 1547.62, pfg: 147.4, pag: 110.5, div: '5-0-0', home: '5-2-0', away: '7-0-0', strk: 'W2', moves: 25 },
-    { rk: 5, team: 'Sutton things never change', manager: 'Tariq Muhummad', rec: '9-5-0', pf: 1747.32, pa: 1762.26, pfg: 124.8, pag: 125.9, div: '3-2-0', home: '6-2-0', away: '3-3-0', strk: 'W6', moves: 27 },
-    { rk: 6, team: 'The Happy Accidents', manager: 'Dustin Carr', rec: '5-9-0', pf: 1551.56, pa: 1812.74, pfg: 110.8, pag: 129.5, div: '2-3-0', home: '3-5-0', away: '2-4-0', strk: 'W1', moves: 16 },
-    { rk: 7, team: 'Breece’s Pieces', manager: 'Daisy Carr', rec: '7-7-0', pf: 1852.68, pa: 1685.98, pfg: 132.3, pag: 120.4, div: '2-3-0', home: '5-3-0', away: '2-4-0', strk: 'W1', moves: 3 },
-    { rk: 8, team: 'Love thy Nabers', manager: 'Raphael Carr', rec: '7-7-0', pf: 1706.28, pa: 1698.06, pfg: 121.9, pag: 121.3, div: '1-4-0', home: '2-4-0', away: '5-3-0', strk: 'L2', moves: 11 },
-    { rk: 9, team: "King Henry's Court", manager: 'Angelo Carr', rec: '4-10-0', pf: 1767.72, pa: 1973.82, pfg: 126.3, pag: 141.0, div: '2-3-0', home: '1-7-0', away: '3-3-0', strk: 'L1', moves: 11 },
-    { rk: 10, team: "francisco's Fantastic Team", manager: 'Francisco Chavez', rec: '3-11-0', pf: 1601.08, pa: 1723.70, pfg: 114.4, pag: 123.1, div: '1-4-0', home: '1-5-0', away: '2-6-0', strk: 'W1', moves: 4 },
-    { rk: 11, team: 'No Punt Intended', manager: 'Callie Carr', rec: '4-10-0', pf: 1439.36, pa: 1894.20, pfg: 102.8, pag: 135.3, div: '1-4-0', home: '2-5-0', away: '2-5-0', strk: 'W1', moves: 7 },
-    { rk: 12, team: 'The Replacements', manager: 'David Carr', rec: '3-11-0', pf: 1475.40, pa: 1905.90, pfg: 105.4, pag: 136.1, div: '1-4-0', home: '1-4-0', away: '2-7-0', strk: 'L1', moves: 0 },
+    { rk: 1, team: 'Team Simon', manager: 'Simon Carr', rec: '10-4-0', pf: 1992.52, pa: 1594.42, pfg: 142.3, pag: 113.9, diff: 28.4, div: '5-0-0', home: '6-1-0', away: '4-3-0', strk: 'L1', moves: 16 },
+    { rk: 2, team: 'Team Ustav', manager: 'Utsav Pandey', rec: '10-4-0', pf: 1859.76, pa: 1675.38, pfg: 132.8, pag: 119.7, diff: 13.2, div: '3-2-0', home: '7-0-0', away: '3-4-0', strk: 'L1', moves: 24 },
+    { rk: 3, team: 'Santee Eagles', manager: 'Thomas Carr', rec: '10-4-0', pf: 1860.24, pa: 1642.84, pfg: 132.9, pag: 117.3, diff: 15.5, div: '4-1-0', home: '6-1-0', away: '4-3-0', strk: 'L2', moves: 28 },
+    { rk: 4, team: 'Building Dynasties', manager: 'Christian Carr', rec: '12-2-0', pf: 2063.00, pa: 1547.62, pfg: 147.4, pag: 110.5, diff: 36.8, div: '5-0-0', home: '5-2-0', away: '7-0-0', strk: 'W2', moves: 25 },
+    { rk: 5, team: 'Sutton things never change', manager: 'Tariq Muhummad', rec: '9-5-0', pf: 1747.32, pa: 1762.26, pfg: 124.8, pag: 125.9, diff: -1.1, div: '3-2-0', home: '6-2-0', away: '3-3-0', strk: 'W6', moves: 27 },
+    { rk: 6, team: 'The Happy Accidents', manager: 'Dustin Carr', rec: '5-9-0', pf: 1551.56, pa: 1812.74, pfg: 110.8, pag: 129.5, diff: -18.7, div: '2-3-0', home: '3-5-0', away: '2-4-0', strk: 'W1', moves: 16 },
+    { rk: 7, team: 'Breece’s Pieces', manager: 'Daisy Carr', rec: '7-7-0', pf: 1852.68, pa: 1685.98, pfg: 132.3, pag: 120.4, diff: 11.9, div: '2-3-0', home: '5-3-0', away: '2-4-0', strk: 'W1', moves: 3 },
+    { rk: 8, team: 'Love thy Nabers', manager: 'Raphael Carr', rec: '7-7-0', pf: 1706.28, pa: 1698.06, pfg: 121.9, pag: 121.3, diff: 0.6, div: '1-4-0', home: '2-4-0', away: '5-3-0', strk: 'L2', moves: 11 },
+    { rk: 9, team: "King Henry's Court", manager: 'Angelo Carr', rec: '4-10-0', pf: 1767.72, pa: 1973.82, pfg: 126.3, pag: 141.0, diff: -14.7, div: '2-3-0', home: '1-7-0', away: '3-3-0', strk: 'L1', moves: 11 },
+    { rk: 10, team: "francisco's Fantastic Team", manager: 'Francisco Chavez', rec: '3-11-0', pf: 1601.08, pa: 1723.70, pfg: 114.4, pag: 123.1, diff: -8.8, div: '1-4-0', home: '1-5-0', away: '2-6-0', strk: 'W1', moves: 4 },
+    { rk: 11, team: 'No Punt Intended', manager: 'Callie Carr', rec: '4-10-0', pf: 1439.36, pa: 1894.20, pfg: 102.8, pag: 135.3, diff: -32.5, div: '1-4-0', home: '2-5-0', away: '2-5-0', strk: 'W1', moves: 7 },
+    { rk: 12, team: 'The Replacements', manager: 'David Carr', rec: '3-11-0', pf: 1475.40, pa: 1905.90, pfg: 105.4, pag: 136.1, diff: -30.8, div: '1-4-0', home: '1-4-0', away: '2-7-0', strk: 'L1', moves: 0 },
   ];
 
   const espn2025Links = [
@@ -161,8 +161,8 @@ export default function History() {
                     <td className="py-2 pr-4 text-zinc-200">{team.pa.toFixed(2)}</td>
                     <td className="py-2 pr-4 text-zinc-200">{team.pfg.toFixed(1)}</td>
                     <td className="py-2 pr-4 text-zinc-200">{team.pag.toFixed(1)}</td>
-                    <td className={`py-2 pr-4 font-mono ${team.pfg - team.pag >= 0 ? 'text-lime-400' : 'text-rose-400'}`}>
-                      {(team.pfg - team.pag >= 0 ? '+' : '') + (team.pfg - team.pag).toFixed(1)}
+                    <td className={`py-2 pr-4 font-mono ${team.diff >= 0 ? 'text-lime-400' : 'text-rose-400'}`}>
+                      {(team.diff >= 0 ? '+' : '') + team.diff.toFixed(1)}
                     </td>
                     <td className="py-2 pr-4 text-zinc-200">{team.div}</td>
                     <td className="py-2 pr-4 text-zinc-200">{team.home}</td>
