@@ -5,18 +5,18 @@ import { Trophy } from 'lucide-react';
 
 export default function History() {
   const standings2025 = [
-    { rk: 1, team: 'Team Simon', rec: '10-4-0' },
-    { rk: 2, team: 'Team Ustav', rec: '10-4-0' },
-    { rk: 3, team: 'Santee Eagles', rec: '10-4-0' },
-    { rk: 4, team: 'Building Dynasties', rec: '12-2-0' },
-    { rk: 5, team: 'Sutton things never change', rec: '9-5-0' },
-    { rk: 6, team: 'The Happy Accidents', rec: '5-9-0' },
-    { rk: 7, team: 'Breece’s Pieces', rec: '7-7-0' },
-    { rk: 8, team: 'Love thy Nabers', rec: '7-7-0' },
-    { rk: 9, team: "King Henry's Court", rec: '4-10-0' },
-    { rk: 10, team: "francisco's Fantastic Team", rec: '3-11-0' },
-    { rk: 11, team: 'No Punt Intended', rec: '4-10-0' },
-    { rk: 12, team: 'The Replacements', rec: '3-11-0' },
+    { rk: 1, team: 'Team Simon', manager: 'Simon Carr', rec: '10-4-0', pf: 1992.52, pa: 1594.42, pfg: 142.3, pag: 113.9, div: '5-0-0', home: '6-1-0', away: '4-3-0', strk: 'L1', moves: 16 },
+    { rk: 2, team: 'Team Ustav', manager: 'Utsav Pandey', rec: '10-4-0', pf: 1859.76, pa: 1675.38, pfg: 132.8, pag: 119.7, div: '3-2-0', home: '7-0-0', away: '3-4-0', strk: 'L1', moves: 24 },
+    { rk: 3, team: 'Santee Eagles', manager: 'Thomas Carr', rec: '10-4-0', pf: 1860.24, pa: 1642.84, pfg: 132.9, pag: 117.3, div: '4-1-0', home: '6-1-0', away: '4-3-0', strk: 'L2', moves: 28 },
+    { rk: 4, team: 'Building Dynasties', manager: 'Christian Carr', rec: '12-2-0', pf: 2063.00, pa: 1547.62, pfg: 147.4, pag: 110.5, div: '5-0-0', home: '5-2-0', away: '7-0-0', strk: 'W2', moves: 25 },
+    { rk: 5, team: 'Sutton things never change', manager: 'Tariq Muhummad', rec: '9-5-0', pf: 1747.32, pa: 1762.26, pfg: 124.8, pag: 125.9, div: '3-2-0', home: '6-2-0', away: '3-3-0', strk: 'W6', moves: 27 },
+    { rk: 6, team: 'The Happy Accidents', manager: 'Dustin Carr', rec: '5-9-0', pf: 1551.56, pa: 1812.74, pfg: 110.8, pag: 129.5, div: '2-3-0', home: '3-5-0', away: '2-4-0', strk: 'W1', moves: 16 },
+    { rk: 7, team: 'Breece’s Pieces', manager: 'Daisy Carr', rec: '7-7-0', pf: 1852.68, pa: 1685.98, pfg: 132.3, pag: 120.4, div: '2-3-0', home: '5-3-0', away: '2-4-0', strk: 'W1', moves: 3 },
+    { rk: 8, team: 'Love thy Nabers', manager: 'Raphael Carr', rec: '7-7-0', pf: 1706.28, pa: 1698.06, pfg: 121.9, pag: 121.3, div: '1-4-0', home: '2-4-0', away: '5-3-0', strk: 'L2', moves: 11 },
+    { rk: 9, team: "King Henry's Court", manager: 'Angelo Carr', rec: '4-10-0', pf: 1767.72, pa: 1973.82, pfg: 126.3, pag: 141.0, div: '2-3-0', home: '1-7-0', away: '3-3-0', strk: 'L1', moves: 11 },
+    { rk: 10, team: "francisco's Fantastic Team", manager: 'Francisco Chavez', rec: '3-11-0', pf: 1601.08, pa: 1723.70, pfg: 114.4, pag: 123.1, div: '1-4-0', home: '1-5-0', away: '2-6-0', strk: 'W1', moves: 4 },
+    { rk: 11, team: 'No Punt Intended', manager: 'Callie Carr', rec: '4-10-0', pf: 1439.36, pa: 1894.20, pfg: 102.8, pag: 135.3, div: '1-4-0', home: '2-5-0', away: '2-5-0', strk: 'W1', moves: 7 },
+    { rk: 12, team: 'The Replacements', manager: 'David Carr', rec: '3-11-0', pf: 1475.40, pa: 1905.90, pfg: 105.4, pag: 136.1, div: '1-4-0', home: '1-4-0', away: '2-7-0', strk: 'L1', moves: 0 },
   ];
 
   const espn2025Links = [
@@ -107,6 +107,15 @@ export default function History() {
             ))}
           </div>
 
+          <div className="max-w-3xl mx-auto mb-8 border border-lime-500/40 bg-zinc-900 rounded-md p-5 text-left">
+            <div className="text-xs uppercase tracking-widest text-lime-400 mb-2">Championship · Week 17</div>
+            <div className="flex flex-wrap items-center justify-between gap-3 text-zinc-100">
+              <span>Team Ustav <strong className="text-zinc-300">143.16</strong></span>
+              <span className="text-xs uppercase tracking-widest text-zinc-500">Final</span>
+              <span>Team Simon <strong className="text-lime-400">178.84</strong></span>
+            </div>
+          </div>
+
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             {espn2025Links.map(({ label, href }) => (
               <a
@@ -121,21 +130,45 @@ export default function History() {
             ))}
           </div>
 
-          <div className="overflow-x-auto max-w-3xl mx-auto">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left uppercase text-zinc-400">
-                  <th className="py-2 px-4">Finish</th>
-                  <th className="py-2 px-4">Team</th>
-                  <th className="py-2 px-4">Record</th>
+                  <th className="py-2 pr-4">RK</th>
+                  <th className="py-2 pr-4">Team</th>
+                  <th className="py-2 pr-4">Manager</th>
+                  <th className="py-2 pr-4">REC</th>
+                  <th className="py-2 pr-4">PF</th>
+                  <th className="py-2 pr-4">PA</th>
+                  <th className="py-2 pr-4">PF/G</th>
+                  <th className="py-2 pr-4">PA/G</th>
+                  <th className="py-2 pr-4">DIFF</th>
+                  <th className="py-2 pr-4">DIV</th>
+                  <th className="py-2 pr-4">H</th>
+                  <th className="py-2 pr-4">A</th>
+                  <th className="py-2 pr-4">STRK</th>
+                  <th className="py-2 pr-4">MOVES</th>
                 </tr>
               </thead>
               <tbody>
                 {standings2025.map((team, index) => (
                   <tr key={team.rk} className={index % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-900/30'}>
-                    <td className="py-3 px-4 text-zinc-300">{team.rk}</td>
-                    <td className="py-3 px-4 text-zinc-100 font-semibold">{team.team}</td>
-                    <td className="py-3 px-4 text-zinc-200">{team.rec}</td>
+                    <td className="py-2 pr-4 text-zinc-300">{team.rk}</td>
+                    <td className="py-2 pr-4 text-zinc-100 font-semibold">{team.team}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.manager}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.rec}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.pf.toFixed(2)}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.pa.toFixed(2)}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.pfg.toFixed(1)}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.pag.toFixed(1)}</td>
+                    <td className={`py-2 pr-4 font-mono ${team.pfg - team.pag >= 0 ? 'text-lime-400' : 'text-rose-400'}`}>
+                      {(team.pfg - team.pag >= 0 ? '+' : '') + (team.pfg - team.pag).toFixed(1)}
+                    </td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.div}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.home}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.away}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.strk}</td>
+                    <td className="py-2 pr-4 text-zinc-200">{team.moves}</td>
                   </tr>
                 ))}
               </tbody>
