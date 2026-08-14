@@ -430,17 +430,9 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
 
   const sendTestNotification = async () => {
     setTestMessage('');
-    if (!voterName || !pinInput) {
-      setTestMessage('Select your name and enter your existing PIN first.');
-      return;
-    }
     try {
       setTestSending(true);
-      const response = await axios.post('/api/notifyPick', {
-        test: true,
-        team: voterName,
-        pin: pinInput,
-      });
+      const response = await axios.post('/api/notifyPick', { test: true });
       setTestMessage(response.data?.duplicate
         ? 'A draft notification test was already sent today.'
         : '✅ Test notification sent. Check Discord.');
@@ -1569,7 +1561,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 onClick={sendTestNotification}
                 disabled={testSending}
                 className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title="Requires an existing league member name and PIN"
+                title="Temporarily sends one rate-limited Discord test notification"
               >
                 {testSending ? 'Sending…' : 'Test Draft Notification'}
               </button>
