@@ -328,6 +328,7 @@ export default function DraftPage() {
   const [voterName, setVoterName] = useState(localStorage.getItem('fantasy:draftVoter') || '');
   useEffect(() => { if (voterName) localStorage.setItem('fantasy:draftVoter', voterName); }, [voterName]);
   const [pickInput, setPickInput] = useState('');
+  const [selectedPick, setSelectedPick] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -416,6 +417,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
 
   const chooseSuggestion = (name) => {
     setPickInput(name);
+    setSelectedPick(name);
     setPendingPickLabel(name);
     setShowSuggestions(false);
     // focus stays in the input for fast submit
@@ -423,25 +425,8 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
   };
 
   // --- Test SMS state (currently hidden) ---
-  const [testSending, setTestSending] = useState(false);
-  const [testMessage, setTestMessage] = useState('');
   const [testSmsSending, setTestSmsSending] = useState(false);
   const [testSmsMessage, setTestSmsMessage] = useState('');
-
-  const sendTestNotification = async () => {
-    setTestMessage('');
-    try {
-      setTestSending(true);
-      const response = await axios.post('/api/notifyPick', { test: true });
-      setTestMessage(response.data?.duplicate
-        ? 'A draft notification test was already sent today.'
-        : '✅ Test notification sent. Check Discord.');
-    } catch (error) {
-      setTestMessage(error.response?.data?.error || '⚠️ Test failed. Verify your name, PIN, and deployment.');
-    } finally {
-      setTestSending(false);
-    }
-  };
   // const sendTestSMS = async () => {
   //   try {
   //     setTestSmsMessage('');
@@ -564,6 +549,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       )));
 
       setPickInput('');
+      setSelectedPick('');
       setPinInput('');
       setConfirmOpen(false);
     } catch (err) {
@@ -1110,6 +1096,10 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
     if (isDraftComplete) { setSubmitError('Draft is complete — no further picks.'); return; }
     if (!voterName) { setSubmitError('Select your name.'); return; }
     if (!pickInput.trim()) { setSubmitError('Enter your pick.'); return; }
+    if (!selectedPick || normalize(selectedPick) !== normalize(pickInput)) {
+      setSubmitError('Choose a rookie from the suggestion list, or use the PASS button.');
+      return;
+    }
     // Draft must have started
     if (draftNotStarted) {
       setSubmitError("Draft hasn't started yet.");
@@ -1312,7 +1302,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                   <input
                     ref={pickInputRef}
                     value={pickInput}
-                    onChange={(e) => { setPickInput(e.target.value); buildSuggestions(e.target.value); }}
+                    onChange={(e) => { setPickInput(e.target.value); setSelectedPick(''); buildSuggestions(e.target.value); }}
                     onFocus={() => buildSuggestions(pickInput)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
                     onKeyDown={(e) => {
@@ -1358,7 +1348,14 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                     )
                   )}
                 </div>
-                <p className="text-[11px] text-gray-500 mt-2">Participation is optional. Enter PASS to skip your pick immediately.</p>
+                <button
+                  type="button"
+                  onClick={() => { setPickInput('PASS'); setSelectedPick('PASS'); setShowSuggestions(false); }}
+                  className="mt-2 text-xs px-3 py-2 rounded-lg border border-gray-600 text-gray-300 hover:border-amber-400 hover:text-amber-300 transition"
+                >
+                  Pass This Pick
+                </button>
+                <p className="text-[11px] text-gray-500 mt-2">Search by name, then select a rookie from the list. Manual entries are blocked.</p>
                 <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
                 <p className="text-[11px] text-red-400 mt-1">Heads up: Picks are <span className="font-semibold">FINAL</span> once submitted.</p>
               </div>
@@ -1556,15 +1553,6 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 </svg>
                 Get notified through Discord
               </a>              
-              <button
-                type="button"
-                onClick={sendTestNotification}
-                disabled={testSending}
-                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title="Temporarily sends one rate-limited Discord test notification"
-              >
-                {testSending ? 'Sending…' : 'Test Draft Notification'}
-              </button>
               {/* <button
                 type="button"
                 onClick={sendTestSMS}
@@ -1575,9 +1563,6 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 {testSmsSending ? 'Sending SMS…' : 'Send Test SMS'}
               </button> */}
             </div>
-            {testMessage && (
-              <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testMessage}</div>
-            )}
             {testSmsMessage && (
               <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testSmsMessage}</div>
             )}
