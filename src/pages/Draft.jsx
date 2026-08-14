@@ -1276,7 +1276,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
           
           {/* Submit Pick Card */}
           {(liveDraftEnabled || showPreviewExperience) && (
-            <form onSubmit={submitPick} className="bg-black/60 border border-lime-400/40 rounded-xl p-6 shadow-lg space-y-4">
+            <form onSubmit={submitPick} className="relative overflow-visible bg-gradient-to-b from-zinc-900/95 to-black/95 border border-lime-400/30 rounded-2xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/5 space-y-5">
               {showPreviewExperience && (
                 <div className="rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-200">
                   Preview mode lets everyone see the draft UI early, but submissions, DraftLog activity, Discord alerts, and live draft pop-ups remain off until the real draft starts.
@@ -1287,7 +1287,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 <select
                   value={voterName}
                   onChange={(e) => setVoterName(e.target.value)}
-                  className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  className="w-full bg-black/70 text-white px-4 py-3.5 rounded-xl border border-zinc-700 shadow-inner focus:outline-none focus:border-lime-400 focus:ring-2 focus:ring-lime-400/20 transition"
                   required
                 >
                   <option value="" disabled>-- Select your team --</option>
@@ -1316,7 +1316,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                     placeholder="Type the player name"
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                    className="w-full bg-black/70 text-white px-4 py-3.5 rounded-xl border border-zinc-700 shadow-inner focus:outline-none focus:border-lime-400 focus:ring-2 focus:ring-lime-400/20 transition"
                     required
                   />
 
@@ -1352,7 +1352,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 <button
                   type="button"
                   onClick={() => { setPickInput('PASS'); setSelectedPick('PASS'); setShowSuggestions(false); }}
-                  className="mt-2 text-xs px-3 py-2 rounded-lg border border-gray-600 text-gray-300 hover:border-amber-400 hover:text-amber-300 transition"
+                  className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl border border-amber-400/40 bg-amber-400/5 text-amber-300 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition-all"
                 >
                   Pass This Pick
                 </button>
@@ -1469,10 +1469,10 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
               <button
                 type="submit"
                 disabled={isSubmitting || !voterName || !pickInput || draftNotStarted || showPreviewExperience}
-                className={`w-full uppercase font-extrabold tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all border-2 ${
+                className={`w-full uppercase font-extrabold tracking-wider px-6 py-4 rounded-xl shadow-lg transition-all border ${
                   isSubmitting || !voterName || !pickInput || draftNotStarted || showPreviewExperience
                     ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
-                    : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
+                    : 'bg-lime-400 text-black border-lime-300 hover:bg-lime-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(163,230,53,0.18)] active:translate-y-0'
                 }`}
               >
                 {showPreviewExperience ? 'Live Draft Opens August 15 at 9:30 AM PT' : 'Submit Pick'}
@@ -1521,38 +1521,46 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
               </div>
             </div>
           )}
-          {/* Backup link to edit sheet directly (commissioner use) + Test Notification */}
-          <div className="text-center mt-4">
-            <div className="inline-flex items-center gap-3 flex-wrap justify-center">
+          {/* Draft utility controls */}
+          <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3 sm:p-4 shadow-lg backdrop-blur-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
               {/* Manual refresh (no auto reload) */}
               <button
-              type="button"
-              onClick={refreshAll}
-              disabled={refreshing}
-              className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-              title={`Fetch latest (throttled ${Math.round(REFRESH_THROTTLE_MS/1000)}s) • Uses ETag cache`}
-            >
-              {refreshing ? 'Refreshing…' : 'Refresh'}
-            </button>
-            {lastUpdatedAt && (
-              <>
-                <span className="ml-3 text-xs text-gray-400">
-                  Updated {new Date(lastUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                <span className="ml-2 text-[11px] text-gray-500">cached ≤ {Math.round(SHEET_TTL_MS/1000)}s</span>
-              </>
-            )}
+                type="button"
+                onClick={refreshAll}
+                disabled={refreshing}
+                className="group inline-flex shrink-0 items-center gap-2.5 rounded-xl border border-lime-400/50 bg-lime-400/10 px-4 py-2.5 text-sm font-bold text-lime-300 shadow-[0_0_0_1px_rgba(163,230,53,0.04)] transition-all hover:-translate-y-0.5 hover:border-lime-300 hover:bg-lime-400 hover:text-black hover:shadow-[0_10px_25px_rgba(163,230,53,0.14)] active:translate-y-0 disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
+                title={`Fetch latest (throttled ${Math.round(REFRESH_THROTTLE_MS/1000)}s) • Uses ETag cache`}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-4 w-4 ${refreshing ? 'animate-spin' : 'transition-transform duration-500 group-hover:rotate-180'}`} fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 6v5h-5M4 18v-5h5M18.4 9A7 7 0 006.1 6.6L4 11m16 2-2.1 4.4A7 7 0 015.6 15" />
+                </svg>
+                {refreshing ? 'Syncing picks…' : 'Refresh picks'}
+              </button>
+              <div className="min-w-0 text-left">
+                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+                  <span className={`h-2 w-2 rounded-full ${refreshing ? 'animate-pulse bg-amber-400' : 'bg-lime-400 shadow-[0_0_8px_rgba(163,230,53,0.8)]'}`} />
+                  {refreshing ? 'Checking for updates' : 'Draft board synced'}
+                </div>
+                <div className="mt-0.5 truncate text-[11px] text-zinc-500">
+                  {lastUpdatedAt
+                    ? `Updated ${new Date(lastUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · cache up to ${Math.round(SHEET_TTL_MS / 1000)}s`
+                    : 'Refresh to fetch the latest picks'}
+                </div>
+              </div>
+              </div>
               <a
                 href="https://discord.gg/Q9JufrVbq"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black transition"
+                className="inline-flex items-center justify-center gap-2.5 rounded-xl border border-indigo-400/50 bg-indigo-400/10 px-4 py-2.5 text-sm font-bold text-indigo-200 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-400 hover:text-black hover:shadow-[0_10px_25px_rgba(129,140,248,0.14)]"
                 title="Join Discord to get notified when picks are made"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" className="opacity-90">
                   <path d="M20.317 4.369A19.791 19.791 0 0016.558 3c-.197.35-.42.82-.574 1.2a18.4 18.4 0 00-7.968 0c-.154-.38-.377-.85-.574-1.2A19.789 19.789 0 003.683 4.37C1.803 7.216 1.156 9.96 1.33 12.662c2.1 1.567 4.137 2.52 6.106 3.145.47-.646.892-1.338 1.257-2.067a11.71 11.71 0 01-1.905-.902c.16-.118.315-.242.464-.37 3.692 1.74 7.69 1.74 11.383 0 .149.129.304.252.464.37-.611.345-1.253.64-1.905.902.365.729.787 1.421 1.257 2.067 1.97-.625 4.006-1.578 6.106-3.145.252-3.958-.68-6.67-2.74-8.293zM9.5 12.5c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2zm5 0c-.9 0-1.625-.9-1.625-2s.725-2 1.625-2 1.625.9 1.625 2-.725 2-1.625 2z" fill="currentColor"/>
                 </svg>
-                Get notified through Discord
+                Discord alerts
               </a>              
               {/* <button
                 type="button"
