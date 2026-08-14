@@ -453,7 +453,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
   const sendTestNotification = async () => {
     try {
       if (isOffseason) {
-        setTestMessage(`Preview only — live draft pop-ups are disabled until August 14, ${DRAFT_YEAR}.`);
+        setTestMessage(`Preview only — live draft pop-ups are disabled until August 15, ${DRAFT_YEAR} at 9:30 AM PT.`);
         return;
       }
       setTestMessage('');
@@ -975,7 +975,8 @@ const clockDeadline = React.useMemo(
   () => new Date(clockStart.getTime() + windowMinutes * 60 * 1000),
   [clockStart, windowMinutes]
 );
-const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
+const rawPickMsLeft = clockDeadline.getTime() - effectiveNow.getTime();
+const pickMsLeft = Math.max(0, rawPickMsLeft);
 // Free Agency opens: Tue Aug 25, 2026 @ 9:00 AM PT
 const FREE_AGENCY_START = new Date('2026-08-25T09:00:00-07:00');
 const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.getTime());
@@ -989,7 +990,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
   // Helper: check if the current pick is expired
   function pickExpired() {
     // Only treat as expired once we're past the deadline by the grace period
-    return hasDraftStarted && (pickMsLeft <= -AUTO_PASS_GRACE_MS);
+    return hasDraftStarted && (rawPickMsLeft <= -AUTO_PASS_GRACE_MS);
   }
   useEffect(() => {
     if (isDraftComplete) return; // stop auto-pass once draft is finished
@@ -1074,7 +1075,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
     if (hasDraftStarted && pickExpired()) {
       checkAndAutoPass();
     }
-  }, [pickMsLeft, playersPicks, onTheClock, currentRound, overallPick, logsReady, timeLeft.total, hasDraftStarted, passInFlight, isDraftComplete]);
+  }, [rawPickMsLeft, playersPicks, onTheClock, currentRound, overallPick, logsReady, timeLeft.total, hasDraftStarted, passInFlight, isDraftComplete]);
 
   useEffect(() => {
     setPinError('');
@@ -1145,7 +1146,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
       return;
     }
     if (showPreviewExperience) {
-      setSubmitError(`Preview mode is enabled. Live pick submissions open on August 14, ${DRAFT_YEAR}.`);
+      setSubmitError(`Preview mode is enabled. Live pick submissions open on August 15, ${DRAFT_YEAR} at 9:30 AM PT.`);
       return;
     }
     // Must be on the clock
@@ -1498,7 +1499,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                     : 'bg-black text-lime-300 border-lime-400 hover:bg-lime-400 hover:text-black'
                 }`}
               >
-                {showPreviewExperience ? 'Live Draft Opens August 14' : 'Submit Pick'}
+                {showPreviewExperience ? 'Live Draft Opens August 15 at 9:30 AM PT' : 'Submit Pick'}
               </button>
             </form>
           )}
@@ -1552,7 +1553,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                 onClick={sendTestNotification}
                 disabled={testSending}
                 className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title={isOffseason ? `Preview only until August 14, ${DRAFT_YEAR}` : 'Sends a test message to Discord via /api/notifyPick'}
+                title={isOffseason ? `Preview only until August 15, ${DRAFT_YEAR} at 9:30 AM PT` : 'Sends a test message to Discord via /api/notifyPick'}
               >
                 {testSending ? 'Sending…' : 'Test Draft Notification'}
               </button>

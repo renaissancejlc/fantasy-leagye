@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState(() => {
     const now = new Date();
-    const draftDate = new Date('2025-08-14T09:30:00-07:00');
+    const draftDate = new Date('2026-08-15T09:30:00-07:00');
     const total = draftDate - now;
     return {
       total,
@@ -19,7 +19,7 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const draftDate = new Date('2025-08-14T09:30:00-07:00');
+      const draftDate = new Date('2026-08-15T09:30:00-07:00');
       const total = draftDate - now;
       setTimeLeft({
         total,
@@ -166,7 +166,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
             </svg>
             <p className="text-sm sm:text-base text-red-300 font-medium">
-              Important Update: Draft has been moved to <span className="font-bold text-white">Thursday, August 14 · 9:30am PST</span>
+              Draft starts <span className="font-bold text-white">Saturday, August 15 · 9:30 AM PT</span>. Each picker has 24 hours.
             </p>
           </div>
         </div>
