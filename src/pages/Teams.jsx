@@ -44,7 +44,6 @@ export default function Teams() {
     { id: 6, abbr: '3', teamName: 'The Replacements', division: 'San Diego', managers: ['David Carr', 'David Carr'], email: null, status: 'Joined', canAddSecondManager: false, canRemoveManager: true },
     { id: 7, abbr: '4', teamName: 'Santee Eagles', division: 'San Diego', managers: ['Thomas Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 8, abbr: '9', teamName: 'Tyreek it Till you Make it', division: 'World', managers: ['Tariq Muhummad'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
-    { id: 9, abbr: 'TM9', teamName: 'Team 9', division: 'World', managers: [], email: 'franciscohchavez5@gmail.com', status: 'Invited', canAddSecondManager: true, canRemoveManager: true },
     { id: 10, abbr: '5', teamName: 'Team Ustav', division: 'San Diego', managers: ['Utsav Pandey'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 11, abbr: 'RC', teamName: 'Love thy Nabers', division: 'San Diego', managers: ['Raphael Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 12, abbr: 'CTE', teamName: 'Cryo Me a River', division: 'World', managers: ['Daisy Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
@@ -60,7 +59,7 @@ export default function Teams() {
           Meet the Teams
         </h1>
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
-          12 squads. One trophy. Tap a team to view its page.
+          11 squads. One trophy. Tap a team to view its page.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -107,7 +106,7 @@ export default function Teams() {
                     </div>
                     <h3 className="text-xl font-extrabold text-white group-hover:text-lime-400 transition-colors">{team.teamName}</h3>
                     <p className="text-sm text-gray-300">
-                      {uniqueManagers.length ? `Mgr: ${uniqueManagers.join(', ')}` : 'Mgr: Cisco'}
+                      {uniqueManagers.length ? `Mgr: ${uniqueManagers.join(', ')}` : 'Manager TBD'}
                     </p>
                   </div>
                 </div>

@@ -16,7 +16,7 @@ const VOTES_CACHE_KEY = 'fantasy:votesCache';
 
 const PINS_CACHE_KEY = 'fantasy:pinsCache';
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1406471095556771841/KJveqiYeOk-0z1u9PO9jCx9Z8PX2585JkO4tak_L7CH_SEF7RzR_C4A7go4Hcz3_xPSH';
-const DISCORD_INVITE_URL = 'https://discord.gg/hfGzs4a7g6';
+const DISCORD_INVITE_URL = 'https://discord.gg/Q9JufrVbq';
 const SHEETOPS_API_KEY = 'sk_live_40bd24a37303db3ee9ac84bc1c04afb0fcde';
 const SHEETOPS_VOTES_CONNECTION_ID = 18;
 const SHEETOPS_DIRECT_BASE_URL = `https://api.sheetops.app/v1/connections/${SHEETOPS_VOTES_CONNECTION_ID}`;
@@ -110,7 +110,6 @@ const isOnline = () => (typeof navigator === 'undefined' ? true : navigator.onLi
 const members = [
   'Callie',
   'Christian',
-  'Cisco',
   'Dad',
   'Daisy',
   'Dustin',

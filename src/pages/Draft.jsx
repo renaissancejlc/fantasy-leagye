@@ -173,9 +173,6 @@ const SHEET_TTL_MS   = 30 * 1000;           // 30s - picks change often
 const LOG_TTL_MS     = 20 * 1000;           // 20s - recap log
 const REFRESH_THROTTLE_MS = 15 * 1000;    // 15s - throttle manual refresh requests
 
-// --- Discord Notification (client-side fallback) ---
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1405602854244188182/ZI4aYoCLTTqPgY0qJP-x6bxB4L0cCeiLQeu0OsxtyUpQ-rFU9vxvi8_2VJyLxLvO_0Bn";
-
 const formatDiscordMessage = (p) => {
   const head = `🏈 Round ${p.round}, Pick ${p.pickNumber}`;
   let base;
@@ -187,20 +184,13 @@ const formatDiscordMessage = (p) => {
 };
 
 async function notifyDiscord(payload) {
-  // Try app endpoint first (if you later add a real /api/notifyPick). If 404 or network error, fall back to direct webhook.
   try {
     await axios.post('/api/notifyPick', payload);
     console.info('[notifyDiscord] sent via /api/notifyPick');
     return true;
   } catch (e) {
-    try {
-      await axios.post(DISCORD_WEBHOOK, { content: formatDiscordMessage(payload) }, { headers: { 'Content-Type': 'application/json' } });
-      console.info('[notifyDiscord] sent via direct Discord webhook');
-      return true;
-    } catch (err) {
-      console.warn('[notifyDiscord] direct webhook failed', err);
-      return false;
-    }
+    console.warn('[notifyDiscord] server notification failed', e);
+    return false;
   }
 }
 // --- SMS Notification helpers (non-blocking) ---
@@ -234,7 +224,6 @@ const RAW_DRAFT_ORDER = [
   'Christian',
   'Dad',
   'Dustin',
-  'Cisco',
   'Angelo',
   'Daisy',
   'River',
@@ -251,7 +240,6 @@ const normalize = str => str?.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s
 const STATIC_PHONE_BOOK = Object.freeze({
   callie: '+16194033562',
   christian: '+19193256775',
-  cisco: '+16193070620',
   dad: '+16193069767',
   daisy: '+19713367265',
   dustin: '+16193020433',
@@ -581,6 +569,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
         status: 'PICKED',
         nextUp: computeNextUp(),
         submittedAt: isoNow(),
+        pin: pinRecord ? pinInput : newPin,
       });
       // Fire-and-forget SMS; do not block submission if it fails
       // void notifyNextUpSMS(computeNextUp());
@@ -1576,7 +1565,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
               </>
             )}
               <a
-                href="https://discord.gg/7Ud9D2XA"
+                href="https://discord.gg/Q9JufrVbq"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-indigo-400 text-indigo-300 hover:bg-indigo-400 hover:text-black transition"

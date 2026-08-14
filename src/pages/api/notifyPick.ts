@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import fetch from "node-fetch";
 
-// Static config (no process.env). For production, consider moving back to env vars.
 const CONFIG = {
   SLACK_WEBHOOK: "", // optional
-  DISCORD_WEBHOOK: "https://discord.com/api/webhooks/1405602854244188182/ZI4aYoCLTTqPgY0qJP-x6bxB4L0cCeiLQeu0OsxtyUpQ-rFU9vxvi8_2VJyLxLvO_0Bn",
+  DISCORD_WEBHOOK: process.env.DRAFT_DISCORD_WEBHOOK_URL || "",
   RESEND_KEY: "",               // optional email API key
   NOTIFY_EMAILS: "",            // comma-separated list
   TWILIO_SID: "",               // optional SMS

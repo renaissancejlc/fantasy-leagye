@@ -14,8 +14,7 @@ const members = [
   'Utsav',
   'Tariq',
   'Daisy',
-  'Raphy',
-  'Cisco'
+  'Raphy'
 ];
 
 export default function Prize() {
