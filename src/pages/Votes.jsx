@@ -101,7 +101,7 @@ const sheetOpsDeleteRows = (tab, where) => axios.delete(
 
 // Fixed season start (kickoff). Before this date = applies to THIS season.
 // After this date = queued decision for NEXT season (but voting is locked in-season).
-const SEASON_START_ISO = '2025-09-04T17:20:00-07:00';
+const SEASON_START_ISO = '2026-09-09T17:20:00-07:00';
 
 const isOnline = () => (typeof navigator === 'undefined' ? true : navigator.onLine !== false);
 

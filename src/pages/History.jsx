@@ -4,6 +4,28 @@ import Footer from '../components/Footer';
 import { Trophy } from 'lucide-react';
 
 export default function History() {
+  const standings2025 = [
+    { rk: 1, team: 'Team Simon', rec: '10-4-0' },
+    { rk: 2, team: 'Team Ustav', rec: '10-4-0' },
+    { rk: 3, team: 'Santee Eagles', rec: '10-4-0' },
+    { rk: 4, team: 'Building Dynasties', rec: '12-2-0' },
+    { rk: 5, team: 'Sutton things never change', rec: '9-5-0' },
+    { rk: 6, team: 'The Happy Accidents', rec: '5-9-0' },
+    { rk: 7, team: 'Breece’s Pieces', rec: '7-7-0' },
+    { rk: 8, team: 'Love thy Nabers', rec: '7-7-0' },
+    { rk: 9, team: "King Henry's Court", rec: '4-10-0' },
+    { rk: 10, team: "francisco's Fantastic Team", rec: '3-11-0' },
+    { rk: 11, team: 'No Punt Intended', rec: '4-10-0' },
+    { rk: 12, team: 'The Replacements', rec: '3-11-0' },
+  ];
+
+  const espn2025Links = [
+    { label: 'Full Standings', href: 'https://fantasy.espn.com/football/league/standings?seasonId=2025&leagueId=135143' },
+    { label: 'Scoreboard', href: 'https://fantasy.espn.com/football/league/scoreboard?seasonId=2025&leagueId=135143' },
+    { label: 'Draft Recap', href: 'https://fantasy.espn.com/football/league/draftrecap?seasonId=2025&leagueId=135143' },
+    { label: 'League Office', href: 'https://fantasy.espn.com/football/league?seasonId=2025&leagueId=135143' },
+  ];
+
   const standings2024 = [
     { rk: 1, team: "Patty's Pub", manager: 'Angelo Carr', rec: '7-7-0', pf: 1618.48, pa: 1566.02, pfg: 115.6, pag: 111.9, div: '3-2-0', home: '4-4-0', away: '3-3-0', strk: 'W1', moves: 6 },
     { rk: 2, team: 'Cryo Me a River', manager: 'Daisy Carr', rec: '6-8-0', pf: 1558.42, pa: 1695.2, pfg: 111.3, pag: 121.1, div: '4-1-0', home: '5-3-0', away: '1-5-0', strk: 'L2', moves: 2 },
@@ -51,6 +73,13 @@ export default function History() {
             Champions &amp; Records
           </div>
           <ul className="space-y-4 max-w-xl mx-auto text-left">
+            <li className="border border-lime-500/60 bg-zinc-900 p-4 rounded-md shadow-sm font-mono flex items-center gap-3 ring-1 ring-lime-500/40">
+              <Trophy className="text-lime-400 w-6 h-6" />
+              <span>
+                <span className="text-zinc-200 font-semibold">2025</span> - Team Simon <span className="text-zinc-400">(Record: 10-4)</span>
+                <span className="block text-xs uppercase tracking-widest text-zinc-400 mt-1">League Champion</span>
+              </span>
+            </li>
             <li className="border border-zinc-700 bg-zinc-900 p-4 rounded-md shadow-sm font-mono flex items-center gap-3 ring-1 ring-zinc-700">
               <Trophy className="text-lime-400 w-6 h-6" />
               <span>
@@ -59,6 +88,59 @@ export default function History() {
               </span>
             </li>
           </ul>
+        </div>
+
+        <div className="mb-16 mt-8">
+          <h2 className="text-2xl uppercase tracking-widest font-mono text-zinc-200 mb-2">2025 Season Snapshot</h2>
+          <div className="text-xs uppercase tracking-widest text-zinc-400 mb-6">Final Results &amp; Regular-Season Records</div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+            {[
+              { place: 'Champion', team: 'Team Simon', color: 'text-lime-400' },
+              { place: 'Second Place', team: 'Team Ustav', color: 'text-zinc-200' },
+              { place: 'Third Place', team: 'Santee Eagles', color: 'text-amber-500' },
+            ].map(({ place, team, color }) => (
+              <div key={place} className="border border-zinc-700 bg-zinc-900 rounded-md p-5">
+                <div className={`text-xs uppercase tracking-widest mb-2 ${color}`}>{place}</div>
+                <div className="text-zinc-100 font-semibold">{team}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {espn2025Links.map(({ label, href }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-md border border-lime-500/60 text-lime-400 text-xs uppercase tracking-wider hover:bg-lime-400 hover:text-black transition"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+
+          <div className="overflow-x-auto max-w-3xl mx-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left uppercase text-zinc-400">
+                  <th className="py-2 px-4">Finish</th>
+                  <th className="py-2 px-4">Team</th>
+                  <th className="py-2 px-4">Record</th>
+                </tr>
+              </thead>
+              <tbody>
+                {standings2025.map((team, index) => (
+                  <tr key={team.rk} className={index % 2 === 0 ? 'bg-zinc-900/60' : 'bg-zinc-900/30'}>
+                    <td className="py-3 px-4 text-zinc-300">{team.rk}</td>
+                    <td className="py-3 px-4 text-zinc-100 font-semibold">{team.team}</td>
+                    <td className="py-3 px-4 text-zinc-200">{team.rec}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="mb-16 mt-8">
