@@ -19,10 +19,11 @@ export default function NavBar() {
   const searchRef = useRef(null);
 
   const players = [
+    { name: "Julio", path: "/teams/julio" },
     { name: "Dad", path: "/teams/dad" },
     { name: "Dustin", path: "/teams/dustin" },
     { name: "Callie", path: "/teams/callie" },
-    { name: "Angelo", path: "/teams/angelo" },
+    { name: "Kevin", path: "/teams/kevin" },
     { name: "Simon", path: "/teams/simon" },
     { name: "River", path: "/teams/river" },
     { name: "Christian", path: "/teams/christian" },

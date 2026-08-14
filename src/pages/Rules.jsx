@@ -18,7 +18,7 @@ export default function Rules() {
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
             <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><Target size={20} /> Draft & Keeper Format</h2>
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
-              The league uses a <strong>full-keeper format</strong>. The 2026 draft is an optional, <strong>three-round rookie-only draft</strong> using a fixed standard order—not a snake draft. The same order repeats in every round.
+              The league has <strong>12 teams</strong> and uses a <strong>full-keeper format</strong>. The 2026 draft is an optional, <strong>three-round rookie-only draft</strong> using a fixed standard order—not a snake draft. The same order repeats in every round.
               <br /><br />
               The draft begins on <strong>Saturday, August 15 at 9:30 AM PT</strong>. Every picker has <strong>12 hours</strong> to select a rookie or pass. Picks are submitted through the draft page and announced in Discord.
             </p>

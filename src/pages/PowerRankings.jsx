@@ -4,8 +4,8 @@ import Footer from '../components/Footer';
 
 export default function PowerRankings() {
   const players = [
-    'Christian', 'Angelo', 'Callie', 'Dustin', 'Tariq', 'Simon',
-    'River', 'Utsav', 'Daisy', 'Raphy', 'Dad'
+    'Christian', 'Kevin', 'Julio', 'Callie', 'Dustin', 'Tariq',
+    'Simon', 'River', 'Utsav', 'Daisy', 'Raphy', 'Dad'
   ];
 
   return (
@@ -13,7 +13,7 @@ export default function PowerRankings() {
       <NavBar />
       <section className="px-6 py-20 text-center">
         <h1 className="text-5xl font-extrabold uppercase tracking-wide mb-4 text-lime-400">
-          2025 Power Rankings
+          2026 Power Rankings
         </h1>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-12">
           These aren’t official standings. Updated weekly by the Commissioner and league drama. 

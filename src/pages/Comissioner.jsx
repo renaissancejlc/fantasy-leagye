@@ -4,10 +4,11 @@ import Footer from '../components/Footer';
 import { Trophy, ScrollText, DollarSign, AlertTriangle } from 'lucide-react';
 
 const members = [
+  'Julio',
   'Dad',
   'Dustin',
   'Callie',
-  'Angelo',
+  'Kevin',
   'Simon',
   'River',
   'Christian',

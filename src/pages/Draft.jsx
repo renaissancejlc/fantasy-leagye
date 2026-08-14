@@ -208,6 +208,7 @@ const formatTurnSMS = (p) => {
 // Note: uses provided spellings; mapped to actual sheet names via normalization
 const RAW_DRAFT_ORDER = [
   'River',
+  'Julio',
   'Callie',
   'Kevin',
   'Dustin',

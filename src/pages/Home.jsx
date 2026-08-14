@@ -49,7 +49,7 @@ export default function Home() {
               <span className="text-lime-400">Starts Now.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-relaxed text-zinc-300 md:text-xl">
-              Eleven teams. Keeper rosters. A rookie-only draft. The Carr League is back—and every move from here shapes the next championship run.
+              Twelve teams. Keeper rosters. A rookie-only draft. The Carr League is back—and every move from here shapes the next championship run.
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
               <a href="/draft" className="rounded bg-lime-400 px-7 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:bg-lime-300">
@@ -83,9 +83,9 @@ export default function Home() {
 
           <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              ['11', 'Teams'],
+              ['12', 'Teams'],
               ['3', 'Rounds'],
-              ['33', 'Possible Picks'],
+              ['36', 'Possible Picks'],
               ['12 HR', 'Pick Clock'],
             ].map(([value, label]) => (
               <div key={label} className="border border-zinc-700 bg-black p-5">
@@ -122,7 +122,7 @@ export default function Home() {
               <p className="mt-5 text-zinc-400">The same order repeats in rounds one, two, and three. Be ready when your name hits the clock.</p>
             </div>
             <ol className="grid grid-cols-1 gap-px overflow-hidden border border-zinc-800 bg-zinc-800 sm:grid-cols-2">
-              {['River', 'Callie', 'Kevin', 'Dustin', 'Raphy', 'Daisy', 'Tariq', 'Dad', 'Christian', 'Utsav', 'Simon'].map((name, index) => (
+              {['River', 'Julio', 'Callie', 'Kevin', 'Dustin', 'Raphy', 'Daisy', 'Tariq', 'Dad', 'Christian', 'Utsav', 'Simon'].map((name, index) => (
                 <li key={name} className="flex items-center gap-4 bg-zinc-950 px-5 py-4">
                   <span className="w-8 font-mono text-lime-400">{String(index + 1).padStart(2, '0')}</span>
                   <span className="font-bold uppercase tracking-wide text-zinc-100">{name}</span>

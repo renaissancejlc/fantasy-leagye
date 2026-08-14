@@ -4,16 +4,13 @@ import Footer from '../components/Footer';
 
 export default function SeasonTimeline() {
   const timeline = [
-    { date: 'July 14', event: 'Home Run Derby', note: 'Determines draft order' },
     { date: 'August 14', event: 'Dues Deadline', note: '$20 or lose chance to win the prize' },
     { date: 'August 15', event: 'Rookie Draft Begins', note: '9:30 AM PT · 3 rounds · 12 hours per pick' },
-    // { date: 'August 15', event: 'Roster Lock', note: 'Trades + lineups must be set' },
-    { date: 'September 4', event: 'NFL Kickoff (Week 1)', note: 'Chiefs vs TBD' },
-    { date: 'October 17', event: 'Trade Deadline', note: 'Last chance to trade' },
-    { date: 'November 27', event: 'Thanksgiving Games', note: 'Classic matchups' },
-    { date: 'December 3', event: 'Playoffs Begin (Week 14)', note: 'Top 4 or 6 teams' },
-    { date: 'December 17', event: 'Championship (Week 16)', note: 'Final week' },
-    { date: 'January 1', event: 'Keeper Deadline', note: 'Declare 2026 keepers' }
+    { date: '24 hours after the final pick', event: 'Free Agency Resumes', note: 'Standard FAAB budget and bidding return' },
+    { date: 'September 9', event: 'NFL Kickoff (Week 1)', note: '5:20 PM PT · Patriots at Seahawks' },
+    { date: 'TBD', event: 'Trade Deadline', note: 'Two weeks before the fantasy playoffs' },
+    { date: 'November 26', event: 'Thanksgiving Games', note: 'Holiday football returns' },
+    { date: 'TBD', event: 'Fantasy Playoffs', note: 'Final schedule set in ESPN' }
   ];
 
   return (
@@ -21,7 +18,7 @@ export default function SeasonTimeline() {
       <NavBar />
       <section className="px-6 py-20 text-center">
         <h1 className="text-5xl font-extrabold uppercase tracking-wide mb-6 text-lime-400">
-          2025 Season Timeline
+          2026 Season Timeline
         </h1>
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
           Here's your playbook for the entire fantasy football season. Know the deadlines. Respect the grind.

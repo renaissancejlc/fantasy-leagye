@@ -5,7 +5,8 @@ import Footer from '../components/Footer';
 export default function Rankings() {
   const players = [
     { name: 'Christian', record: '0-0', points: 0 },
-    { name: 'Angelo', record: '0-0', points: 0 },
+    { name: 'Kevin', record: '0-0', points: 0 },
+    { name: 'Julio', record: '0-0', points: 0 },
     { name: 'Callie', record: '0-0', points: 0 },
     { name: 'Dustin', record: '0-0', points: 0 },
     { name: 'Tariq', record: '0-0', points: 0 },
@@ -22,7 +23,7 @@ export default function Rankings() {
       <NavBar />
       <section className="px-6 py-20 text-center">
         <h1 className="text-5xl font-extrabold uppercase tracking-wide mb-6 text-lime-400">
-          2025 Rankings
+          2026 Rankings
         </h1>
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
           The season has begun. The slate is clean. Let the rankings begin.

@@ -107,14 +107,14 @@ const isOnline = () => (typeof navigator === 'undefined' ? true : navigator.onLi
 
 // League members (one person, one vote per motion)
 const members = [
+  'Julio',
   'Callie',
   'Christian',
   'Dad',
   'Daisy',
   'Dustin',
-  'Angelo',
+  'Kevin',
   'Raphy',
-  'Reny- Test', // test user
   'River',
   'Simon',
   'Tariq',

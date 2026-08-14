@@ -37,7 +37,7 @@ const resolveIcon = (names = []) => {
 export default function Teams() {
   const teams = [
     { id: 1, abbr: 'Nbr.', teamName: 'The Happy Accidents', division: 'World', managers: ['Dustin Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: false },
-    { id: 2, abbr: 'ASIP', teamName: "Patty's Pub", division: 'World', managers: ['Angelo Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
+    { id: 2, abbr: 'K', teamName: 'Team Kevin', division: 'World', managers: ['Kevin'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 3, abbr: '8', teamName: 'Building Dynasties', division: 'World', managers: ['Christian Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 4, abbr: '1', teamName: 'Team Simon', division: 'San Diego', managers: ['Simon Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 5, abbr: '8', teamName: 'No Punt Intended', division: 'San Diego', managers: ['Callie Everson'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
@@ -47,6 +47,7 @@ export default function Teams() {
     { id: 10, abbr: '5', teamName: 'Team Ustav', division: 'San Diego', managers: ['Utsav Pandey'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 11, abbr: 'RC', teamName: 'Love thy Nabers', division: 'San Diego', managers: ['Raphael Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
     { id: 12, abbr: 'CTE', teamName: 'Cryo Me a River', division: 'World', managers: ['Daisy Carr'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
+    { id: 13, abbr: 'J', teamName: 'Team Julio', division: 'World', managers: ['Julio'], email: null, status: 'Joined', canAddSecondManager: true, canRemoveManager: true },
   ];
 
   const slugify = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -59,7 +60,7 @@ export default function Teams() {
           Meet the Teams
         </h1>
         <p className="text-lg text-gray-400 mb-12 max-w-3xl mx-auto">
-          11 squads. One trophy. Tap a team to view its page.
+          12 squads. One trophy. Tap a team to view its page.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -75,7 +76,7 @@ export default function Teams() {
                 key={team.id}
                 className="group relative bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-lime-500/40 hover:bg-gray-900/80 transition"
               >
-                {team.teamName === "Patty's Pub" && (
+                {team.teamName === 'Team Simon' && (
                   <span className="absolute top-3 right-3 text-[10px] uppercase tracking-widest bg-lime-500/20 border border-lime-500/40 text-lime-300 px-2 py-0.5 rounded flex items-center gap-1">
                     <span aria-hidden>👑</span> Defending Champ
                   </span>
