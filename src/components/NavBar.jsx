@@ -82,13 +82,13 @@ export default function NavBar() {
 
           <div className="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest">
             <Link to="/" className="hover:text-lime-400 transition-colors">Home</Link>
-            <Link to="/matchups" className="hover:text-lime-400 transition-colors">Matchups</Link>
             <Link to="/vote" className="hover:text-lime-400 transition-colors">Votes</Link>
             <Link to="/draft" className="hover:text-lime-400 transition-colors">Draft</Link>
             <Link to="/history" className="hover:text-lime-400 transition-colors">History</Link>
             <Link to="/prize" className="hover:text-lime-400 transition-colors">Prize</Link>
           </div>
 
+          {/* Search temporarily disabled
           <div className="flex items-center gap-4">
             <button
               aria-label="Search"
@@ -98,13 +98,13 @@ export default function NavBar() {
               <Search className="w-5 h-5" />
             </button>
           </div>
+          */}
         </div>
 
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="flex flex-col gap-4 mt-4 md:hidden text-sm font-semibold uppercase tracking-widest">
               <Link to="/" className="hover:text-lime-400 transition-colors">Home</Link>
-            <Link to="/matchups" className="hover:text-lime-400 transition-colors">Matchups</Link>
             <Link to="/vote" className="hover:text-lime-400 transition-colors">Votes</Link>
             <Link to="/draft" className="hover:text-lime-400 transition-colors">Draft</Link>
             <Link to="/history" className="hover:text-lime-400 transition-colors">History</Link>
@@ -112,6 +112,7 @@ export default function NavBar() {
           </div>
         )}
 
+        {/* Search temporarily disabled
         {searchOpen && (
           <div className="mt-4">
             <input
@@ -145,6 +146,7 @@ export default function NavBar() {
             )}
           </div>
         )}
+        */}
       </div>
     </nav>
   );

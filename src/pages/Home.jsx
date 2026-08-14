@@ -49,7 +49,7 @@ export default function Home() {
               <span className="text-lime-400">Starts Now.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-relaxed text-zinc-300 md:text-xl">
-              Twelve teams. Keeper rosters. A rookie-only draft. The Carr League is back—and every move from here shapes the next championship run.
+              Twelve teams. Keeper rosters. A rookie-only draft. The Carr League is back, and every move from here shapes the next championship run.
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
               <a href="/draft" className="rounded bg-lime-400 px-7 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:bg-lime-300">
@@ -67,6 +67,31 @@ export default function Home() {
             <div className="relative flex h-72 w-72 items-center justify-center md:h-80 md:w-80">
               <div className="absolute inset-0 rounded-full bg-lime-400/30 blur-3xl animate-pulse" />
               <img src="/images/logo.png" alt="Carr League logo" className="relative z-10 h-64 w-64 object-contain md:h-72 md:w-72" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* NEWS FLASH: DUES */}
+      <section className="border-b border-amber-400/30 bg-gradient-to-br from-zinc-950 via-black to-amber-950/20 px-6 py-24">
+        <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[0.75fr_1.25fr] md:items-center">
+          <div className="text-center md:text-left">
+            <FlashLabel tone="red">Dues Alert · 2026</FlashLabel>
+            <div className="mt-6 text-7xl font-black tracking-tight text-amber-400">$20</div>
+            <div className="mt-1 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">Per Manager · Final Pool TBD</div>
+          </div>
+          <div>
+            <h2 className="text-4xl font-black uppercase leading-tight md:text-5xl">Pay Before<br /><span className="text-amber-400">Week One Kicks Off</span></h2>
+            <p className="mt-5 text-lg leading-relaxed text-zinc-300">
+              League dues are due by <strong className="text-white">September 9 at 5:20 PM PT</strong>, the first kickoff of the NFL regular season. Anyone unpaid at kickoff forfeits all 2026 league winnings, which roll into the following season’s prize pool.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <a href="https://venmo.com/reny-carr" target="_blank" rel="noopener noreferrer" className="rounded bg-amber-400 px-7 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:bg-amber-300">
+                Pay @reny-carr
+              </a>
+              <a href="/prize" className="rounded border border-amber-400/50 px-7 py-4 text-sm font-black uppercase tracking-wider text-amber-300 transition hover:bg-amber-400 hover:text-black">
+                View Dues &amp; Prize
+              </a>
             </div>
           </div>
         </div>
@@ -147,31 +172,6 @@ export default function Home() {
           <a href="/rules" className="mt-7 inline-block text-sm font-black uppercase tracking-wider text-lime-400 underline decoration-lime-400/40 underline-offset-8 hover:text-lime-300">
             Review League Rules
           </a>
-        </div>
-      </section>
-
-      {/* NEWS FLASH: DUES */}
-      <section className="border-b border-amber-400/30 bg-gradient-to-br from-zinc-950 via-black to-amber-950/20 px-6 py-24">
-        <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[0.75fr_1.25fr] md:items-center">
-          <div className="text-center md:text-left">
-            <FlashLabel tone="red">Dues Alert · 2026</FlashLabel>
-            <div className="mt-6 text-7xl font-black tracking-tight text-amber-400">$20</div>
-            <div className="mt-1 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">Per Manager · Final Pool TBD</div>
-          </div>
-          <div>
-            <h2 className="text-4xl font-black uppercase leading-tight md:text-5xl">Pay Before<br /><span className="text-amber-400">Week One Kicks Off</span></h2>
-            <p className="mt-5 text-lg leading-relaxed text-zinc-300">
-              League dues are due by <strong className="text-white">September 9 at 5:20 PM PT</strong>, the first kickoff of the NFL regular season. Anyone unpaid at kickoff forfeits all 2026 league winnings, which roll into the following season’s prize pool.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a href="https://venmo.com/reny-carr" target="_blank" rel="noopener noreferrer" className="rounded bg-amber-400 px-7 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:bg-amber-300">
-                Pay @reny-carr
-              </a>
-              <a href="/prize" className="rounded border border-amber-400/50 px-7 py-4 text-sm font-black uppercase tracking-wider text-amber-300 transition hover:bg-amber-400 hover:text-black">
-                View Dues &amp; Prize
-              </a>
-            </div>
-          </div>
         </div>
       </section>
 
