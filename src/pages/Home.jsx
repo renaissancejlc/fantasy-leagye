@@ -55,6 +55,9 @@ export default function Home() {
               <a href="/draft" className="rounded bg-lime-400 px-7 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:bg-lime-300">
                 Enter Draft Room
               </a>
+              <a href="https://fantasy.espn.com/football/league?leagueId=135143" target="_blank" rel="noopener noreferrer" className="rounded bg-red-600 px-7 py-4 text-sm font-black uppercase tracking-wider text-white transition hover:bg-red-500">
+                ESPN League Home
+              </a>
               <a href="https://discord.gg/Q9JufrVbq" target="_blank" rel="noopener noreferrer" className="rounded border border-zinc-600 px-7 py-4 text-sm font-black uppercase tracking-wider text-white transition hover:border-lime-400 hover:text-lime-300">
                 Join League Discord
               </a>
