@@ -15,7 +15,6 @@ const MIN_REFRESH_INTERVAL_MS = 15 * 1000; // throttle manual refresh calls
 const VOTES_CACHE_KEY = 'fantasy:votesCache';
 
 const PINS_CACHE_KEY = 'fantasy:pinsCache';
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1406471095556771841/KJveqiYeOk-0z1u9PO9jCx9Z8PX2585JkO4tak_L7CH_SEF7RzR_C4A7go4Hcz3_xPSH';
 const DISCORD_INVITE_URL = 'https://discord.gg/Q9JufrVbq';
 const SHEETOPS_API_KEY = 'sk_live_40bd24a37303db3ee9ac84bc1c04afb0fcde';
 const SHEETOPS_VOTES_CONNECTION_ID = 18;
@@ -161,16 +160,13 @@ function formatDiscordMessage(r) {
 }
 
 async function notifyDiscord(r) {
-  if (!DISCORD_WEBHOOK_URL) return;
-  const payload = {
-    username: 'Fantasy League Bot',
-    content: formatDiscordMessage(r),
-  };
   try {
-    await axios.post(DISCORD_WEBHOOK_URL, payload, { headers: { 'Content-Type': 'application/json' } });
+    await axios.post('/api/notifyVote', {
+      motionId: r.motionId,
+      seasonBucket: r.seasonBucket,
+    });
   } catch (err) {
-    // Most likely CORS when calling from the browser. Intentionally swallow to avoid breaking UI.
-    console.warn('Discord notification failed (likely CORS in browser). Consider proxying via your backend.', err?.message || err);
+    console.warn('Discord vote notification failed.', err?.message || err);
   }
 }
 

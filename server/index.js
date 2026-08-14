@@ -145,6 +145,55 @@ async function handleNotifyPick(req, res) {
   }
 }
 
+async function handleNotifyVote(req, res) {
+  try {
+    if (notificationRateLimited(req)) return sendJson(res, 429, { ok: false, error: 'Too many requests' });
+    const body = await readJsonBody(req);
+    const webhookUrl = process.env.VOTES_DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) return sendJson(res, 503, { ok: false, error: 'Discord is not configured' });
+
+    if (body.test === true) {
+      if (!process.env.NOTIFICATION_TEST_KEY || req.headers['x-notification-test-key'] !== process.env.NOTIFICATION_TEST_KEY) {
+        return sendJson(res, 403, { ok: false, error: 'Forbidden' });
+      }
+      await postDiscord(webhookUrl, '✅ **Controlled integration test** — Carr League vote notifications are connected.');
+      return sendJson(res, 200, { ok: true, test: true });
+    }
+
+    const motionId = String(body.motionId || '').trim();
+    const seasonBucket = String(body.seasonBucket || '').trim();
+    if (!motionId || !seasonBucket) return sendJson(res, 400, { ok: false, error: 'Invalid vote notification payload' });
+
+    const votesKey = process.env.SHEETOPS_VOTES_API_KEY;
+    if (!votesKey) return sendJson(res, 503, { ok: false, error: 'Vote verification is not configured' });
+    const [votes, results] = await Promise.all([
+      sheetOpsRows(18, 'Votes', votesKey),
+      sheetOpsRows(18, 'Results', votesKey),
+    ]);
+    const matching = votes.filter((vote) => String(vote.motionId) === motionId && String(vote.seasonBucket) === seasonBucket);
+    const yes = matching.filter((vote) => normalize(vote.choice) === 'yes').length;
+    const no = matching.filter((vote) => normalize(vote.choice) === 'no').length;
+    const abstain = matching.length - yes - no;
+    const openedAtMs = matching.reduce((earliest, vote) => {
+      const value = Date.parse(vote.dateProposed || vote.timestamp || '');
+      return Number.isFinite(value) ? Math.min(earliest, value) : earliest;
+    }, Infinity);
+    const windowClosed = Number.isFinite(openedAtMs) && Date.now() >= openedAtMs + (3 * 24 * 60 * 60 * 1000);
+    const outcome = yes >= 7 ? 'Passed' : no >= 7 ? 'Failed' : windowClosed && yes > no ? 'Passed' : windowClosed && no > yes ? 'Failed' : '';
+    if (!outcome) return sendJson(res, 409, { ok: false, error: 'Vote is not decisively closed' });
+
+    const notificationId = `${motionId}-${seasonBucket}-${outcome.toLowerCase()}`;
+    if (results.some((row) => row.notifiedKey === notificationId)) return sendJson(res, 200, { ok: true, duplicate: true });
+    const title = String(matching[0]?.motionTitle || motionId).trim();
+    const content = `**League Vote Result**\nMotion: **${title}**\nSeason: ${seasonBucket}\nOutcome: **${outcome}**\nYes: ${yes} • No: ${no} • Abstain: ${abstain} • Total: ${matching.length}`;
+    await postDiscord(webhookUrl, content);
+    return sendJson(res, 200, { ok: true });
+  } catch (error) {
+    console.error('[notifyVote] error', error?.message || error);
+    return sendJson(res, 502, { ok: false, error: 'Discord notification failed' });
+  }
+}
+
 // Normalize common US-formatted inputs to E.164. Returns null if invalid.
 function normalizeE164(raw) {
   if (!raw) return null;
@@ -247,6 +296,9 @@ const server = http.createServer(async (req, res) => {
   }
   if (method === 'POST' && url === '/api/notifyPick') {
     return handleNotifyPick(req, res);
+  }
+  if (method === 'POST' && url === '/api/notifyVote') {
+    return handleNotifyVote(req, res);
   }
   if (method === 'GET' && url.startsWith('/api/smsStatus')) {
     return handleSmsStatus(req, res);
