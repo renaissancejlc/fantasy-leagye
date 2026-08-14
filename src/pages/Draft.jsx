@@ -533,6 +533,8 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
         pick: pickLabel,
         status: isPass ? 'PASSED' : 'PICKED',
         nextUp: computeNextUp(),
+        draftComplete: overallPick >= totalCells,
+        totalPicks: totalCells,
         submittedAt: isoNow(),
         pin: pinRecord ? pinInput : newPin,
       });
@@ -843,9 +845,10 @@ const computeNextUp = React.useCallback(() => {
     nextRound = currentRound + 1;
     nextIdx = 0;
   }
+  if (nextRound > rounds) return '';
   const nextOrder = teamOrder;
   return nextOrder[nextIdx] || '';
-}, [currentRound, idxInRound, teamOrder, totalTeams, isDraftComplete]);
+}, [currentRound, idxInRound, teamOrder, totalTeams, isDraftComplete, rounds]);
 
 // const notifyNextUpSMS = (name) => {
 //   try {
@@ -1012,6 +1015,8 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
           pick: 'PASS',
           status: 'PASSED',
           nextUp: computeNextUp(),
+          draftComplete: overallPick >= totalCells,
+          totalPicks: totalCells,
           submittedAt: isoNow(),
         });
         if (!passSent) console.warn('[notifyDiscord] pass notification failed');

@@ -67,7 +67,14 @@ export default async (request) => {
     const notifiedKey = `draft-${round}-${pickNumber}-${normalize(team)}-${normalize(pick)}`;
     if (resultRows.some((row) => row.notifiedKey === notifiedKey)) return json({ ok: true, duplicate: true });
     const action = status === 'PASSED' ? `**${team}** passes.` : `**${team}** selects **${pick}**.`;
-    await postDiscord(webhook, `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${nextUp ? `\n➡️ Up next: **${nextUp}**` : ''}`);
+    const totalDraftPicks = draftRows.length * 3;
+    const draftComplete = totalDraftPicks > 0 && pickNumber >= totalDraftPicks;
+    const followUp = draftComplete
+      ? '\n🏁 **Draft complete!** All three rounds are finished.'
+      : nextUp
+        ? `\n➡️ Up next: **${nextUp}**`
+        : '';
+    await postDiscord(webhook, `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${followUp}`);
     await appendSheetOpsRow(18, 'Results', { notifiedKey, type: 'draft', notifiedAt: new Date().toISOString() }, votesKey);
     return json({ ok: true });
   } catch (error) {

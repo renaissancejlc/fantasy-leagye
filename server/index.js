@@ -152,7 +152,16 @@ async function handleNotifyPick(req, res) {
 
     const notificationId = `${round}:${pickNumber}:${normalize(team)}:${normalize(pick)}`;
     if (notifiedDraftPicks.has(notificationId)) return sendJson(res, 200, { ok: true, duplicate: true });
-    const content = `🏈 **Round ${round}, Pick ${pickNumber}** — **${team}** selects **${pick}**.${nextUp ? `\n➡️ Up next: **${nextUp}**` : ''}`;
+    const status = String(body.status || 'PICKED').toUpperCase();
+    const action = status === 'PASSED' ? `**${team}** passes.` : `**${team}** selects **${pick}**.`;
+    const totalPicks = Number(body.totalPicks);
+    const draftComplete = body.draftComplete === true && Number.isInteger(totalPicks) && pickNumber >= totalPicks;
+    const followUp = draftComplete
+      ? '\n🏁 **Draft complete!** All three rounds are finished.'
+      : nextUp
+        ? `\n➡️ Up next: **${nextUp}**`
+        : '';
+    const content = `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${followUp}`;
     await postDiscord(webhookUrl, content);
     notifiedDraftPicks.add(notificationId);
     return sendJson(res, 200, { ok: true });
