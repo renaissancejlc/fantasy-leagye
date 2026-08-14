@@ -292,8 +292,8 @@ const PASSED_GUARD_KEY = (pid) => `fantasy:autoPassed:${pid}`;
 function wasAutoPassDone(pid) { try { return localStorage.getItem(PASSED_GUARD_KEY(pid)) === '1'; } catch { return false; } }
 function markAutoPassDone(pid) { try { localStorage.setItem(PASSED_GUARD_KEY(pid), '1'); } catch {} }
 
-// Base: 4 hours per pick for everyone
-const BASE_PICK_MINUTES = 240;
+// Every picker gets 24 elapsed hours from the moment they go on the clock.
+const BASE_PICK_MINUTES = 24 * 60;
 const EXCEPTION_MINUTES = Object.freeze({});
 const getPickWindowMinutes = (teamName, round) => EXCEPTION_MINUTES[normalize(teamName || '')] || BASE_PICK_MINUTES;
 
@@ -332,7 +332,7 @@ async function saltedHash(pin, salt) {
 export default function DraftPage() {
 
   const DRAFT_YEAR = 2026;
-  const DRAFT_START_ISO = '2026-08-14T09:30:00-07:00';
+  const DRAFT_START_ISO = '2026-08-15T09:30:00-07:00';
   const [previewMode, setPreviewMode] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
         total: 0,
@@ -972,7 +972,7 @@ const clockStart = clockStartRef.current || draftStart;
 
 const windowMinutes = getPickWindowMinutes(onTheClock, currentRound);
 const clockDeadline = React.useMemo(
-  () => computeActiveDeadline(clockStart, windowMinutes, ACTIVE_TZ),
+  () => new Date(clockStart.getTime() + windowMinutes * 60 * 1000),
   [clockStart, windowMinutes]
 );
 const pickMsLeft = Math.max(0, clockDeadline.getTime() - effectiveNow.getTime());
@@ -1213,7 +1213,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
 
               {isOffseason && (
                 <div className="max-w-3xl mx-auto space-y-4">
-                  <div className="text-2xl md:text-3xl font-black text-lime-300">{DRAFT_YEAR} Draft Day is August 14, {DRAFT_YEAR}</div>
+                  <div className="text-2xl md:text-3xl font-black text-lime-300">{DRAFT_YEAR} Draft Day is August 15, {DRAFT_YEAR} at 9:30 AM PT</div>
                   <div className="text-sm md:text-base text-gray-300">
                     The {DRAFT_YEAR - 1} draft is over. Live draft controls, pick submissions, DraftLog warnings, and on-the-clock updates stay disabled until the new draft begins.
                   </div>
@@ -1289,7 +1289,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                     <span className="mx-2">•</span>
                     <span className="text-gray-300 normal-case">Time Left:</span>
                     <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
-                    <span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes / 60}h` : `${windowMinutes}m`} window; paused 7pm–9am PT)</span>
+                    <span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes / 60}h` : `${windowMinutes}m`} window)</span>
                   </>
                 )}
               </div>
@@ -1299,7 +1299,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
             <div className="mb-4 text-center">
               <div className="mx-auto w-full sm:w-auto inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl sm:rounded-full border text-xs sm:text-sm font-semibold uppercase tracking-normal sm:tracking-wide bg-indigo-500/10 border-indigo-400 text-indigo-300 max-w-full whitespace-normal break-words">
                 <span className="w-2 h-2 rounded-full bg-current inline-block" />
-                Preview Mode · Live draft disabled until August 14, {DRAFT_YEAR}
+                Preview Mode · Live draft disabled until August 15, {DRAFT_YEAR} at 9:30 AM PT
               </div>
             </div>
           )}
