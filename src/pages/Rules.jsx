@@ -1,7 +1,7 @@
 import React from 'react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
-import { Package, Target, BarChart2, Repeat, CalendarDays, Crown, FlaskConical, DollarSign } from 'lucide-react';
+import { Package, Target, BarChart2, Repeat, CalendarDays, Crown, FlaskConical, DollarSign, Users } from 'lucide-react';
 
 export default function Rules() {
   return (
@@ -25,6 +25,15 @@ export default function Rules() {
           </div>
 
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
+            <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><Users size={20} /> New &amp; Departing Managers</h2>
+            <p className="text-sm sm:text-base leading-relaxed text-gray-300">
+              The league is designed for <strong>12 teams</strong>. New managers may join when approved by the Commissioner and assigned to an open franchise. A replacement manager inherits that franchise’s existing roster, keeper rights, draft position, FAAB budget, and other league assets. Joining the league does not create an additional draft slot or allow a new roster to be built from free agency.
+              <br /><br />
+              Managers leaving the league should notify the Commissioner as early as possible. Once notice is given, they may not make trades, drops, or other transactions intended to unfairly weaken the franchise. The Commissioner may lock or temporarily manage a vacant team until a replacement is found, taking only reasonable actions needed to preserve the team and league competition.
+            </p>
+          </div>
+
+          <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
             <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><CalendarDays size={20} /> Free Agency</h2>
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
               No players may be added from free agency until <strong>24 hours after the final draft pick</strong>. Drops remain allowed during the lock. Once free agency resumes, the league returns to its standard budget/bidding format. Each team starts the season with a <strong>$200 FAAB budget</strong>; tied bids go to the team with higher waiver priority.
@@ -41,7 +50,7 @@ export default function Rules() {
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
             <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><DollarSign size={20} /> Dues</h2>
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
-              League dues are <strong>$20 per player</strong> and must be paid by <strong>Week 1 kickoff</strong>. Any player who fails to submit payment on time will <strong>forfeit their cash winnings</strong>, the winnings will rollover into the following season.
+              League dues are <strong>$20 per manager</strong> and must be paid by the first kickoff of the NFL regular season: <strong>September 9, 2026 at 5:20 PM PT</strong>. Any manager who has not paid by that deadline will <strong>forfeit all 2026 league winnings</strong>. Any forfeited prize money will roll over into the following season's prize pool.
             </p>
           </div>
 

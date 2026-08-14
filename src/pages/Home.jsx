@@ -150,6 +150,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* NEWS FLASH: DUES */}
+      <section className="border-b border-amber-400/30 bg-gradient-to-br from-zinc-950 via-black to-amber-950/20 px-6 py-24">
+        <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[0.75fr_1.25fr] md:items-center">
+          <div className="text-center md:text-left">
+            <FlashLabel tone="red">Dues Alert · 2026</FlashLabel>
+            <div className="mt-6 text-7xl font-black tracking-tight text-amber-400">$20</div>
+            <div className="mt-1 text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">Per Manager · Final Pool TBD</div>
+          </div>
+          <div>
+            <h2 className="text-4xl font-black uppercase leading-tight md:text-5xl">Pay Before<br /><span className="text-amber-400">Week One Kicks Off</span></h2>
+            <p className="mt-5 text-lg leading-relaxed text-zinc-300">
+              League dues are due by <strong className="text-white">September 9 at 5:20 PM PT</strong>, the first kickoff of the NFL regular season. Anyone unpaid at kickoff forfeits all 2026 league winnings, which roll into the following season’s prize pool.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <a href="https://venmo.com/reny-carr" target="_blank" rel="noopener noreferrer" className="rounded bg-amber-400 px-7 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:bg-amber-300">
+                Pay @reny-carr
+              </a>
+              <a href="/prize" className="rounded border border-amber-400/50 px-7 py-4 text-sm font-black uppercase tracking-wider text-amber-300 transition hover:bg-amber-400 hover:text-black">
+                View Dues &amp; Prize
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* NEWS FLASH: KICKOFF */}
       <section className="border-b border-zinc-800 bg-zinc-950 px-6 py-24 text-center">
         <div className="mx-auto max-w-5xl">
