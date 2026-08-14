@@ -423,8 +423,33 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
   };
 
   // --- Test SMS state (currently hidden) ---
+  const [testSending, setTestSending] = useState(false);
+  const [testMessage, setTestMessage] = useState('');
   const [testSmsSending, setTestSmsSending] = useState(false);
   const [testSmsMessage, setTestSmsMessage] = useState('');
+
+  const sendTestNotification = async () => {
+    setTestMessage('');
+    if (!voterName || !pinInput) {
+      setTestMessage('Select your name and enter your existing PIN first.');
+      return;
+    }
+    try {
+      setTestSending(true);
+      const response = await axios.post('/api/notifyPick', {
+        test: true,
+        team: voterName,
+        pin: pinInput,
+      });
+      setTestMessage(response.data?.duplicate
+        ? 'A draft notification test was already sent today.'
+        : '✅ Test notification sent. Check Discord.');
+    } catch (error) {
+      setTestMessage(error.response?.data?.error || '⚠️ Test failed. Verify your name, PIN, and deployment.');
+    } finally {
+      setTestSending(false);
+    }
+  };
   // const sendTestSMS = async () => {
   //   try {
   //     setTestSmsMessage('');
@@ -1539,6 +1564,15 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 </svg>
                 Get notified through Discord
               </a>              
+              <button
+                type="button"
+                onClick={sendTestNotification}
+                disabled={testSending}
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
+                title="Requires an existing league member name and PIN"
+              >
+                {testSending ? 'Sending…' : 'Test Draft Notification'}
+              </button>
               {/* <button
                 type="button"
                 onClick={sendTestSMS}
@@ -1549,6 +1583,9 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 {testSmsSending ? 'Sending SMS…' : 'Send Test SMS'}
               </button> */}
             </div>
+            {testMessage && (
+              <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testMessage}</div>
+            )}
             {testSmsMessage && (
               <div className="mt-2 text-sm text-gray-300" role="status" aria-live="polite">{testSmsMessage}</div>
             )}

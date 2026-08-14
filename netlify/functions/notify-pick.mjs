@@ -19,7 +19,21 @@ export default async (request) => {
     if (!webhook || !draftKey || !votesKey) return json({ ok: false, error: 'Notification service is not configured' }, 503);
 
     if (body.test === true) {
-      if (!validTestRequest(request)) return json({ ok: false, error: 'Forbidden' }, 403);
+      if (!validTestRequest(request)) {
+        const team = String(body.team || '').trim();
+        const [pinRows, resultRows] = await Promise.all([
+          sheetOpsRows(18, 'Pins', votesKey),
+          sheetOpsRows(18, 'Results', votesKey),
+        ]);
+        const pinRow = pinRows.find((row) => normalize(row.voter) === normalize(team));
+        if (!team || !pinMatches(body.pin, pinRow)) return json({ ok: false, error: 'Valid member name and PIN required' }, 403);
+        const day = new Date().toISOString().slice(0, 10);
+        const notifiedKey = `draft-test-${day}`;
+        if (resultRows.some((row) => row.notifiedKey === notifiedKey)) return json({ ok: true, test: true, duplicate: true });
+        await postDiscord(webhook, `✅ **Controlled integration test** — Draft notifications verified by **${team}**.`);
+        await appendSheetOpsRow(18, 'Results', { notifiedKey, type: 'draft-test', notifiedAt: new Date().toISOString() }, votesKey);
+        return json({ ok: true, test: true });
+      }
       await postDiscord(webhook, '✅ **Controlled integration test** — Carr League draft notifications are connected.');
       return json({ ok: true, test: true });
     }

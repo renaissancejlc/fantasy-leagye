@@ -45,6 +45,7 @@ function sendJson(res, status, obj) {
 }
 
 const notifiedDraftPicks = new Set();
+const sentNotificationTests = new Set();
 const notificationAttempts = new Map();
 
 function notificationRateLimited(req) {
@@ -126,8 +127,20 @@ async function handleNotifyPick(req, res) {
     if (!webhookUrl) return sendJson(res, 503, { ok: false, error: 'Discord is not configured' });
 
     if (body.test === true) {
-      if (!process.env.NOTIFICATION_TEST_KEY || req.headers['x-notification-test-key'] !== process.env.NOTIFICATION_TEST_KEY) {
-        return sendJson(res, 403, { ok: false, error: 'Forbidden' });
+      const hasServerKey = process.env.NOTIFICATION_TEST_KEY && req.headers['x-notification-test-key'] === process.env.NOTIFICATION_TEST_KEY;
+      if (!hasServerKey) {
+        const votesKey = process.env.SHEETOPS_VOTES_API_KEY;
+        const pinRows = votesKey ? await sheetOpsRows(18, 'Pins', votesKey) : [];
+        const pinRow = pinRows.find((row) => normalize(row.voter) === normalize(body.team));
+        const expected = String(pinRow?.pinHash || pinRow?.pinhash || pinRow?.hash || '');
+        const actual = crypto.createHash('sha256').update(`${pinRow?.salt || ''}:${body.pin || ''}`).digest('hex');
+        const validPin = expected.length === actual.length && expected && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
+        if (!validPin) return sendJson(res, 403, { ok: false, error: 'Valid member name and PIN required' });
+        const testKey = new Date().toISOString().slice(0, 10);
+        if (sentNotificationTests.has(testKey)) return sendJson(res, 200, { ok: true, test: true, duplicate: true });
+        await postDiscord(webhookUrl, `✅ **Controlled integration test** — Draft notifications verified by **${body.team}**.`);
+        sentNotificationTests.add(testKey);
+        return sendJson(res, 200, { ok: true, test: true });
       }
       await postDiscord(webhookUrl, '✅ **Controlled integration test** — Carr League draft notifications are connected.');
       return sendJson(res, 200, { ok: true, test: true });
