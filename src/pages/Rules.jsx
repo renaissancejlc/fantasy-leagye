@@ -12,24 +12,22 @@ export default function Rules() {
         <h1 className="text-5xl font-black uppercase text-lime-400 mb-4 tracking-tight">
           Official League Rules
         </h1>
-        <p className="text-sm text-gray-400 mb-12">Last updated: August 13, 2025</p>
+        <p className="text-sm text-gray-400 mb-12">Last updated: August 14, 2026</p>
 
         <div className="space-y-10 text-gray-100">
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
             <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><Target size={20} /> Draft & Keeper Format</h2>
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
-              For 2025, the league will follow a <strong>snake draft format</strong>. The draft order will be determined by participants’ selections based on the results of the MLB Home Run Derby. Each player may choose their draft position based on proximity of their derby guess to the actual outcome. 
+              The league uses a <strong>full-keeper format</strong>. The 2026 draft is an optional, <strong>three-round rookie-only draft</strong> using a fixed standard order—not a snake draft. The same order repeats in every round.
               <br /><br />
-              The 2026 draft begins on <strong>Saturday, August 15 at 9:30 AM PT</strong>. Every picker has <strong>24 hours per pick</strong>. Picks are submitted through the draft page and announced in the group message.
-              <br /><br />
-              There are <strong>no keepers</strong> for 2025. Beginning in 2026, the league will adopt a full-keeper format. Each team will retain their entire roster and participate in a <strong>5-round rookie draft</strong> each season.
+              The draft begins on <strong>Saturday, August 15 at 9:30 AM PT</strong>. Every picker has <strong>12 hours</strong> to select a rookie or pass. Picks are submitted through the draft page and announced in Discord.
             </p>
           </div>
 
           <div className="border-l-4 border-lime-400 pl-6 py-4 bg-gray-900 rounded-md shadow-md">
             <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold uppercase text-lime-300 mb-1 tracking-wide"><CalendarDays size={20} /> Free Agency</h2>
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
-              Each team starts the season with a <strong>$200 FAAB budget</strong> to bid on free agents. Bid deadlines occur <strong>every Thursday and Sunday at 9:00 AM PST</strong>. In the event of tied bids, the team with the higher waiver priority (based on reverse standings) will win the player.
+              No players may be added from free agency until <strong>24 hours after the final draft pick</strong>. Drops remain allowed during the lock. Once free agency resumes, the league returns to its standard budget/bidding format. Each team starts the season with a <strong>$200 FAAB budget</strong>; tied bids go to the team with higher waiver priority.
             </p>
           </div>
 

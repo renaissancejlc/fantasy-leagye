@@ -6,7 +6,7 @@ export default function SeasonTimeline() {
   const timeline = [
     { date: 'July 14', event: 'Home Run Derby', note: 'Determines draft order' },
     { date: 'August 14', event: 'Dues Deadline', note: '$20 or lose chance to win the prize' },
-    { date: 'August 15', event: 'Fantasy Draft Begins', note: '9:30 AM PT · 24 hours per pick' },
+    { date: 'August 15', event: 'Rookie Draft Begins', note: '9:30 AM PT · 3 rounds · 12 hours per pick' },
     // { date: 'August 15', event: 'Roster Lock', note: 'Trades + lineups must be set' },
     { date: 'September 4', event: 'NFL Kickoff (Week 1)', note: 'Chiefs vs TBD' },
     { date: 'October 17', event: 'Trade Deadline', note: 'Last chance to trade' },

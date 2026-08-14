@@ -166,7 +166,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
             </svg>
             <p className="text-sm sm:text-base text-red-300 font-medium">
-              Draft starts <span className="font-bold text-white">Saturday, August 15 · 9:30 AM PT</span>. Each picker has 24 hours.
+              Draft starts <span className="font-bold text-white">Saturday, August 15 · 9:30 AM PT</span>. Three rookie-only rounds, 12 hours per pick.
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function Home() {
 
           <h3 className="text-2xl uppercase font-semibold text-white mb-4"> Countdown</h3>
                     <p className="text-lg text-gray-400 mb-2 max-w-2xl mx-auto">
-          Are you ready? Solidify your strategy. Prepare for the snake.        </p>
+          Keeper rosters are set. Prepare for three standard-order rookie rounds.        </p>
           {timeLeft.total > 0 ? (
             <div className="text-4xl md:text-5xl font-mono text-lime-400 tracking-wider">
               {`${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}

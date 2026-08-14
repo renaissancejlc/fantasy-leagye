@@ -204,20 +204,20 @@ const formatTurnSMS = (p) => {
 // }
 
 
-// Explicit snake-draft order (display + turn control)
+// Fixed standard draft order (same order in every round)
 // Note: uses provided spellings; mapped to actual sheet names via normalization
 const RAW_DRAFT_ORDER = [
-  'Callie',
-  'Utsav',
-  'Tariq',
-  'Simon',
-  'Christian',
-  'Dad',
-  'Dustin',
-  'Angelo',
-  'Daisy',
   'River',
+  'Callie',
+  'Kevin',
+  'Dustin',
   'Raphy',
+  'Daisy',
+  'Tariq',
+  'Dad',
+  'Christian',
+  'Utsav',
+  'Simon',
 ];
 
 const getDraftLogUrl = (suffix = '') => {
@@ -270,8 +270,8 @@ const PASSED_GUARD_KEY = (pid) => `fantasy:autoPassed:${pid}`;
 function wasAutoPassDone(pid) { try { return localStorage.getItem(PASSED_GUARD_KEY(pid)) === '1'; } catch { return false; } }
 function markAutoPassDone(pid) { try { localStorage.setItem(PASSED_GUARD_KEY(pid), '1'); } catch {} }
 
-// Every picker gets 24 elapsed hours from the moment they go on the clock.
-const BASE_PICK_MINUTES = 24 * 60;
+// Every picker gets 12 elapsed hours from the moment they go on the clock.
+const BASE_PICK_MINUTES = 12 * 60;
 const EXCEPTION_MINUTES = Object.freeze({});
 const getPickWindowMinutes = (teamName, round) => EXCEPTION_MINUTES[normalize(teamName || '')] || BASE_PICK_MINUTES;
 
@@ -488,10 +488,11 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       if (teamIdx === -1) { setSubmitError('Name not found in draft sheet.'); return; }
 
       const roundCol = `Round ${currentRound}`;
+      const isPass = normalize(pickLabel) === 'pass';
 
       // Duplicate pick check
       const allPicks = formatted.flatMap(p => p.picks).filter(x => x && x !== '—').map(normalize);
-      if (allPicks.includes(normalize(pickLabel))) {
+      if (!isPass && allPicks.includes(normalize(pickLabel))) {
         setSubmitError('That player is already drafted.');
         return;
       }
@@ -513,7 +514,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
           round: currentRound,
           team: voterName,
           pick: pickLabel,
-          status: 'PICKED',
+          status: isPass ? 'PASSED' : 'PICKED',
           submittedAt: isoNow(),
           windowHours: getPickWindowMinutes(voterName, currentRound) / 60,
         });
@@ -527,7 +528,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
         round: currentRound,
         team: voterName,
         pick: pickLabel,
-        status: 'PICKED',
+        status: isPass ? 'PASSED' : 'PICKED',
         nextUp: computeNextUp(),
         submittedAt: isoNow(),
         pin: pinRecord ? pinInput : newPin,
@@ -810,12 +811,18 @@ function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
     return RAW_DRAFT_ORDER.map((n) => byNorm.get(normalize(n)) || n);
   }, [playersPicks]);
   const totalTeams = teamOrder.length;
-  const rounds = React.useMemo(() => (playersPicks[0]?.picks?.length || 15), [playersPicks]);
-  const filledCount = React.useMemo(() => playersPicks.reduce((acc, p) => acc + p.picks.filter(x => x && x !== '—').length, 0), [playersPicks]);
+  const rounds = 3;
+  const orderedPlayersPicks = React.useMemo(() => teamOrder.map((name) => (
+    playersPicks.find((player) => normalize(player.name) === normalize(name)) || { name, picks: Array(rounds).fill('—') }
+  )), [playersPicks, teamOrder]);
+  const filledCount = React.useMemo(() => orderedPlayersPicks.reduce(
+    (acc, player) => acc + player.picks.slice(0, rounds).filter((pick) => pick && pick !== '—').length,
+    0
+  ), [orderedPlayersPicks]);
   const overallPick = filledCount + 1;
   const currentRound = Math.min(Math.ceil(overallPick / Math.max(totalTeams, 1)), rounds);
   const idxInRound = (overallPick - 1) % Math.max(totalTeams, 1);
-  const orderThisRound = currentRound % 2 === 1 ? teamOrder : [...teamOrder].reverse();
+  const orderThisRound = teamOrder;
   const onTheClock = orderThisRound[idxInRound] || '';
   // ---- Draft completion state ----
   const totalCells = Math.max(totalTeams, 1) * rounds;
@@ -832,7 +839,7 @@ const computeNextUp = React.useCallback(() => {
     nextRound = currentRound + 1;
     nextIdx = 0;
   }
-  const nextOrder = nextRound % 2 === 1 ? teamOrder : [...teamOrder].reverse();
+  const nextOrder = teamOrder;
   return nextOrder[nextIdx] || '';
 }, [currentRound, idxInRound, teamOrder, totalTeams, isDraftComplete]);
 
@@ -927,9 +934,11 @@ const clockDeadline = React.useMemo(
 );
 const rawPickMsLeft = clockDeadline.getTime() - effectiveNow.getTime();
 const pickMsLeft = Math.max(0, rawPickMsLeft);
-// Free Agency opens: Tue Aug 25, 2026 @ 9:00 AM PT
-const FREE_AGENCY_START = new Date('2026-08-25T09:00:00-07:00');
-const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.getTime());
+// Free agency opens 24 hours after the final draft pick/pass is recorded.
+const freeAgencyStart = isDraftComplete && lastSubmittedAt
+  ? new Date(new Date(lastSubmittedAt).getTime() + 24 * 60 * 60 * 1000)
+  : null;
+const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime() - effectiveNow.getTime()) : null;
 
   // Use draftStart (already a Date) for draft start logic (hasDraftStarted is true if draft start time is now or in the past)
   const hasDraftStarted = effectiveNow >= draftStart;
@@ -1084,12 +1093,6 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
     if (isDraftComplete) { setSubmitError('Draft is complete — no further picks.'); return; }
     if (!voterName) { setSubmitError('Select your name.'); return; }
     if (!pickInput.trim()) { setSubmitError('Enter your pick.'); return; }
-    // Disallow manual PASS. Only auto-pass on expiry.
-    if (normalize(pickInput) === 'pass') {
-      setSubmitError('Manual PASS is not allowed. A PASS only happens automatically when time expires.');
-      return;
-    }
-
     // Draft must have started
     if (draftNotStarted) {
       setSubmitError("Draft hasn't started yet.");
@@ -1196,6 +1199,13 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                   ? `Completed on ${new Date(lastSubmittedAt).toLocaleString('en-US', { timeZone: ACTIVE_TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} PT`
                   : 'All rounds are filled.'}
               </div>
+              {freeAgencyStart && (
+                <div className="text-sm text-emerald-100">
+                  {freeAgencyMsLeft > 0
+                    ? `Free agency opens in ${fmtShort(freeAgencyMsLeft)} (24 hours after the final pick).`
+                    : 'Free agency is open. Standard FAAB bidding rules apply.'}
+                </div>
+              )}
               <a
                 href="https://fantasy.espn.com/football/league/rosters?leagueId=135143"
                 target="_blank"
@@ -1331,6 +1341,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
                     )
                   )}
                 </div>
+                <p className="text-[11px] text-gray-500 mt-2">Participation is optional. Enter PASS to skip your pick immediately.</p>
                 <p className="text-[11px] text-gray-500 mt-1">Duplicates are automatically blocked.</p>
                 <p className="text-[11px] text-red-400 mt-1">Heads up: Picks are <span className="font-semibold">FINAL</span> once submitted.</p>
               </div>
@@ -1551,16 +1562,16 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
             <thead>
               <tr className="bg-lime-400/80 text-black uppercase font-bold text-xs tracking-wide">
                 <th className="px-3 py-2 text-base tracking-tight text-center">Player</th>
-                {Array.from({ length: 15 }, (_, i) => (
+                {Array.from({ length: rounds }, (_, i) => (
                   <th key={i} className="px-3 py-2 text-base tracking-tight text-center">Round {i + 1}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {playersPicks.map(({ name, picks }, idx) => (
+              {orderedPlayersPicks.map(({ name, picks }, idx) => (
                 <tr key={idx} className="even:bg-gray-800/50 hover:bg-lime-300/10 hover:scale-[1.01] transition-transform duration-150">
                   <td className="px-3 py-2 font-semibold">{name}</td>
-                  {picks.map((pick, roundIdx) => {
+                  {picks.slice(0, rounds).map((pick, roundIdx) => {
                     const normPick = normalize(pick);
                     const isDuplicate = duplicatePicks.has(normPick);
                     const pos = playerPosIndex[normPick];
@@ -1581,7 +1592,7 @@ const freeAgencyMsLeft = Math.max(0, FREE_AGENCY_START.getTime() - effectiveNow.
             </tbody>
           </table>
            <div className="text-center text-sm text-gray-400 italic mb-6">
-        Note: This is a <span className="text-lime-400 font-semibold">snake order</span> draft.
+        This is a <span className="text-lime-400 font-semibold">three-round standard-order rookie draft</span>. The order stays the same every round.
       </div>
       {isDraftComplete && (
         <div className="text-center text-sm text-emerald-300 font-semibold mb-6">
