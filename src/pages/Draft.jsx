@@ -396,7 +396,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
   const normStr = (s = '') => s.toLowerCase();
   const buildSuggestions = (q) => {
     const query = normStr(q || '');
-    if (query.length < 2 || !playerNames.length) {
+    if (query.length < 1 || !playerNames.length) {
       setSuggestions([]);
       setShowSuggestions(false);
       setHighlightIdx(0);
@@ -1341,7 +1341,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                         ))}
                       </ul>
                     ) : (
-                      pickInput && pickInput.length >= 2 && (
+                      pickInput && pickInput.length >= 1 && (
                         <div className="absolute z-20 mt-1 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-lg text-left px-3 py-2 text-gray-400">
                           No matches
                         </div>
