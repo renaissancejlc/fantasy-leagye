@@ -43,7 +43,7 @@ export default function Home() {
       <section className="relative border-b border-zinc-800 bg-gradient-to-br from-black via-zinc-950 to-lime-950/40 px-6 py-24 md:py-32">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 md:grid-cols-[1.3fr_0.7fr]">
           <div>
-            <FlashLabel>Breaking · 2026 Season</FlashLabel>
+            <FlashLabel>Breaking · Season 12 · 2026</FlashLabel>
             <h1 className="mt-6 text-5xl font-black uppercase leading-[0.92] tracking-tight md:text-8xl">
               A New Era<br />
               <span className="text-lime-400">Starts Now.</span>
