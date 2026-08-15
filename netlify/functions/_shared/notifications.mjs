@@ -32,11 +32,15 @@ export async function appendSheetOpsRow(connectionId, tab, row, apiKey) {
   if (!response.ok) throw new Error(`SheetOps append returned ${response.status}`);
 }
 
-export async function postDiscord(webhookUrl, content) {
+export async function postDiscord(webhookUrl, content, mentionedUserIds = []) {
   const response = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'Fantasy League Bot', content }),
+    body: JSON.stringify({
+      username: 'Fantasy League Bot',
+      content,
+      allowed_mentions: { parse: [], users: mentionedUserIds },
+    }),
   });
   if (!response.ok) throw new Error(`Discord returned ${response.status}`);
 }

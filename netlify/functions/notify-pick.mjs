@@ -10,6 +10,17 @@ import {
 } from './_shared/notifications.mjs';
 
 const pinVoterNames = (team) => normalize(team) === 'kevin' ? ['kevin', 'angelo'] : [normalize(team)];
+const DISCORD_USER_IDS = {
+  kevin: '207223813623119872',
+  angelo: '207223813623119872',
+  dad: '1406393702686920787',
+  utsav: '1537957407068651633',
+  julio: '1538160983489519626',
+  christian: '1538233842731581450',
+  callie: '1538253600415809546',
+  raphy: '1538256310603219155',
+  daisy: '1287122323811471476',
+};
 
 export default async (request) => {
   if (request.method !== 'POST') return json({ ok: false, error: 'Method Not Allowed' }, 405);
@@ -77,12 +88,17 @@ export default async (request) => {
     const totalDraftPicks = draftRows.length * 3;
     const draftComplete = totalDraftPicks > 0 && expectedPickNumber === totalDraftPicks;
     const nextTeam = draftComplete ? '' : String(draftRows[(teamIndex + 1) % draftRows.length]?.[teamField] || '').trim();
+    const nextUserId = DISCORD_USER_IDS[normalize(nextTeam)];
     const followUp = draftComplete
       ? '\n🏁 **Draft complete!** All three rounds are finished.'
       : nextTeam
-        ? `\n➡️ Up next: **${nextTeam}**`
+        ? `\n➡️ Up next: ${nextUserId ? `<@${nextUserId}> (**${nextTeam}**)` : `**${nextTeam}**`}`
         : '';
-    await postDiscord(webhook, `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${followUp}`);
+    await postDiscord(
+      webhook,
+      `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${followUp}`,
+      nextUserId ? [nextUserId] : [],
+    );
     await appendSheetOpsRow(18, 'Results', { notifiedKey, type: 'draft', notifiedAt: new Date().toISOString() }, votesKey);
     return json({ ok: true });
   } catch (error) {
