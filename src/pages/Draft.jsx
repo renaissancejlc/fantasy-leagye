@@ -150,6 +150,36 @@ const getDraftRoundPicks = (row = {}) => Object.entries(row)
   .sort(([a], [b]) => Number(a.match(/\d+/)?.[0] || 0) - Number(b.match(/\d+/)?.[0] || 0))
   .map(([, value]) => value || '—');
 
+const validateDraftBoard = (rows = [], teamOrder = [], rounds = 3, teamField = getDraftTeamField(rows)) => {
+  const normalizedTeams = rows.map((row) => normalize(getDraftTeamName(row, teamField))).filter(Boolean);
+  const expectedTeams = teamOrder.map(normalize);
+  const missingTeams = expectedTeams.filter((team) => !normalizedTeams.includes(team));
+  const duplicateTeams = normalizedTeams.filter((team, index) => normalizedTeams.indexOf(team) !== index);
+  const orderedRows = teamOrder.map((team) => rows.find(
+    (row) => normalize(getDraftTeamName(row, teamField)) === normalize(team)
+  ));
+
+  if (missingTeams.length || duplicateTeams.length || orderedRows.some((row) => !row)) {
+    return { valid: false, error: 'The draft sheet team list is missing or contains duplicate teams.' };
+  }
+
+  const cells = [];
+  for (let round = 1; round <= rounds; round += 1) {
+    for (const row of orderedRows) cells.push(String(row?.[`Round ${round}`] || '').trim());
+  }
+  const firstEmpty = cells.findIndex((cell) => !cell || cell === '—');
+  const filledCount = firstEmpty === -1 ? cells.length : firstEmpty;
+  if (firstEmpty !== -1 && cells.slice(firstEmpty + 1).some((cell) => cell && cell !== '—')) {
+    return { valid: false, error: 'The draft sheet has a filled pick after an empty pick. Fix the board order before continuing.' };
+  }
+
+  const selectedPlayers = cells.slice(0, filledCount).filter((pick) => normalize(pick) !== 'pass').map(normalize);
+  if (new Set(selectedPlayers).size !== selectedPlayers.length) {
+    return { valid: false, error: 'The draft sheet contains the same player more than once.' };
+  }
+  return { valid: true, filledCount };
+};
+
 const sheetOpsAppend = (tab, row, baseUrl = SHEETOPS_BASE_URL) => axios.post(
   `${baseUrl}/append`,
   { tab, row },
@@ -237,6 +267,7 @@ const RAW_DRAFT_ORDER = [
   'Utsav',
   'Simon',
 ];
+const getPinVoterName = (team) => normalize(team) === 'kevin' ? 'Angelo' : team;
 
 const getDraftLogUrl = (suffix = '') => {
   if (suffix === '/search') return `${SHEETOPS_BASE_URL}/rows?tab=DraftLog`;
@@ -498,10 +529,37 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
       const latestRows = extractRows(latest.data);
       const teamField = getDraftTeamField(latestRows);
+      const boardCheck = validateDraftBoard(latestRows, teamOrder, rounds, teamField);
+      if (!boardCheck.valid) {
+        setSubmitError(boardCheck.error);
+        setConfirmOpen(false);
+        return;
+      }
       const formatted = latestRows.map(row => ({
         name: getDraftTeamName(row, teamField),
         picks: getDraftRoundPicks(row)
       }));
+
+      // Recompute the authoritative turn from the freshly fetched sheet. Never
+      // trust a stale browser render when deciding which cell to mutate.
+      const latestOrdered = teamOrder.map((name) => (
+        formatted.find((player) => normalize(player.name) === normalize(name))
+        || { name, picks: Array(rounds).fill('—') }
+      ));
+      const latestFilledCount = boardCheck.filledCount;
+      const latestOverallPick = latestFilledCount + 1;
+      const latestRound = Math.min(Math.ceil(latestOverallPick / Math.max(totalTeams, 1)), rounds);
+      const latestTeam = teamOrder[(latestOverallPick - 1) % Math.max(totalTeams, 1)] || '';
+      if (
+        latestOverallPick !== overallPick
+        || latestRound !== currentRound
+        || normalize(latestTeam) !== normalize(voterName)
+      ) {
+        setPlayersPicks(formatted);
+        setSubmitError(`The draft advanced. It is now ${latestTeam || 'the next manager'}'s turn.`);
+        setConfirmOpen(false);
+        return;
+      }
 
       const teamIdx = formatted.findIndex(p => normalize(p.name) === normalize(voterName));
       if (teamIdx === -1) { setSubmitError('Name not found in draft sheet.'); return; }
@@ -524,7 +582,11 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       }
 
       // Write the pick to the sheet (PATCH by search on Player)
-      await sheetOpsPatchByPlayer('Draft', voterName, { [roundCol]: pickLabel }, teamField);
+      const patchResponse = await sheetOpsPatchByPlayer('Draft', voterName, { [roundCol]: pickLabel }, teamField);
+      const updatedRow = patchResponse?.data?.row || patchResponse?.data?.data?.[0] || null;
+      if (!updatedRow || normalize(updatedRow[roundCol]) !== normalize(pickLabel)) {
+        throw new Error('SheetOps did not confirm the requested draft cell update.');
+      }
 
       // Log the pick in DraftLog (best-effort, non-blocking)
       try {
@@ -643,7 +705,7 @@ async function refreshDraftOnce(forceNetwork = false) {
     setPlayersPicks(formatted);
     const allPicks = formatted
       .flatMap(player => player.picks)
-      .filter(pick => pick && pick !== '—')
+      .filter(pick => pick && pick !== '—' && normalize(pick) !== 'pass')
       .map(normalize);
     const duplicates = allPicks.filter((item, index, self) => self.indexOf(item) !== index);
     setDuplicatePicks(new Set(duplicates));
@@ -882,7 +944,7 @@ const lastSubmittedAt = React.useMemo(() => {
     const t = r?.submittedAt || r?.submitted_at || r?.timestamp;
     if (t) {
       const d = new Date(t);
-      if (!isNaN(+d) && (!max || d > max)) max = d;
+      if (!isNaN(+d) && d.getFullYear() === DRAFT_YEAR && (!max || d > max)) max = d;
     }
   }
   return max;
@@ -1001,12 +1063,44 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
         if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
         const latestRows = extractRows(latest.data);
         const teamField = getDraftTeamField(latestRows);
+        const boardCheck = validateDraftBoard(latestRows, teamOrder, rounds, teamField);
+        if (!boardCheck.valid) {
+          console.error('[autoPass] Refusing to mutate an invalid draft board:', boardCheck.error);
+          setSubmitError(boardCheck.error);
+          setPassInFlight(false);
+          return;
+        }
+        const latestFormatted = latestRows.map((row) => ({
+          name: getDraftTeamName(row, teamField),
+          picks: getDraftRoundPicks(row),
+        }));
+        const latestOrdered = teamOrder.map((name) => (
+          latestFormatted.find((player) => normalize(player.name) === normalize(name))
+          || { name, picks: Array(rounds).fill('—') }
+        ));
+        const latestFilledCount = boardCheck.filledCount;
+        const latestOverallPick = latestFilledCount + 1;
+        const latestRound = Math.min(Math.ceil(latestOverallPick / Math.max(totalTeams, 1)), rounds);
+        const latestTeam = teamOrder[(latestOverallPick - 1) % Math.max(totalTeams, 1)] || '';
+        if (
+          latestOverallPick !== overallPick
+          || latestRound !== currentRound
+          || normalize(latestTeam) !== normalize(onTheClock)
+        ) {
+          setPlayersPicks(latestFormatted);
+          setPassInFlight(false);
+          return;
+        }
         const sheetTeamIdx = latestRows.findIndex((r) => normalize(getDraftTeamName(r, teamField)) === normalize(onTheClock));
         const latestRow = latestRows[sheetTeamIdx] || {};
         if (latestRow[roundCol] && latestRow[roundCol] !== '—') { setPassInFlight(false); return; }
 
         // Mark PASS in sheet
-        await sheetOpsPatchByPlayer('Draft', onTheClock, { [roundCol]: 'PASS' }, teamField);
+        const patchResponse = await sheetOpsPatchByPlayer('Draft', onTheClock, { [roundCol]: 'PASS' }, teamField);
+        const updatedRow = patchResponse?.data?.row || patchResponse?.data?.data?.[0] || null;
+        if (!updatedRow || normalize(updatedRow[roundCol]) !== 'pass') {
+          throw new Error('SheetOps did not confirm the automatic pass update.');
+        }
         // Log the pass (best-effort)
         try {
           await sheetOpsAppend('DraftLog', {
@@ -1069,12 +1163,13 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
     if (!voterName) { setPinRecord(null); setPinMode('verify'); return; }
 
     // Cache by full query URL so each voter lookup is independently cached
-    const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(voterName)}`;
+    const pinVoterName = getPinVoterName(voterName);
+    const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(pinVoterName)}`;
 
     cachedGet(pinsQueryUrl, { ttlMs: 24 * 60 * 60 * 1000, forceNetwork: false })
       .then((res) => {
         const pinRows = extractRows(res.data);
-        const rec = pinRows.find((row) => normalize(row.voter || '') === normalize(voterName)) || pinRows[0] || null;
+        const rec = pinRows.find((row) => normalize(row.voter || '') === normalize(pinVoterName)) || null;
         setPinRecord(rec);
         setPinMode(rec ? 'verify' : 'set');
       })
@@ -1097,16 +1192,17 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
   };
 
   const createOrUpdatePin = async (voter, pin) => {
+    const pinVoter = getPinVoterName(voter);
     const salt = makeSalt(8);
     const pinHash = await saltedHash(pin, salt);
-    try { await sheetOpsDeleteRows('Pins', { voter }, VOTES_API); } catch (_) {}
-    await sheetOpsAppend('Pins', { voter, salt, pinHash, updatedAt: isoNow() }, VOTES_API);
-    setPinRecord({ voter, salt, pinHash });
+    try { await sheetOpsDeleteRows('Pins', { voter: pinVoter }, VOTES_API); } catch (_) {}
+    await sheetOpsAppend('Pins', { voter: pinVoter, salt, pinHash, updatedAt: isoNow() }, VOTES_API);
+    setPinRecord({ voter: pinVoter, salt, pinHash });
     setPinMode('verify');
     // Seed the cached search result for this voter
     try {
-      const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(voter)}`;
-      const packed = { ts: Date.now(), data: [{ voter, salt, pinHash, updatedAt: isoNow() }], headers: {}, etag: null };
+      const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(pinVoter)}`;
+      const packed = { ts: Date.now(), data: [{ voter: pinVoter, salt, pinHash, updatedAt: isoNow() }], headers: {}, etag: null };
       MEMORY_CACHE.set(pinsQueryUrl, packed);
       writeLS(pinsQueryUrl, packed);
     } catch {}

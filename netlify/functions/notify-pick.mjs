@@ -9,6 +9,8 @@ import {
   validTestRequest,
 } from './_shared/notifications.mjs';
 
+const pinVoterNames = (team) => normalize(team) === 'kevin' ? ['kevin', 'angelo'] : [normalize(team)];
+
 export default async (request) => {
   if (request.method !== 'POST') return json({ ok: false, error: 'Method Not Allowed' }, 405);
   try {
@@ -37,7 +39,6 @@ export default async (request) => {
     const team = String(body.team || '').trim();
     const pick = String(body.pick || '').trim();
     const status = String(body.status || 'PICKED').toUpperCase();
-    const nextUp = String(body.nextUp || '').trim();
     if (!Number.isInteger(pickNumber) || pickNumber < 1 || !Number.isInteger(round) || round < 1 ||
         !team || !pick || !['PICKED', 'PASSED'].includes(status)) {
       return json({ ok: false, error: 'Invalid notification payload' }, 400);
@@ -53,8 +54,10 @@ export default async (request) => {
       || Object.keys(draftRows[0] || {}).find((key) => key.toLowerCase() === 'draftl')
       || Object.keys(draftRows[0] || {}).find((key) => !/^round\s+\d+$/i.test(key));
     const draftRow = draftRows.find((row) => normalize(row?.[teamField]) === normalize(team));
+    const teamIndex = draftRows.indexOf(draftRow);
+    const expectedPickNumber = (round - 1) * draftRows.length + teamIndex + 1;
     const sheetPick = String(draftRow?.[`Round ${round}`] || '').trim();
-    if (!draftRow || normalize(sheetPick) !== normalize(pick)) {
+    if (!draftRow || pickNumber !== expectedPickNumber || normalize(sheetPick) !== normalize(pick)) {
       return json({ ok: false, error: 'Pick does not match the draft sheet' }, 409);
     }
 
@@ -63,7 +66,8 @@ export default async (request) => {
         normalize(row.team) === normalize(team) && normalize(row.pick) === 'pass' && normalize(row.status) === 'passed');
       if (normalize(pick) !== 'pass' || !passLogged) return json({ ok: false, error: 'Pass is not recorded in DraftLog' }, 403);
     } else {
-      const pinRow = pinRows.find((row) => normalize(row.voter) === normalize(team));
+      const acceptedPinNames = pinVoterNames(team);
+      const pinRow = pinRows.find((row) => acceptedPinNames.includes(normalize(row.voter)));
       if (!pinMatches(body.pin, pinRow)) return json({ ok: false, error: 'Pick authentication failed' }, 403);
     }
 
@@ -71,11 +75,12 @@ export default async (request) => {
     if (resultRows.some((row) => row.notifiedKey === notifiedKey)) return json({ ok: true, duplicate: true });
     const action = status === 'PASSED' ? `**${team}** passes.` : `**${team}** selects **${pick}**.`;
     const totalDraftPicks = draftRows.length * 3;
-    const draftComplete = totalDraftPicks > 0 && pickNumber >= totalDraftPicks;
+    const draftComplete = totalDraftPicks > 0 && expectedPickNumber === totalDraftPicks;
+    const nextTeam = draftComplete ? '' : String(draftRows[(teamIndex + 1) % draftRows.length]?.[teamField] || '').trim();
     const followUp = draftComplete
       ? '\n🏁 **Draft complete!** All three rounds are finished.'
-      : nextUp
-        ? `\n➡️ Up next: **${nextUp}**`
+      : nextTeam
+        ? `\n➡️ Up next: **${nextTeam}**`
         : '';
     await postDiscord(webhook, `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${followUp}`);
     await appendSheetOpsRow(18, 'Results', { notifiedKey, type: 'draft', notifiedAt: new Date().toISOString() }, votesKey);

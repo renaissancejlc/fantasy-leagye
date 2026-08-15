@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const pinVoterNames = (team) => normalize(team) === 'kevin' ? ['kevin', 'angelo'] : [normalize(team)];
 
 // --- tiny .env loader so we don't need dotenv ---
 (function loadEnv() {
@@ -104,7 +105,8 @@ async function authenticateDraftPick(body) {
     );
   }
 
-  const pinRow = pinRows.find((row) => normalize(row.voter) === normalize(body.team));
+  const acceptedPinNames = pinVoterNames(body.team);
+  const pinRow = pinRows.find((row) => acceptedPinNames.includes(normalize(row.voter)));
   if (!body.pin || !pinRow) return false;
   const expectedHash = pinRow.pinHash || pinRow.pinhash || pinRow.hash;
   const computedHash = crypto.createHash('sha256').update(`${pinRow.salt || ''}:${body.pin}`).digest('hex');
