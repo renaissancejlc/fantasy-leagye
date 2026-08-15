@@ -5,7 +5,7 @@ import axios from 'axios';
 const API_TIMEOUT_MS = 10_000; // 10s network timeout for GETs
 const http = axios.create({ timeout: API_TIMEOUT_MS });
 
-const SHEETOPS_DRAFT_API_KEY = 'sk_live_6204d2fecc944f79c331432e1f8b584287f2';
+const SHEETOPS_DRAFT_API_KEY = 'sk_live_19edc003b192dda12ec805b38754abe4b5a9';
 const SHEETOPS_VOTES_API_KEY = 'sk_live_40bd24a37303db3ee9ac84bc1c04afb0fcde';
 const SHEETOPS_DRAFT_CONNECTION_ID = 17;
 const SHEETOPS_VOTES_CONNECTION_ID = 18;
@@ -143,8 +143,8 @@ const sheetOpsPatchByPlayer = (tab, player, data) => axios.patch(
   `${SHEETOPS_BASE_URL}/rows`,
   {
     tab,
-    where: { Player: player },
-    data,
+    match: { Player: player },
+    updates: data,
   },
   { headers: sheetOpsHeaders(SHEETOPS_BASE_URL) }
 );
@@ -153,7 +153,7 @@ const sheetOpsDeleteRows = (tab, where, baseUrl = SHEETOPS_BASE_URL) => axios.de
   `${baseUrl}/rows`,
   {
     headers: sheetOpsHeaders(baseUrl),
-    data: { tab, where },
+    data: { tab, match: where },
   }
 );
 
