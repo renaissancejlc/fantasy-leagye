@@ -87,7 +87,10 @@ async function authenticateDraftPick(body) {
     sheetOpsRows(18, 'Pins', votesKey),
     sheetOpsRows(17, 'DraftLog', draftKey),
   ]);
-  const draftRow = draftRows.find((row) => normalize(row.Player) === normalize(body.team));
+  const teamField = Object.keys(draftRows[0] || {}).find((key) => key.toLowerCase() === 'player')
+    || Object.keys(draftRows[0] || {}).find((key) => key.toLowerCase() === 'draftl')
+    || Object.keys(draftRows[0] || {}).find((key) => !/^round\s+\d+$/i.test(key));
+  const draftRow = draftRows.find((row) => normalize(row?.[teamField]) === normalize(body.team));
   const sheetPick = String(draftRow?.[`Round ${body.round}`] || '').trim();
   if (!draftRow || normalize(sheetPick) !== normalize(body.pick)) return false;
 

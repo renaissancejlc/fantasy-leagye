@@ -49,7 +49,10 @@ export default async (request) => {
       sheetOpsRows(17, 'DraftLog', draftKey),
       sheetOpsRows(18, 'Results', votesKey),
     ]);
-    const draftRow = draftRows.find((row) => normalize(row.Player) === normalize(team));
+    const teamField = Object.keys(draftRows[0] || {}).find((key) => key.toLowerCase() === 'player')
+      || Object.keys(draftRows[0] || {}).find((key) => key.toLowerCase() === 'draftl')
+      || Object.keys(draftRows[0] || {}).find((key) => !/^round\s+\d+$/i.test(key));
+    const draftRow = draftRows.find((row) => normalize(row?.[teamField]) === normalize(team));
     const sheetPick = String(draftRow?.[`Round ${round}`] || '').trim();
     if (!draftRow || normalize(sheetPick) !== normalize(pick)) {
       return json({ ok: false, error: 'Pick does not match the draft sheet' }, 409);

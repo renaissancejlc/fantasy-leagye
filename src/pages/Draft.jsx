@@ -133,17 +133,29 @@ const extractRows = (data) => {
   return [];
 };
 
+const getDraftTeamField = (rows = []) => {
+  const row = rows.find((item) => item && typeof item === 'object');
+  if (!row) return 'Player';
+  const keys = Object.keys(row);
+  return keys.find((key) => key.toLowerCase() === 'player')
+    || keys.find((key) => key.toLowerCase() === 'draftl')
+    || keys.find((key) => !/^round\s+\d+$/i.test(key))
+    || 'Player';
+};
+
+const getDraftTeamName = (row, teamField = 'Player') => row?.[teamField] || row?.Player || row?.DraftL || '';
+
 const sheetOpsAppend = (tab, row, baseUrl = SHEETOPS_BASE_URL) => axios.post(
   `${baseUrl}/append`,
   { tab, row },
   { headers: sheetOpsHeaders(baseUrl) }
 );
 
-const sheetOpsPatchByPlayer = (tab, player, data) => axios.patch(
+const sheetOpsPatchByPlayer = (tab, player, data, teamField = 'Player') => axios.patch(
   `${SHEETOPS_BASE_URL}/rows`,
   {
     tab,
-    match: { Player: player },
+    match: { [teamField]: player },
     updates: data,
   },
   { headers: sheetOpsHeaders(SHEETOPS_BASE_URL) }
@@ -480,8 +492,9 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
       if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
       const latestRows = extractRows(latest.data);
+      const teamField = getDraftTeamField(latestRows);
       const formatted = latestRows.map(row => ({
-        name: row.Player,
+        name: getDraftTeamName(row, teamField),
         picks: Object.entries(row)
           .filter(([key]) => key !== 'Player')
           .map(([, value]) => value || '—')
@@ -508,7 +521,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       }
 
       // Write the pick to the sheet (PATCH by search on Player)
-      await sheetOpsPatchByPlayer('Draft', voterName, { [roundCol]: pickLabel });
+      await sheetOpsPatchByPlayer('Draft', voterName, { [roundCol]: pickLabel }, teamField);
 
       // Log the pick in DraftLog (best-effort, non-blocking)
       try {
@@ -619,8 +632,9 @@ async function refreshDraftOnce(forceNetwork = false) {
     const response = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork });
     if (response && response.headers) updateOffsetFromHeaders(response.headers);
     const rows = extractRows(response.data);
+    const teamField = getDraftTeamField(rows);
     const formatted = rows.map(row => ({
-      name: row.Player,
+      name: getDraftTeamName(row, teamField),
       picks: Object.entries(row)
         .filter(([key]) => key !== 'Player')
         .map(([, value]) => value || '—')
@@ -985,12 +999,13 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
         const latest = await cachedGet(DRAFT_SHEET_URL, { ttlMs: SHEET_TTL_MS, forceNetwork: true });
         if (latest && latest.headers) updateOffsetFromHeaders(latest.headers);
         const latestRows = extractRows(latest.data);
-        const sheetTeamIdx = latestRows.findIndex((r) => normalize(r.Player) === normalize(onTheClock));
+        const teamField = getDraftTeamField(latestRows);
+        const sheetTeamIdx = latestRows.findIndex((r) => normalize(getDraftTeamName(r, teamField)) === normalize(onTheClock));
         const latestRow = latestRows[sheetTeamIdx] || {};
         if (latestRow[roundCol] && latestRow[roundCol] !== '—') { setPassInFlight(false); return; }
 
         // Mark PASS in sheet
-        await sheetOpsPatchByPlayer('Draft', onTheClock, { [roundCol]: 'PASS' });
+        await sheetOpsPatchByPlayer('Draft', onTheClock, { [roundCol]: 'PASS' }, teamField);
         // Log the pass (best-effort)
         try {
           await sheetOpsAppend('DraftLog', {
