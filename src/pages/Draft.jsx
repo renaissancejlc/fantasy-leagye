@@ -145,6 +145,11 @@ const getDraftTeamField = (rows = []) => {
 
 const getDraftTeamName = (row, teamField = 'Player') => row?.[teamField] || row?.Player || row?.DraftL || '';
 
+const getDraftRoundPicks = (row = {}) => Object.entries(row)
+  .filter(([key]) => /^round\s+\d+$/i.test(key))
+  .sort(([a], [b]) => Number(a.match(/\d+/)?.[0] || 0) - Number(b.match(/\d+/)?.[0] || 0))
+  .map(([, value]) => value || '—');
+
 const sheetOpsAppend = (tab, row, baseUrl = SHEETOPS_BASE_URL) => axios.post(
   `${baseUrl}/append`,
   { tab, row },
@@ -495,9 +500,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       const teamField = getDraftTeamField(latestRows);
       const formatted = latestRows.map(row => ({
         name: getDraftTeamName(row, teamField),
-        picks: Object.entries(row)
-          .filter(([key]) => key !== 'Player')
-          .map(([, value]) => value || '—')
+        picks: getDraftRoundPicks(row)
       }));
 
       const teamIdx = formatted.findIndex(p => normalize(p.name) === normalize(voterName));
@@ -635,9 +638,7 @@ async function refreshDraftOnce(forceNetwork = false) {
     const teamField = getDraftTeamField(rows);
     const formatted = rows.map(row => ({
       name: getDraftTeamName(row, teamField),
-      picks: Object.entries(row)
-        .filter(([key]) => key !== 'Player')
-        .map(([, value]) => value || '—')
+      picks: getDraftRoundPicks(row)
     }));
     setPlayersPicks(formatted);
     const allPicks = formatted
