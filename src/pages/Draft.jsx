@@ -267,7 +267,6 @@ const RAW_DRAFT_ORDER = [
   'Utsav',
   'Simon',
 ];
-const getPinVoterName = (team) => normalize(team) === 'kevin' ? 'Angelo' : team;
 
 const getDraftLogUrl = (suffix = '') => {
   if (suffix === '/search') return `${SHEETOPS_BASE_URL}/rows?tab=DraftLog`;
@@ -1162,16 +1161,11 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
     setNewPinConfirm('');
     if (!voterName) { setPinRecord(null); setPinMode('verify'); return; }
 
-    // Cache by full query URL so each voter lookup is independently cached
-    const pinVoterName = getPinVoterName(voterName);
-    const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(pinVoterName)}`;
-
-    cachedGet(pinsQueryUrl, { ttlMs: 24 * 60 * 60 * 1000, forceNetwork: false })
+    axios.post('/api/draftPin', { action: 'status', team: voterName })
       .then((res) => {
-        const pinRows = extractRows(res.data);
-        const rec = pinRows.find((row) => normalize(row.voter || '') === normalize(pinVoterName)) || null;
-        setPinRecord(rec);
-        setPinMode(rec ? 'verify' : 'set');
+        const exists = res?.data?.exists === true;
+        setPinRecord(exists ? { exists: true } : null);
+        setPinMode(exists ? 'verify' : 'set');
       })
       .catch((err) => {
         console.warn('SheetOps PIN fetch failed; falling back to set mode', err?.message || err);
@@ -1185,27 +1179,14 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
 
   const verifyPinAgainstRecord = async (pin, rec) => {
     if (!rec) return false;
-    const salt = getSaltFromRecord(rec);
-    const expected = getPinHashFromRecord(rec);
-    const computed = await saltedHash(pin, salt);
-    return expected === computed;
+    const response = await axios.post('/api/draftPin', { action: 'verify', team: voterName, pin });
+    return response?.data?.valid === true;
   };
 
   const createOrUpdatePin = async (voter, pin) => {
-    const pinVoter = getPinVoterName(voter);
-    const salt = makeSalt(8);
-    const pinHash = await saltedHash(pin, salt);
-    try { await sheetOpsDeleteRows('Pins', { voter: pinVoter }, VOTES_API); } catch (_) {}
-    await sheetOpsAppend('Pins', { voter: pinVoter, salt, pinHash, updatedAt: isoNow() }, VOTES_API);
-    setPinRecord({ voter: pinVoter, salt, pinHash });
+    await axios.post('/api/draftPin', { action: 'create', team: voter, pin });
+    setPinRecord({ exists: true });
     setPinMode('verify');
-    // Seed the cached search result for this voter
-    try {
-      const pinsQueryUrl = `${getPinsUrl('/search')}&voter=${encodeURIComponent(pinVoter)}`;
-      const packed = { ts: Date.now(), data: [{ voter: pinVoter, salt, pinHash, updatedAt: isoNow() }], headers: {}, etag: null };
-      MEMORY_CACHE.set(pinsQueryUrl, packed);
-      writeLS(pinsQueryUrl, packed);
-    } catch {}
   };
 
   const submitPick = async (e) => {

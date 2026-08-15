@@ -7,11 +7,6 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const pinVoterNames = (team) => normalize(team) === 'kevin' ? ['kevin', 'angelo'] : [normalize(team)];
-const DISCORD_USER_IDS = {
-  kevin: '207223813623119872', angelo: '207223813623119872', dad: '1406393702686920787',
-  utsav: '1537957407068651633', julio: '1538160983489519626', christian: '1538233842731581450',
-  callie: '1538253600415809546', raphy: '1538256310603219155', daisy: '1287122323811471476',
-};
 
 // --- tiny .env loader so we don't need dotenv ---
 (function loadEnv() {
@@ -120,11 +115,11 @@ async function authenticateDraftPick(body) {
   return hashesMatch;
 }
 
-async function postDiscord(webhookUrl, content, mentionedUserIds = []) {
+async function postDiscord(webhookUrl, content) {
   const response = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'Fantasy League Bot', content, allowed_mentions: { parse: [], users: mentionedUserIds } }),
+    body: JSON.stringify({ username: 'Fantasy League Bot', content }),
   });
   if (!response.ok) throw new Error(`Discord returned ${response.status}`);
 }
@@ -166,14 +161,13 @@ async function handleNotifyPick(req, res) {
     const action = status === 'PASSED' ? `**${team}** passes.` : `**${team}** selects **${pick}**.`;
     const totalPicks = Number(body.totalPicks);
     const draftComplete = body.draftComplete === true && Number.isInteger(totalPicks) && pickNumber >= totalPicks;
-    const nextUserId = DISCORD_USER_IDS[normalize(nextUp)];
     const followUp = draftComplete
       ? '\n🏁 **Draft complete!** All three rounds are finished.'
       : nextUp
-        ? `\n➡️ Up next: ${nextUserId ? `<@${nextUserId}> (**${nextUp}**)` : `**${nextUp}**`}`
+        ? `\n➡️ Up next: **${nextUp}**`
         : '';
     const content = `🏈 **Round ${round}, Pick ${pickNumber}** — ${action}${followUp}`;
-    await postDiscord(webhookUrl, content, nextUserId ? [nextUserId] : []);
+    await postDiscord(webhookUrl, content);
     notifiedDraftPicks.add(notificationId);
     return sendJson(res, 200, { ok: true });
   } catch (error) {
