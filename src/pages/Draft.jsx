@@ -771,23 +771,18 @@ function getTZParts(d, tz = ACTIVE_TZ) {
 
 // Convert Pacific local date parts back to a real UTC Date
 function localPartsToDate(p, tz = ACTIVE_TZ) {
-  // Initial guess treats parts as if they were UTC
-  let utcMs = Date.UTC(p.y, (p.m || 1) - 1, p.d, p.H || 0, p.M || 0, p.S || 0);
-  let date = new Date(utcMs);
-  // Align minutes difference between shown local time and target local time
-  let shown = getTZParts(date, tz);
-  const targetMin = (p.H || 0) * 60 + (p.M || 0);
-  const shownMin = (shown.H || 0) * 60 + (shown.M || 0);
-  date = new Date(date.getTime() + (targetMin - shownMin) * 60000);
-  // Align any day difference (handles DST offsets cleanly)
-  shown = getTZParts(date, tz);
-  const baseTarget = Date.UTC(p.y, p.m - 1, p.d);
-  const baseShown = Date.UTC(shown.y, shown.m - 1, shown.d);
-  const dayDelta = Math.round((baseTarget - baseShown) / (24 * 3600 * 1000));
-  if (dayDelta !== 0) {
-    date = new Date(date.getTime() + dayDelta * 24 * 3600 * 1000);
+  const targetAsUtc = Date.UTC(p.y, (p.m || 1) - 1, p.d, p.H || 0, p.M || 0, p.S || 0);
+  let guess = targetAsUtc;
+  // Iteratively compare the desired wall-clock parts with the parts displayed
+  // in Pacific Time. A second pass resolves dates that cross a DST boundary.
+  for (let i = 0; i < 4; i += 1) {
+    const shown = getTZParts(new Date(guess), tz);
+    const shownAsUtc = Date.UTC(shown.y, shown.m - 1, shown.d, shown.H || 0, shown.M || 0, shown.S || 0);
+    const correction = targetAsUtc - shownAsUtc;
+    guess += correction;
+    if (correction === 0) break;
   }
-  return date;
+  return new Date(guess);
 }
 
 // Given a start time, add N active minutes counting only 8am–11pm PT windows.
