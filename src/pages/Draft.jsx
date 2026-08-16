@@ -309,7 +309,9 @@ const fmtShort = (ms) => {
 
 
 // ---- Feature flags ----
-const AUTO_PASS_ENABLED = true; // Enable auto-pass: the ONLY way a team is passed is when time expires
+// Disabled: a browser tab is not an authoritative scheduler. Stale/open tabs
+// can otherwise race and repeatedly write PASS after a commissioner correction.
+const AUTO_PASS_ENABLED = false;
 const AUTO_REFRESH_ENABLED = false; // Disable auto polling; use manual Refresh button
 
 // Add a small grace window and a per-pick guard so one pick can only be auto-passed once
