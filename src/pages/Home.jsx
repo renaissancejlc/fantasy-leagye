@@ -106,7 +106,7 @@ export default function Home() {
             <span className="text-lime-400">9:30 AM Pacific</span>
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-lg text-zinc-300">
-            This is a three-round, rookie-only keeper draft in fixed order. It is not a snake draft, participation is optional, and every manager gets up to 12 continuous hours to pick or pass.
+            This is a three-round, rookie-only keeper draft in fixed order. It is not a snake draft, participation is optional, and every manager gets up to 12 active hours to pick or pass. Draft clocks pause nightly from 11 PM to 8 AM Pacific.
           </p>
 
           <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-4">

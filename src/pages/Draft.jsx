@@ -320,7 +320,7 @@ const PASSED_GUARD_KEY = (pid) => `fantasy:autoPassed:${pid}`;
 function wasAutoPassDone(pid) { try { return localStorage.getItem(PASSED_GUARD_KEY(pid)) === '1'; } catch { return false; } }
 function markAutoPassDone(pid) { try { localStorage.setItem(PASSED_GUARD_KEY(pid), '1'); } catch {} }
 
-// Every picker gets 12 elapsed hours from the moment they go on the clock.
+// Every picker gets 12 active hours; the clock pauses nightly from 11 PM to 8 AM PT.
 const BASE_PICK_MINUTES = 12 * 60;
 const EXCEPTION_MINUTES = Object.freeze({});
 const getPickWindowMinutes = (teamName, round) => EXCEPTION_MINUTES[normalize(teamName || '')] || BASE_PICK_MINUTES;
@@ -745,14 +745,15 @@ async function refreshAll() {
 
 // --- Business-hours draft clock (Pacific Time) ---------------------------------
 const ACTIVE_TZ = 'America/Los_Angeles';
-const ACTIVE_START_HOUR = 9;  // 9:00 AM PT
-const ACTIVE_END_HOUR = 19;  // 7:00 PM PT
+const ACTIVE_START_HOUR = 8;  // 8:00 AM PT
+const ACTIVE_END_HOUR = 23;   // 11:00 PM PT
 
 // Parse a Date into Pacific local parts using Intl (works regardless of viewer's time zone)
 function getTZParts(d, tz = ACTIVE_TZ) {
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
     hour12: false,
+    hourCycle: 'h23',
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit'
   });
@@ -789,39 +790,62 @@ function localPartsToDate(p, tz = ACTIVE_TZ) {
   return date;
 }
 
-// Given a start time, add N active minutes counting only 9am–7pm PT windows.
+// Given a start time, add N active minutes counting only 8am–11pm PT windows.
 function computeActiveDeadline(startDate, minutesNeeded = 60, tz = ACTIVE_TZ) {
-  const ONE_MIN = 60000;
   let cursor = new Date(startDate instanceof Date ? startDate.getTime() : new Date(startDate).getTime());
-  let left = Math.max(0, Math.floor(minutesNeeded));
+  let leftMs = Math.max(0, minutesNeeded * 60000);
   let guard = 0;
-  while (left > 0 && guard++ < 1000) {
+  while (leftMs > 0 && guard++ < 1000) {
     const p = getTZParts(cursor, tz);
     const windowStart = localPartsToDate({ y: p.y, m: p.m, d: p.d, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
     const windowEnd   = localPartsToDate({ y: p.y, m: p.m, d: p.d, H: ACTIVE_END_HOUR,   M: 0, S: 0 }, tz);
 
-    // If we're before the window, jump to 9am. If after, jump to next day 9am.
+    // If before the window, jump to 8 AM. If after, jump to next day at 8 AM.
     if (cursor < windowStart) {
-      cursor = windowStart; // day hasn't started; start at 9:00
+      cursor = windowStart;
       continue;
     }
     if (cursor >= windowEnd) {
-      // move to next day 9:00
       const nextDayStart = localPartsToDate({ y: p.y, m: p.m, d: p.d + 1, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
       cursor = nextDayStart;
       continue;
     }
 
-    const availableMin = Math.floor((windowEnd.getTime() - cursor.getTime()) / ONE_MIN);
-    if (left <= availableMin) {
-      return new Date(cursor.getTime() + left * ONE_MIN);
+    const availableMs = windowEnd.getTime() - cursor.getTime();
+    if (leftMs <= availableMs) {
+      return new Date(cursor.getTime() + leftMs);
     }
-    // Consume today's remaining window and move to next day's window start
-    left -= availableMin;
+    leftMs -= availableMs;
     const nextDayStart = localPartsToDate({ y: p.y, m: p.m, d: p.d + 1, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
     cursor = nextDayStart;
   }
   return cursor; // fallback
+}
+
+// Count only active-time milliseconds between two instants. During the nightly
+// pause this value remains unchanged, so the UI countdown visibly freezes.
+function computeActiveDuration(startDate, endDate, tz = ACTIVE_TZ) {
+  let cursor = new Date(startDate);
+  const end = new Date(endDate);
+  let totalMs = 0;
+  let guard = 0;
+  while (cursor < end && guard++ < 1000) {
+    const p = getTZParts(cursor, tz);
+    const windowStart = localPartsToDate({ y: p.y, m: p.m, d: p.d, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
+    const windowEnd = localPartsToDate({ y: p.y, m: p.m, d: p.d, H: ACTIVE_END_HOUR, M: 0, S: 0 }, tz);
+    if (cursor < windowStart) {
+      cursor = new Date(Math.min(windowStart.getTime(), end.getTime()));
+      continue;
+    }
+    if (cursor >= windowEnd) {
+      cursor = localPartsToDate({ y: p.y, m: p.m, d: p.d + 1, H: ACTIVE_START_HOUR, M: 0, S: 0 }, tz);
+      continue;
+    }
+    const segmentEnd = new Date(Math.min(windowEnd.getTime(), end.getTime()));
+    totalMs += segmentEnd.getTime() - cursor.getTime();
+    cursor = segmentEnd;
+  }
+  return totalMs;
 }
 
   // --- Draft start time (configurable; fallback static) ---
@@ -1014,10 +1038,12 @@ const clockStart = clockStartRef.current || draftStart;
 
 const windowMinutes = getPickWindowMinutes(onTheClock, currentRound);
 const clockDeadline = React.useMemo(
-  () => new Date(clockStart.getTime() + windowMinutes * 60 * 1000),
+  () => computeActiveDeadline(clockStart, windowMinutes),
   [clockStart, windowMinutes]
 );
-const rawPickMsLeft = clockDeadline.getTime() - effectiveNow.getTime();
+const rawPickMsLeft = effectiveNow < clockDeadline
+  ? computeActiveDuration(effectiveNow, clockDeadline)
+  : clockDeadline.getTime() - effectiveNow.getTime();
 const pickMsLeft = Math.max(0, rawPickMsLeft);
 // Free agency opens 24 hours after the final draft pick/pass is recorded.
 const freeAgencyStart = isDraftComplete && lastSubmittedAt

@@ -20,7 +20,7 @@ export default function Rules() {
             <p className="text-sm sm:text-base leading-relaxed text-gray-300">
               The league has <strong>12 teams</strong> and uses a <strong>full-keeper format</strong>. The 2026 draft is an optional, <strong>three-round rookie-only draft</strong> using a fixed standard order—not a snake draft. The same order repeats in every round.
               <br /><br />
-              The draft begins on <strong>Saturday, August 15 at 9:30 AM PT</strong>. Every picker has <strong>12 hours</strong> to select a rookie or pass. Picks are submitted through the draft page and announced in Discord.
+              The draft begins on <strong>Saturday, August 15 at 9:30 AM PT</strong>. Every picker has <strong>12 active hours</strong> to select a rookie or pass, with the clock paused nightly from <strong>11:00 PM to 8:00 AM Pacific</strong>. Picks are submitted through the draft page and announced in Discord.
             </p>
           </div>
 
