@@ -300,10 +300,19 @@ export default function Votes() {
   const [refreshing, setRefreshing] = useState(false);
   const votesEtagRef = useRef(null);
   const votesInFlightRef = useRef(false);
+  const votesInFlightPromiseRef = useRef(null);
   const [nextAllowedFetchAt, setNextAllowedFetchAt] = useState(0);
 
   const fetchVotes = async ({ force = false } = {}) => {
-    if (votesInFlightRef.current) return; // coalesce duplicate calls
+    if (votesInFlightRef.current) {
+      // A manual refresh must not silently disappear behind the initial fetch.
+      // Wait for that request, then issue the explicitly requested fresh read.
+      if (force && votesInFlightPromiseRef.current) {
+        await votesInFlightPromiseRef.current;
+        return fetchVotes({ force: true });
+      }
+      return votesInFlightPromiseRef.current;
+    }
 
     // Try cache first
     const cache = readVotesCache();
@@ -338,12 +347,19 @@ export default function Votes() {
     }
 
     votesInFlightRef.current = true;
+    let finishInFlight;
+    votesInFlightPromiseRef.current = new Promise((resolve) => { finishInFlight = resolve; });
     setError('');
     try {
       const headers = {};
-      // Prefer persisted ETag from cache if present
-      const etag = (cache && cache.etag) || votesEtagRef.current;
+      // Explicit refreshes request a full response instead of accepting a
+      // potentially stale 304 from an intermediary cache.
+      const etag = force ? null : ((cache && cache.etag) || votesEtagRef.current);
       if (etag) headers['If-None-Match'] = etag;
+      if (force) {
+        headers['Cache-Control'] = 'no-cache';
+        headers.Pragma = 'no-cache';
+      }
 
       const res = await http.get(VOTES_API, {
         headers: { ...headers, ...sheetOpsHeaders() },
@@ -379,13 +395,15 @@ export default function Votes() {
     } finally {
       setLoading(false);
       votesInFlightRef.current = false;
+      finishInFlight?.();
+      votesInFlightPromiseRef.current = null;
     }
   };
 
   const refreshAll = async () => {
     try {
       setRefreshing(true);
-      await fetchVotes({ force: false }); // respect TTL + throttle
+      await fetchVotes({ force: true });
     } finally {
       setRefreshing(false);
     }
@@ -1085,13 +1103,13 @@ export default function Votes() {
                 onClick={refreshAll}
                 disabled={refreshing}
                 className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-lime-400 text-lime-300 hover:bg-lime-400 hover:text-black transition disabled:opacity-50"
-                title={`Fetch latest votes (throttled ${Math.round(MIN_REFRESH_INTERVAL_MS/1000)}s)`}
+                title="Fetch the latest votes now"
               >
                 {refreshing ? 'Refreshing…' : 'Refresh'}
               </button>
             </div>
             <div className="text-xs text-gray-400 mb-4">
-              Click Refresh to update{lastUpdated ? ` • Updated ${fmt(lastUpdated)}` : ''} (cached for up to {Math.round(CACHE_TTL_MS/60000)}m)
+              Refresh fetches the live tally{lastUpdated ? ` • Updated ${fmt(lastUpdated)}` : ''}
             </div>
 
             <div className="mb-6">
