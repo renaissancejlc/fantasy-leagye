@@ -231,6 +231,12 @@ const CURRENT_MOTION = {
   expedited: false, // allow if opened within 3 days of kickoff
 };
 
+// Presentation-only aliases keep archived rows readable without changing the
+// motion ID or title already stored with submitted votes.
+const ARCHIVE_MOTION_TITLES = Object.freeze({
+  '2027-league-format': '2027 Keeper League Format',
+});
+
 export default function Votes() {
   // Offseason vs In-season
   const [now, setNow] = useState(new Date());
@@ -1175,7 +1181,7 @@ export default function Votes() {
                       className="even:bg-gray-800/40 hover:bg-lime-300/10 transition-colors"
                     >
                       <td className="px-3 py-2">{r.seasonBucket}</td>
-                      <td className="px-3 py-2">{r.motionTitle}</td>
+                      <td className="px-3 py-2">{ARCHIVE_MOTION_TITLES[r.motionId] || r.motionTitle}</td>
                       <td className="px-3 py-2 text-lime-300">{r.yes}</td>
                       <td className="px-3 py-2 text-red-400">{r.no}</td>
                       <td className="px-3 py-2 text-gray-300">{r.abstain}</td>
