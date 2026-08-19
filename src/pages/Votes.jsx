@@ -216,12 +216,18 @@ const getSeasonBucket = (now = new Date()) =>
 // Current Motion (first vote)
 // ---------------------------------------------------------------------------
 const CURRENT_MOTION = {
-  id: 'remove-total-tackle-points',
-  title: 'Remove "total tackle" points',
+  id: '2027-league-format',
+  title: '2027 League Format',
   question:
-    "Right now we are counting for both \"total\" and \"solo\" or \"assisted\", essentially doubling tackle points; should we remove the point category \"total tackles\"?",
-  createdAt: '2025-08-16',
-  proposedBy: 'Raphy',
+    'Should the 2027 season use a keeper-league format or a non-keeper format? If keeper league wins, we will hold a separate follow-up vote to determine how many players each team may keep.',
+  createdAt: '2026-08-19T09:30:00-07:00',
+  proposedBy: 'Simon',
+  seasonBucket: '2027',
+  choiceLabels: {
+    Yes: 'Keeper League',
+    No: 'Non-Keeper League',
+    Abstain: 'Abstain',
+  },
   expedited: false, // allow if opened within 3 days of kickoff
 };
 
@@ -234,8 +240,8 @@ export default function Votes() {
     return () => clearInterval(t);
   }, []);
 
-  // 3-day voting window from this motion's creation
-  const VOTING_WINDOW_DAYS = 3;
+  // One-week voting window from this motion's creation
+  const VOTING_WINDOW_DAYS = 7;
   const motionOpenAt = useMemo(() => parseDateLocalIfDateOnly(CURRENT_MOTION.createdAt), []);
   const motionDeadline = useMemo(
     () => new Date(motionOpenAt.getTime() + VOTING_WINDOW_DAYS * 24 * 60 * 60 * 1000),
@@ -408,7 +414,7 @@ export default function Votes() {
     [allVotes]
   );
 
-  const currentBucket = getSeasonBucket(now);
+  const currentBucket = CURRENT_MOTION.seasonBucket || getSeasonBucket(now);
   const currentSeasonVotes = useMemo(
     () => motionVotes.filter((v) => `${v.seasonBucket}` === `${currentBucket}`),
     [motionVotes, currentBucket]
@@ -481,7 +487,8 @@ export default function Votes() {
     arr.forEach((r) => {
       // Determine deadline from the motion's openAt
       const openAt = r.openAt ? new Date(r.openAt) : null;
-      const windowMs = 3 * 24 * 60 * 60 * 1000; // 3 days
+      const windowDays = r.motionId === CURRENT_MOTION.id ? 7 : 3;
+      const windowMs = windowDays * 24 * 60 * 60 * 1000;
       const deadline = openAt ? new Date(openAt.getTime() + windowMs) : null;
       r.deadline = deadline;
 
@@ -650,7 +657,7 @@ export default function Votes() {
       motionTitle: CURRENT_MOTION.title,
       voter: voterName,
       choice: pendingChoice, // 'Yes' | 'No' | 'Abstain'
-      seasonBucket: getSeasonBucket(new Date()),
+      seasonBucket: CURRENT_MOTION.seasonBucket || getSeasonBucket(new Date()),
       timestamp: new Date().toISOString(),
       // Also store these simple metadata fields on each row
       propesedBy: CURRENT_MOTION.proposedBy,
@@ -760,7 +767,7 @@ export default function Votes() {
               ? 'In-Season: Voting LOCKED (resumes offseason)'
               : !motionOpenAllowed
                 ? 'Offseason: Motion Not Allowed (opened too close to kickoff)'
-                : `Offseason • Ends ${new Date(SEASON_START_ISO).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+                : `Voting Open • Ends ${fmtDate(motionDeadline)}`}
           </div>
           <div className="text-xs text-gray-400 mt-2">
             Season start: {new Date(SEASON_START_ISO).toLocaleString()}
@@ -860,7 +867,7 @@ export default function Votes() {
                         className="hidden"
                         onChange={() => setPendingChoice(opt)}
                       />
-                      {opt}
+                      {CURRENT_MOTION.choiceLabels?.[opt] || opt}
                     </label>
                   ))}
                 </div>
@@ -1089,11 +1096,11 @@ export default function Votes() {
 
             <div className="mb-6">
               <div className="text-sm uppercase text-gray-300 mb-2">
-                This Season ({currentBucket})
+                Target Season ({currentBucket})
               </div>
-              <Bar label="Yes" value={aCurrent.yes} total={aCurrent.total} />
-              <Bar label="No" value={aCurrent.no} total={aCurrent.total} />
-              <Bar label="Abstain" value={aCurrent.abstain} total={aCurrent.total} />
+              <Bar label={CURRENT_MOTION.choiceLabels?.Yes || 'Yes'} value={aCurrent.yes} total={aCurrent.total} />
+              <Bar label={CURRENT_MOTION.choiceLabels?.No || 'No'} value={aCurrent.no} total={aCurrent.total} />
+              <Bar label={CURRENT_MOTION.choiceLabels?.Abstain || 'Abstain'} value={aCurrent.abstain} total={aCurrent.total} />
               <div className="text-xs text-gray-400 mt-1">
                 Total votes: {aCurrent.total}
               </div>
