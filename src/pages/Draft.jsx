@@ -959,16 +959,25 @@ const computeNextUp = React.useCallback(() => {
 // };
 
 const lastSubmittedAt = React.useMemo(() => {
-  let max = localSubmitAt ? new Date(localSubmitAt) : null;
+  // The current clock must be anchored only by the immediately preceding pick.
+  // Taking the newest timestamp from the whole log lets stray/future rows move
+  // an unrelated clock, while preferring a browser fallback can reset it.
+  const previousPickNumber = overallPick - 1;
+  let authoritative = null;
   for (const r of draftLogRows) {
+    if (Number(r?.pickNumber) !== previousPickNumber) continue;
     const t = r?.submittedAt || r?.submitted_at || r?.timestamp;
     if (t) {
       const d = new Date(t);
-      if (!isNaN(+d) && d.getFullYear() === DRAFT_YEAR && (!max || d > max)) max = d;
+      if (!isNaN(+d) && d.getFullYear() === DRAFT_YEAR && (!authoritative || d > authoritative)) {
+        authoritative = d;
+      }
     }
   }
-  return max;
-}, [draftLogRows, localSubmitAt]);
+  if (authoritative) return authoritative;
+  const local = localSubmitAt ? new Date(localSubmitAt) : null;
+  return local && !isNaN(+local) ? local : null;
+}, [draftLogRows, localSubmitAt, overallPick]);
 
 // --- Local per-pick start fallback (used ONLY if DraftLog is unavailable) ---
 const PICK_START_KEY = (pid) => `fantasy:pickStart:${pid}`;
@@ -1020,8 +1029,12 @@ useEffect(() => {
     // If we ended up using DraftLog, also persist locally for resiliency
     if (lastSubmittedAt) savePickStart(pickId, lastSubmittedAt);
   } else {
-    // Same pick: if we previously latched a local fallback and DraftLog later arrives, upgrade anchor
-    if (lastSubmittedAt && clockStartRef.current && lastSubmittedAt > clockStartRef.current) {
+    // Same pick: DraftLog may arrive after the initial render. It is authoritative
+    // even when its timestamp is earlier than the temporary browser fallback.
+    if (
+      lastSubmittedAt
+      && (!clockStartRef.current || lastSubmittedAt.getTime() !== clockStartRef.current.getTime())
+    ) {
       clockStartRef.current = lastSubmittedAt;
       savePickStart(pickId, lastSubmittedAt);
     }
