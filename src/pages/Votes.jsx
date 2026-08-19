@@ -362,10 +362,6 @@ export default function Votes() {
       // potentially stale 304 from an intermediary cache.
       const etag = force ? null : ((cache && cache.etag) || votesEtagRef.current);
       if (etag) headers['If-None-Match'] = etag;
-      if (force) {
-        headers['Cache-Control'] = 'no-cache';
-        headers.Pragma = 'no-cache';
-      }
 
       const res = await http.get(VOTES_API, {
         headers: { ...headers, ...sheetOpsHeaders() },
