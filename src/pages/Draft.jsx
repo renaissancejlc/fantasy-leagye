@@ -507,7 +507,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       setIsSubmitting(true);
       // Re-check time window at confirmation time
       if (pickMsLeft <= 0) {
-        setSubmitError('Time expired — pick was passed.');
+        setSubmitError('Time expired — awaiting commissioner pass.');
         setConfirmOpen(false);
         return;
       }
@@ -1251,7 +1251,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
     }
     // Time window must still be open
     if (pickMsLeft <= 0) {
-      setSubmitError('Time expired — pick was passed.');
+      setSubmitError('Time expired — awaiting commissioner pass.');
       return;
     }
 
@@ -1391,7 +1391,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                   <>
                     <span className="mx-2">•</span>
                     <span className="text-gray-300 normal-case">Time Left:</span>
-                    <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
+                    <span className={`ml-1 ${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'EXPIRED'}</span>
                     <span className="ml-2 text-gray-400 normal-case">({windowMinutes % 60 === 0 ? `${windowMinutes / 60}h` : `${windowMinutes}m`} window)</span>
                   </>
                 )}
@@ -1411,6 +1411,11 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
           {/* Submit Pick Card */}
           {(liveDraftEnabled || showPreviewExperience) && (
             <form onSubmit={submitPick} className="relative overflow-visible bg-gradient-to-b from-zinc-900/95 to-black/95 border border-lime-400/30 rounded-2xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/5 space-y-5">
+              {!AUTO_PASS_ENABLED && !draftNotStarted && pickMsLeft <= 0 && (
+                <div className="rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  This pick has expired and is awaiting commissioner action. The next turn begins after the pass is recorded.
+                </div>
+              )}
               {showPreviewExperience && (
                 <div className="rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-200">
                   Preview mode lets everyone see the draft UI early, but submissions, DraftLog activity, Discord alerts, and live draft pop-ups remain off until the real draft starts.
@@ -1640,7 +1645,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 <p className="text-xs text-red-400 mb-4">This pick is <span className="font-semibold">FINAL</span> once submitted.</p>
                 {!draftNotStarted && (
                   <p className="text-xs text-gray-400 mb-4">
-                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'PASS'}</span>
+                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'EXPIRED — AWAITING COMMISSIONER'}</span>
                   </p>
                 )}
                 {submitError && <div className="text-red-400 text-xs mb-3">{submitError}</div>}
