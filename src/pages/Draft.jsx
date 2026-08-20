@@ -312,7 +312,8 @@ const fmtShort = (ms) => {
 // Disabled: a browser tab is not an authoritative scheduler. Stale/open tabs
 // can otherwise race and repeatedly write PASS after a commissioner correction.
 const AUTO_PASS_ENABLED = false;
-const AUTO_REFRESH_ENABLED = false; // Disable auto polling; use manual Refresh button
+const SERVER_AUTO_PASS_ENABLED = true;
+const AUTO_REFRESH_ENABLED = true; // Read-only polling; all automatic writes are server-side
 
 // Add a small grace window and a per-pick guard so one pick can only be auto-passed once
 const AUTO_PASS_GRACE_MS = 15000; // 15s grace to avoid false passes from clock jitter
@@ -507,7 +508,7 @@ const [phoneBook, setPhoneBook] = useState(STATIC_PHONE_BOOK);
       setIsSubmitting(true);
       // Re-check time window at confirmation time
       if (pickMsLeft <= 0) {
-        setSubmitError('Time expired — awaiting commissioner pass.');
+        setSubmitError('Time expired — automatic pass is pending.');
         setConfirmOpen(false);
         return;
       }
@@ -907,6 +908,14 @@ function computeActiveDuration(startDate, endDate, tz = ACTIVE_TZ) {
     refreshDraftOnce(); // initial fetch only
   }, []);
 
+  useEffect(() => {
+    if (!AUTO_REFRESH_ENABLED) return undefined;
+    const refreshId = setInterval(() => {
+      void Promise.all([refreshDraftOnce(true), refreshLogOnce(true)]);
+    }, 60 * 1000);
+    return () => clearInterval(refreshId);
+  }, [logsReady]);
+
   const teamOrder = React.useMemo(() => {
     // Map normalized name -> actual sheet name
     const byNorm = new Map(playersPicks.map(p => [normalize(p.name), p.name]));
@@ -1251,7 +1260,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
     }
     // Time window must still be open
     if (pickMsLeft <= 0) {
-      setSubmitError('Time expired — awaiting commissioner pass.');
+      setSubmitError('Time expired — automatic pass is pending.');
       return;
     }
 
@@ -1411,9 +1420,9 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
           {/* Submit Pick Card */}
           {(liveDraftEnabled || showPreviewExperience) && (
             <form onSubmit={submitPick} className="relative overflow-visible bg-gradient-to-b from-zinc-900/95 to-black/95 border border-lime-400/30 rounded-2xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/5 space-y-5">
-              {!AUTO_PASS_ENABLED && !draftNotStarted && pickMsLeft <= 0 && (
+              {SERVER_AUTO_PASS_ENABLED && !draftNotStarted && pickMsLeft <= 0 && (
                 <div className="rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                  This pick has expired and is awaiting commissioner action. The next turn begins after the pass is recorded.
+                  This pick has expired. The server is recording the pass; the next turn normally appears within five minutes.
                 </div>
               )}
               {showPreviewExperience && (
@@ -1645,7 +1654,7 @@ const freeAgencyMsLeft = freeAgencyStart ? Math.max(0, freeAgencyStart.getTime()
                 <p className="text-xs text-red-400 mb-4">This pick is <span className="font-semibold">FINAL</span> once submitted.</p>
                 {!draftNotStarted && (
                   <p className="text-xs text-gray-400 mb-4">
-                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'EXPIRED — AWAITING COMMISSIONER'}</span>
+                    Time left: <span className={`${pickMsLeft > 0 ? 'text-white' : 'text-red-400'}`}>{pickMsLeft > 0 ? fmtDuration(pickMsLeft) : 'EXPIRED — AUTO-PASS PENDING'}</span>
                   </p>
                 )}
                 {submitError && <div className="text-red-400 text-xs mb-3">{submitError}</div>}
